@@ -1,5 +1,5 @@
 import logging
-from regexlint import *
+from regexlint.parser import *
 
 # no nulls in regex (per docs)
 # no funny literals (use \xnn)

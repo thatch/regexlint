@@ -1,8 +1,8 @@
 from unittest import TestCase
 from pygments.token import Other
 
-from regexlint import Regex
-from checkers import find_by_type
+from regexlint.parser import Regex
+from regexlint.checkers import find_by_type
 
 class BasicTests(TestCase):
     def do_it(self, s):

@@ -1,4 +1,4 @@
-from checkers import *
+from regexlint.checkers import *
 from unittest import TestCase
 
 class BasicTests(TestCase):
