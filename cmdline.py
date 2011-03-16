@@ -36,6 +36,9 @@ def check_lexer(lexer_name, cls, mod_path):
     #print lexer_name
     #print cls().tokens
     has_errors = False
+    if cls.flags & re.VERBOSE:
+        print "GRR", lexer_name, "uses verbose mode"
+        return
     for state, pats in cls().tokens.iteritems():
         for i, pat in enumerate(pats):
             #print repr(pat[0])
