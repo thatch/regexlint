@@ -61,7 +61,11 @@ def check_lexer(lexer_name, cls, mod_path):
                     print '%s%s:%s:%s:%d: %s' % (
                         (severity >= logging.ERROR and 'E' or 'W'), num,
                         lexer_name, state, i+1, text)
-                print '  ' + shorten(pat[0])
+                    foo = find_offending_line(mod_path, lexer_name, state, i, pos1)
+                    if foo:
+                        mark(*foo)
+                    else:
+                        print 'Y  ' + shorten(pat[0])
     if not has_errors:
         print lexer_name, "OK"
 
