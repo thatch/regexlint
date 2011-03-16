@@ -25,14 +25,18 @@ def find_offending_line(mod, clsname, state, idx, pos):
     if '\n' in mod:
         mod_text = mod
     else:
+        if mod.endswith('.pyc') or mod.endswith('.pyo'):
+            mod = mod[:-1]
         with file(mod, 'r') as f:
             mod_text = f.read()
 
     # skip as far as possible using regular expressions, then start lexing.
     for m in R_CLASSEXTRACT.finditer(mod_text):
+        #print "Got class", m.group(1), '...' + repr(m.group(0)[-40:])
         if m.group(1) == clsname: break
     else:
-        raise ValueError("Can't find class %r" % (clsname,))
+        return None
+        #raise ValueError("Can't find class %r" % (clsname,))
 
     def match_brace(brace):
         target = close_braces[open_braces.index(brace)]
@@ -53,12 +57,12 @@ def find_offending_line(mod, clsname, state, idx, pos):
     def until(t):
         #print "until", t
         for x in it:
-            if x[-2] in Punctuation and t in x[-1]: # '],' commonly comes together
-                #print "  found"
+            if t == x[-1]:
+                #print "  found", repr(x[-1])
                 return
         
     level = 0
-    tuple_idx = -1
+    tuple_idx = 0
     string_pos = 0
 
     def amal(i):
@@ -93,12 +97,12 @@ def find_offending_line(mod, clsname, state, idx, pos):
     it = filt(amal(PythonLexer().get_tokens_unprocessed(m.group(0))))
 
     for x, y, ttyp, text in it:
-        #print "Loop", level, ttyp
+        #print "Loop", level, ttyp, repr(text)
         if level == 0 and ttyp is Name:
             if text == 'tokens':
                 until('=')
                 until('{')
-            level = 1
+                level = 1
         elif level == 1 and ttyp in String:
             #print "key", text
             key = eval(text, {}, {})
@@ -111,27 +115,36 @@ def find_offending_line(mod, clsname, state, idx, pos):
             if text == '(':
                 # open a tuple
                 level = 3
-                tuple_idx += 1
-            if text == ')':
+            elif text == ')':
                 level = 1 # honestly this should be able to just return
+                #print "too late", idx, tuple_idx
+                return
         elif level == 3:
+            #print "  idx", tuple_idx
             if text == ')':
                 level = 2
+                tuple_idx += 1
+            elif text == '(':
+                match_brace('(')
             elif tuple_idx == idx and ttyp in String:
                 # this might be it!
                 s = eval(text, {}, {})
                 #print "maybe", string_pos, pos, (string_pos+len(s))
                 if string_pos <= pos < (string_pos+len(s)):
                     # need to point in here
-                    (d1, d2) = find_substr_pos(text, pos - string_pos)
-                    return (x, y+d1, y+d2, mod_text.splitlines()[x-1])
+                    (dx, d1, d2) = find_substr_pos(text, pos - string_pos)
+                    return (x+dx, y+d1, y+d2, mod_text.splitlines()[x+dx-1])
                 else:
                     string_pos += len(s)
+            elif tuple_idx == idx and ttyp in Name:
+                # If they're concatenating strings with vars, ignore.
+                break
 
 def find_substr_pos(s, target):
     # This solves the problem the stupid way, because it's expected to only
     # make 40 iterations, on average, so the complexity is not worth it.
   
+    r0 = None
     r1 = None
     end_quote = s[-1]
     for i in range(s.find(end_quote), len(s)-1):
@@ -142,9 +155,18 @@ def find_substr_pos(s, target):
         else:
             if len(r) == target and r1 is None:
                 r1 = i
+                r0 = s[:i].count('\n')
+                if r0:
+                    r1 -= s[:i].rfind('\n')
             elif len(r) == target+1:
-                return (r1, i)
+                if r0:
+                    i -= s[:i].rfind('\n') # HACK
+                return (r0, r1, i)
     # possible error, or r2 is off the end of the string
     if r1 is None:
         raise ValueError("Position off end of string")
-    return (r1, len(s)-1)
+    return (r0, r1, len(s)-1)
+
+def mark(lineno, d1, d2, text):
+    print "  " + text
+    print "  " + " " * d1 + '^' * (d2-d1) + ' ' + 'here'
