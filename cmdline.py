@@ -4,8 +4,8 @@ import logging
 
 from pygments.lexer import RegexLexer
 from pygments.token import Token
-from regexlint import Regex
-from checkers import run_all_checkers
+from regexlint import Regex, run_all_checkers
+from regexlint.indicator import find_offending_line, mark
 
 def import_mod(m):
     mod = __import__(m)
@@ -19,7 +19,7 @@ def main(argv):
         mod = import_mod(module)
         for k, v in mod.__dict__.iteritems():
             if hasattr(v, '__bases__') and issubclass(v, RegexLexer) and v.tokens:
-                check_lexer(k, v)
+                check_lexer(k, v, mod.__file__)
 
 def shorten(s):
     if len(s) < 76:
@@ -32,14 +32,16 @@ def remove_error(errs, *nums):
         if errs[i][0] in nums:
             del errs[i]
 
-def check_lexer(lexer_name, cls):
+def check_lexer(lexer_name, cls, mod_path):
     #print lexer_name
     #print cls().tokens
     has_errors = False
     for state, pats in cls().tokens.iteritems():
         for i, pat in enumerate(pats):
             #print repr(pat[0])
-            errs = run_all_checkers(Regex().get_parse_tree(pat[0]))
+            reg = Regex().get_parse_tree(pat[0])
+            # TODO check for verbose mode here.
+            errs = run_all_checkers(reg)
             # Note, things like '#pop' and 'next-state' get a pass on this, as
             # do callback functions, since they are mostly used for advanced
             # features in indent-dependent languages.
