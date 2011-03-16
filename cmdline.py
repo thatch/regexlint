@@ -57,7 +57,7 @@ def check_lexer(lexer_name, cls, mod_path):
             if errs:
                 has_errors = True
                 #print "Errors in", lexer_name, state, "pattern", i
-                for num, severity, text in errs:
+                for num, severity, pos1, text in errs:
                     print '%s%s:%s:%s:%d: %s' % (
                         (severity >= logging.ERROR and 'E' or 'W'), num,
                         lexer_name, state, i+1, text)
