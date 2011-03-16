@@ -12,7 +12,7 @@ def point_out_error(mod, path_to_str, pos):
     pass
 
 
-R_CLASSEXTRACT = re.compile(r'class (\w+).*:\n([\w\W]*?)(?:^class|\Z)', re.MULTILINE)
+R_CLASSEXTRACT = re.compile(r'class (\w+).*:\n([\w\W]*?)(?=^class|\Z)', re.MULTILINE)
 
 open_braces = '[{('
 close_braces = ']})'
