@@ -177,14 +177,14 @@ def find_substr_pos(s, target):
 
     # only for triplequoted strings
     if '\n' in chars[:target]:
-        print "GOT", target, chars[:target]
+        #print "GOT", target, chars[:target]
         l = chars[:target].count('\n')
         _ = rindex(chars[:target], '\n') + 1
-        print "_", _
+        #print "_", _
         q = sum(map(len, chars[_:target]))
-        print "q", l, q, q+len(chars[target])
+        #print "q", l, q, q+len(chars[target])
 
-    print q
+    #print q
     return (l, q, q+len(chars[target]))
 
 
