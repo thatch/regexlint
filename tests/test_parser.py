@@ -21,9 +21,18 @@ class BasicTests(TestCase):
         self.do_it(r'\(')
         self.do_it(r'\)')
 
+    def test_brackets(self):
+        r = self.do_it(r'\[')
+        print r
+        r = self.do_it(r'\]')
+
     def test_find_by_type(self):
         r = Regex().get_parse_tree(r'(?xi)')
         self.assertEquals('(?xi)', find_by_type(r, Other.Directive))
+
+    def test_char_range(self):
+        r = Regex().get_parse_tree(r'[a-z]')
+        self.assertEquals(1, len(r.alternations[0][0][1].chars))
 
     def test_end_set_correctly(self):
         r = Regex().get_parse_tree(r'\b(foo|bar)\b')

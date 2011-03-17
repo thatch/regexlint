@@ -48,17 +48,25 @@ class CharClass(object):
         n = []
         it = iter(self.chars)
         for t, c in it:
-            if not n and data == '^':
+            if not n and c == '^':
                 # caret is special only when the first char
                 self.negated = True
-            elif n and data == '-':
+            elif c == '-':
                 # dash is special only when not the first or last char.
-                try:
-                    nt, nc = it.next()
-                except StopIteration:
-                    n.append((t, c))
+                is_range = bool(n)
+                print "is_range1", is_range
+                if is_range:
+                    try:
+                        nt, nc = it.next()
+                    except StopIteration:
+                        is_range = False
+                print "is_range", is_range
+                if is_range:
+                    n.append(CharRange(n.pop(), (nt, nc)))
                 else:
-                    n.append(CharRange(n.pop(), nt, nc))
+                    n.append((t, c))
+            else:
+                n.append((t, c))
 
         self.chars = n
         self.end = pos + len(data)
