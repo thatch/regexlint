@@ -8,6 +8,7 @@ class Node(object):
         self.type = t 
         self.alternations = []
         self.start = start
+        self.end = None
 
     def add_token(self, ttyp, data):
         if not self.alternations:
@@ -17,7 +18,8 @@ class Node(object):
         else:
             self.alternations[-1].append((ttyp, data))
 
-    def close(self, ttyp, data):
+    def close(self, pos, ttyp, data):
+        self.end = pos + len(data)
         return True
 
     def __repr__(self):
@@ -34,6 +36,7 @@ class CharClass(object):
         self.chars = []
         self.type = Other.CharClass
         self.start = start
+        self.end = None
 
     def add_token(self, ttyp, data):
         #if not self and data == '^':
@@ -41,7 +44,7 @@ class CharClass(object):
         #else:
         self.chars.append((ttyp, data))
 
-    def close(self, ttyp, data):
+    def close(self, pos, ttyp, data):
         n = []
         it = iter(self.chars)
         for t, c in it:
@@ -58,6 +61,7 @@ class CharClass(object):
                     n.append(CharRange(n.pop(), nt, nc))
 
         self.chars = n
+        self.end = pos + len(data)
 
     def __repr__(self):
         return '<CharClass %r>' % (self.chars,)
@@ -141,6 +145,7 @@ class Regex(RegexLexer):
     def get_parse_tree(cls, s):
         open_stack = [Node(None)]
         open_stack[0].raw = s
+        open_stack[0].start = 0
 
         for i, ttype, data in cls().get_tokens_unprocessed(s):
             if ttype in Other.Open:
@@ -148,11 +153,13 @@ class Regex(RegexLexer):
             elif ttype is Other.CharClass:
                 open_stack.append(CharClass(i))
             elif ttype in (Other.CloseParen, Other.CloseCharClass):
+                open_stack[-1].close(i, ttype, data)
                 open_stack[-2].add_token(open_stack[-1].type, open_stack[-1])
                 open_stack.pop()
             else:
                 open_stack[-1].add_token(ttype, data)
 
+        open_stack[0].close(len(s), None, '')
         return open_stack[0]
 
 def charclass(c):

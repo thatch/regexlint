@@ -25,3 +25,11 @@ class BasicTests(TestCase):
         r = Regex().get_parse_tree(r'(?xi)')
         self.assertEquals('(?xi)', find_by_type(r, Other.Directive))
 
+    def test_end_set_correctly(self):
+        r = Regex().get_parse_tree(r'\b(foo|bar)\b')
+        print id(r)
+        print id(r.alternations[0][1][1])
+        self.assertEquals(0, r.start)
+        self.assertEquals(2, r.alternations[0][1][1].start)
+        self.assertEquals(11, r.alternations[0][1][1].end)
+        self.assertEquals(13, r.end)
