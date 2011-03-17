@@ -17,9 +17,17 @@ def main(argv):
     # currently just a list of module names.
     for module in argv:
         mod = import_mod(module)
-        for k, v in mod.__dict__.iteritems():
-            if hasattr(v, '__bases__') and issubclass(v, RegexLexer) and v.tokens:
-                check_lexer(k, v, mod.__file__)
+        print "Module", module
+        if hasattr(mod, '__all__'):
+            check_lexers(mod, mod.__all__)
+        else:
+            check_lexers(mod, mod.__dict__.keys())
+
+def check_lexers(mod, lexer_names):
+    for k in lexer_names:
+        v = getattr(mod, k)
+        if hasattr(v, '__bases__') and issubclass(v, RegexLexer) and v.tokens:
+            check_lexer(k, v, mod.__file__)
 
 def shorten(s):
     if len(s) < 76:
@@ -58,10 +66,14 @@ def check_lexer(lexer_name, cls, mod_path):
                 has_errors = True
                 #print "Errors in", lexer_name, state, "pattern", i
                 for num, severity, pos1, text in errs:
-                    print '%s%s:%s:%s:%d: %s' % (
-                        (severity >= logging.ERROR and 'E' or 'W'), num,
-                        lexer_name, state, i+1, text)
                     foo = find_offending_line(mod_path, lexer_name, state, i, pos1)
+                    if foo:
+                        line = 'L' + str(foo[0])
+                    else:
+                        line = 'pat#' + str(i+1)
+                    print '%s%s:%s:%s:%s: %s' % (
+                        (severity >= logging.ERROR and 'E' or 'W'), num,
+                        lexer_name, state, line, text)
                     if foo:
                         mark(*foo)
                     else:
