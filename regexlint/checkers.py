@@ -160,7 +160,7 @@ def run_all_checkers(regex):
             try:
                 f(regex, errs)
             except Exception, e:
-                errs.append(('999', logging.ERROR, "Checker %s encountered error parsing: %s" % (f, repr(e))))
+                errs.append(('999', logging.ERROR, 0, "Checker %s encountered error parsing: %s" % (f, repr(e))))
     return errs
 
 if __name__ == '__main__':
