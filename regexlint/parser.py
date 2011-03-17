@@ -5,7 +5,7 @@ from pygments.token import Other
 
 class Node(object):
     def __init__(self, t, start=None):
-        self.type = t 
+        self.type = t
         self.alternations = []
         self.start = start
         self.end = None

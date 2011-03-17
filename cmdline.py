@@ -60,7 +60,7 @@ def check_lexer(lexer_name, cls, mod_path):
                 if re.compile(pat[0]).match(''):
                     errs.append(('999', logging.ERROR, 'Matches empty string'))
                 #remove_error(errs, '103')
-            
+
             errs.sort(key=lambda k: (k[1], k[0]))
             if errs:
                 has_errors = True

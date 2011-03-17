@@ -60,7 +60,7 @@ def find_offending_line(mod, clsname, state, idx, pos):
             if t == x[-1]:
                 #print "  found", repr(x[-1])
                 return
-        
+
     level = 0
     tuple_idx = 0
     string_pos = 0

@@ -112,7 +112,7 @@ def _alternation_helper(i):
         # a literal, I hope!
         for j in _alternation_helper(i[1:]):
             yield i[0][1] + j
-        
+
 
 def all_nodes(regex_root):
     s = [regex_root]
