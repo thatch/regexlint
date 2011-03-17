@@ -88,13 +88,29 @@ def check_prefix_ordering(reg, errs):
         prev = None
         if len(n.alternations) > 1:
             for i in n.alternations:
-                if not all(x[0] in Other.Literal for x in i):
+                #print i, reg.raw[n.start:n.end]
+                if not all(x[0] in Other.Literal or
+                           x[0] in Other.Literals or
+                           x[0] in Other.Newline or
+                           x[0] in Other.Suspicious
+                           for x in i):
+                    #print "Can't check", i
                     return
                 t = ''.join(x[1] for x in i)
+                #print "Check", repr(t), repr(prev)
                 if prev is not None and t.startswith(prev):
                     errs.append((num, level, n.start, msg % (prev, t)))
                     break
                 prev = t
+
+def check_no_python_named_capture_groups(reg, errs):
+    num = '106'
+    level = logging.ERROR
+    msg = 'Python named capture group'
+    for n in all_nodes(reg):
+        if n.type in Other.Open.NamedCapturing:
+            errs.append((num, level, n.start, msg))
+            break
 
 def get_alternation_possibilities(alt):
     """

@@ -122,12 +122,13 @@ class Regex(RegexLexer):
             # TODO parse [][]
             (r'\]', Other.CloseCharClass, '#pop'),
             (r'\\-', Other.EscapedDash),
+            (r'\\.', Other.Suspicious),
             include('simpleliteral'),
         ],
         'meta': [
             (r'\.', Other.Dot),
-            (r'\^', Other.Beginning),
-            (r'\$', Other.End),
+            (r'\\\^', Other.Beginning),
+            (r'\\\$', Other.End),
             (r'\\b', Other.WordBoundary),
             (r'\*\?', Other.NongreedyStar),
             (r'\*', Other.Star),
@@ -139,13 +140,19 @@ class Regex(RegexLexer):
         ],
         'simpleliteral': [
             (r'[^\\^-]', Other.Literal),
-            (r'\0[0-7]{0,3}', Other.OctLiteral), # \0 is legal
-            (r'\\x[0-9a-fA-F]{2}', Other.HexLiteral),
-            (r'\\[\[\]]', Other.LiteralBracket),
-            (r'\\[()]', Other.LiteralParen),
+            (r'\0[0-7]{0,3}', Other.Literal.Oct), # \0 is legal
+            (r'\\x[0-9a-fA-F]{2}', Other.Literal.Hex),
+            (r'\\[\[\]]', Other.Literal.Bracket),
+            (r'\\[()]', Other.Literal.Paren),
             (r'\\n', Other.Newline),
-            (r'\\\\', Other.LiteralBackslash),
-            (r'\\\|', Other.LiteralAlternation),
+            (r'\\\.', Other.Literal.Dot),
+            (r'\\\\', Other.Literal.Backslash),
+            (r'\\\*', Other.Literal.Star),
+            (r'\\\+', Other.Literal.Plus),
+            (r'\\\|', Other.Literal.Alternation),
+            (r'\\\'', Other.Suspicious.Squo),
+            (r'\\\"', Other.Suspicious.Dquo),
+            (r'\\.', Other.Suspicious),
         ],
     }
 

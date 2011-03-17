@@ -50,3 +50,11 @@ class CheckersDoChecking(TestCase):
         errs = []
         check_prefix_ordering(r, errs)
         self.assertEquals(len(errs), 1)
+
+    def test_out_of_order_crazy_complicated(self):
+        r = Regex().get_parse_tree(r'''(!=|#|&&|&|\(|\)|\*|\+|,|-|-\.)''')
+        #|->|\.|\.\.|::|:=|:>|:|;;|;|<|<-|=|>|>]|>}|\?|\?\?|\[|\[<|\[>|\[\||]|_|`|{|{<|\||\|]|}|~)''')
+        print repr(r)
+        errs = []
+        check_prefix_ordering(r, errs)
+        self.assertEquals(len(errs), 1)
