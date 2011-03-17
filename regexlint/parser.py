@@ -54,13 +54,11 @@ class CharClass(object):
             elif c == '-':
                 # dash is special only when not the first or last char.
                 is_range = bool(n)
-                print "is_range1", is_range
                 if is_range:
                     try:
                         nt, nc = it.next()
                     except StopIteration:
                         is_range = False
-                print "is_range", is_range
                 if is_range:
                     n.append(CharRange(n.pop(), (nt, nc)))
                 else:
