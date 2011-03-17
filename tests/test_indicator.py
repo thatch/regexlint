@@ -50,7 +50,7 @@ class SubstrPosTests(unittest.TestCase):
         s = r'"\000b"'
         r = find_substr_pos(s, 0)
         print s[r[0]:r[1]]
-        self.assertEquals((0, 1, 3), r)
+        self.assertEquals((0, 1, 5), r)
     def test_find_pos_end(self):
         r = find_substr_pos('"a"', 0)
         self.assertEquals((0, 1, 2), r)
