@@ -133,39 +133,60 @@ def find_offending_line(mod, clsname, state, idx, pos):
                 if string_pos <= pos < (string_pos+len(s)):
                     # need to point in here
                     (dx, d1, d2) = find_substr_pos(text, pos - string_pos)
-                    return (x+dx, y+d1, y+d2, mod_text.splitlines()[x+dx-1])
+                    if dx == 0:
+                        d1 += y
+                        d2 += y
+                    return (x+dx, d1, d2, mod_text.splitlines()[x+dx-1])
                 else:
                     string_pos += len(s)
             elif tuple_idx == idx and ttyp in Name:
                 # If they're concatenating strings with vars, ignore.
                 break
 
+strp = {
+    '': re.compile(r'\\(?:[\\abfnrtv"\']|\n|x[a-fA-F0-9]{2}|[0-7]{1,3})|'
+                   r'[\w\W]'),
+    'u': re.compile(r'\\(?:[\\abfnrtv"\']|\n|N{.*?}|u[a-fA-F0-9]{4}|'
+                    r'U[a-fA-F0-9]{8}|x[a-fA-F0-9]{2}|[0-7]{1,3})|[\w\W]'),
+    'r': re.compile(r'\\\\|[\w\W]'),
+    'ur': re.compile(r'\\(?:\\|u[a-fA-F0-9]{4}|U[a-fA-F0-9]{8})|[\w\W]'),
+}
+
+def rindex(a, x):
+    for i in range(len(a)-1, -1, -1):
+        if a[i] == x:
+            return i
+    raise ValueError("Not found")
+
 def find_substr_pos(s, target):
-    # This solves the problem the stupid way, because it's expected to only
-    # make 40 iterations, on average, so the complexity is not worth it.
-  
-    r0 = None
-    r1 = None
-    end_quote = s[-1]
-    for i in range(s.find(end_quote), len(s)-1):
-        try:
-            r = eval(s[:i] + end_quote, {}, {})
-        except (SyntaxError, ValueError), e:
-            pass
-        else:
-            if len(r) == target and r1 is None:
-                r1 = i
-                r0 = s[:i].count('\n')
-                if r0:
-                    r1 -= s[:i].rfind('\n')
-            elif len(r) == target+1:
-                if r0:
-                    i -= s[:i].rfind('\n') # HACK
-                return (r0, r1, i)
-    # possible error, or r2 is off the end of the string
-    if r1 is None:
-        raise ValueError("Position off end of string")
-    return (r0, r1, len(s)-1)
+    if s[-3:] in ('"""', "'''"):
+        end_quote = s[-3:]
+    else:
+        end_quote = s[-1]
+    p = s.find(end_quote)
+    mods = s[:p]
+    body = s[p+len(end_quote):-len(end_quote)]
+
+    chars = strp[mods].findall(body)
+
+    if target >= len(chars) or target < 0:
+        raise ValueError("Impossible, out of bounds")
+
+    l = 0
+    q = p+len(end_quote)+sum(map(len, chars[:target]))
+
+    # only for triplequoted strings
+    if '\n' in chars[:target]:
+        print "GOT", target, chars[:target]
+        l = chars[:target].count('\n')
+        _ = rindex(chars[:target], '\n') + 1
+        print "_", _
+        q = sum(map(len, chars[_:target]))
+        print "q", l, q, q+len(chars[target])
+
+    print q
+    return (l, q, q+len(chars[target]))
+
 
 def mark(lineno, d1, d2, text):
     print "  " + text
