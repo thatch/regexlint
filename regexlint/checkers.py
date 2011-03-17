@@ -67,8 +67,27 @@ def check_prefix_ordering(reg, errs):
     Checks for things of the form a|ab, which should be ab|a due to python
     quirks.
     """
+    num = '105'
+    level = logging.ERROR
+    msg = 'Potential out of order alternation between %r and %r'
     for n in all_nodes(reg):
-        pass
+        if n.end is not None:
+            # check for whether it's likely to have an end anchor (not 100%)
+            s = reg.raw[n.end:]
+            if ('\\b' in s or '\\s' in s or '\\S' in s or '$' in s or
+                '(?=' in s):
+                continue
+
+        prev = None
+        if len(n.alternations) > 1:
+            for i in n.alternations:
+                if not all(x[0] in Other.Literal for x in i):
+                    return
+                t = ''.join(x[1] for x in i)
+                if prev is not None and t.startswith(prev):
+                    errs.append((num, level, n.start, msg % (prev, t)))
+                    break
+                prev = t
 
 def get_alternation_possibilities(alt):
     """
@@ -139,5 +158,3 @@ def run_all_checkers(regex):
 
 if __name__ == '__main__':
     print run_all_checkers(Regex().get_parse_tree(r'(foo|) [a-Mq-&]'))
-
-

@@ -43,3 +43,10 @@ class CheckersDoChecking(TestCase):
         errs = []
         check_no_empty_alternations(r, errs)
         self.assertEquals(len(errs), 1)
+
+    def test_out_of_order_alternation_in_root(self):
+        r = Regex().get_parse_tree(r'a|ab')
+        print repr(r)
+        errs = []
+        check_prefix_ordering(r, errs)
+        self.assertEquals(len(errs), 1)
