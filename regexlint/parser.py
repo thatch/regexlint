@@ -115,6 +115,10 @@ class Regex(RegexLexer):
             (r'\(\?[iLmsux]+\)', Other.Directive),
             (r'\(\?:', Other.Open.NonCapturing),
             (r'(\(\?P<)(.*?)(>)', Other.Open.NamedCapturing),
+            (r'\(\?=', Other.Open.Lookahead),
+            (r'\(\?!', Other.Open.NegativeLookahead),
+            (r'\(\?<!', Other.Open.NegativeLookbehind),
+            (r'\(\?<', Other.Open.Lookbehind),
             # TODO (?P=name) backref
             # TODO (?#...) comment
             (r'\(', Other.Open.Capturing),
