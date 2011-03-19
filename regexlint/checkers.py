@@ -43,8 +43,8 @@ def check_no_newlines(reg, errs):
 
     # Ignore re.VERBOSE modes for now.  I'm not sure how they fit in with
     # Java.
-    directive = find_by_type(reg, Other.Directive)
-    if directive and 'x' in directive:
+    directives = list(find_all_by_type(reg, Other.Directive))
+    if directives and any('x' in d for d in directives):
         return
 
     pos = reg.raw.find('\n')
@@ -174,13 +174,12 @@ def all_charclass(regex_root):
                 elif isinstance(x[1], CharRange):
                     yield x[1]
 
-def find_by_type(regex_root, t):
+def find_all_by_type(regex_root, t):
     for n in all_nodes(regex_root):
         for alt in n.alternations:
             for x in alt:
                 if x[0] == t:
-                    return x[1]
-    return None
+                    yield x[1]
 
 def run_all_checkers(regex):
     errs = []

@@ -16,7 +16,7 @@ from unittest import TestCase
 from pygments.token import Other
 
 from regexlint.parser import Regex
-from regexlint.checkers import find_by_type
+from regexlint.checkers import find_all_by_type
 
 class BasicTests(TestCase):
     def do_it(self, s):
@@ -42,7 +42,11 @@ class BasicTests(TestCase):
 
     def test_find_by_type(self):
         r = Regex().get_parse_tree(r'(?xi)')
-        self.assertEquals('(?xi)', find_by_type(r, Other.Directive))
+        self.assertEquals(['(?xi)'], list(find_all_by_type(r, Other.Directive)))
+
+    def test_find_all_by_type(self):
+        r = Regex().get_parse_tree(r'(?x)(?i)')
+        self.assertEquals(2, len(list(find_all_by_type(r, Other.Directive))))
 
     def test_char_range(self):
         r = Regex().get_parse_tree(r'[a-z]')
