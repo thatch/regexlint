@@ -126,6 +126,15 @@ def check_no_python_named_capture_groups(reg, errs):
             errs.append((num, level, n.start, msg))
             break
 
+def manual_toknum(reg, errs, desired_number):
+    num = '107'
+    level = logging.ERROR
+    msg = 'Wrong number of groups(%d) for bygroups(%d)'
+    n = len(list(find_all_by_type(reg, Other.Open.Capturing)))
+    if n != desired_number:
+        errs.append((num, level, 0, msg % (n, desired_number)))
+
+
 def get_alternation_possibilities(alt):
     """
     alt is the 2d list, i.e. [['a'], ['a', 'b']]
