@@ -101,3 +101,9 @@ class SubstrPosTests(unittest.TestCase):
     def test_tripled(self):
         r = find_substr_pos(r'"""a\x00"""', 1)
         self.assertEquals((0, 4, 8), r)
+    def test_find_pos_newline(self):
+        r = find_substr_pos("'\\\na'", 0)
+        self.assertEquals((0, 3, 4), r)
+    def test_find_pos_raw_backslash(self):
+        r = find_substr_pos(r'r"\\"', 1)
+        self.assertEquals((0, 3, 4), r)

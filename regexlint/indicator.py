@@ -162,7 +162,7 @@ strp = {
                    r'[\w\W]'),
     'u': re.compile(r'\\(?:[\\abfnrtv"\']|\n|N{.*?}|u[a-fA-F0-9]{4}|'
                     r'U[a-fA-F0-9]{8}|x[a-fA-F0-9]{2}|[0-7]{1,3})|[\w\W]'),
-    'r': re.compile(r'\\\\|[\w\W]'),
+    'r': re.compile(r'[\w\W]'),
     'ur': re.compile(r'\\(?:\\|u[a-fA-F0-9]{4}|U[a-fA-F0-9]{8})|[\w\W]'),
 }
 
@@ -182,6 +182,12 @@ def find_substr_pos(s, target):
     body = s[p+len(end_quote):-len(end_quote)]
 
     chars = strp[mods].findall(body)
+    if 'r' not in mods:
+        # hack to support a zero-width escape sequence -- escaped newline
+        for i in range(len(chars)):
+            if chars[i] == '\\\n':
+                target += 1
+            if i >= target: break
 
     if target >= len(chars) or target < 0:
         raise ValueError("Impossible, out of bounds")
