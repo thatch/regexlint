@@ -1,0 +1,28 @@
+Regexlint
+---------
+
+Regexlint will examine all regular expressions in an importable Pygments
+lexer, and report things that are probably not doing what you think they're
+doing.  For example, patterns like:
+
+    (elseif|else)
+
+It can also warn about a few syntax problems, for example
+
+    (r'(foo)\s+(bar)', bygroups(Blah)),
+
+
+Todo
+----
+
+* Parse verbose regular expressions
+* Fix bygroups-checking to catch more errors (like ``\s`` above outside
+  capturing)
+* Fix alternation-inversion-checking to understand anchors
+* Add lots of checks for character classes
+
+
+License
+-------
+
+Apache, see COPYING
