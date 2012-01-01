@@ -62,6 +62,11 @@ class Node(object):
         return '<%s type=%r data=%r %r>' % (self.__class__.__name__,
                                             self.type, self.data, self.children)
 
+    def __eq__(self, obj):
+        return (self.type == obj.type and self.data == obj.data and
+                self.children == obj.children and self.start == obj.start and
+                self.end == obj.end)
+
 class CharRange(object):
     def __init__(self, a, b):
         self.a = a
