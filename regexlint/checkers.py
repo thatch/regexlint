@@ -64,19 +64,20 @@ def check_charclass_homogeneous_ranges(reg, errs):
     num = '104'
     level = logging.ERROR
     msg = 'Range in character class is not homogeneous near position %d'
-    for c in all_charclass(reg):
+    msg2 = 'Range in character class goes backwards near position %d'
+    for c in find_all_by_type(reg, Other.CharClass):
         for p in c.chars:
             if isinstance(p, CharRange):
-                if p.a[0] in Other.Literal and p.b[0] in Other.Literal:
+                if p.a.type in Other.Literal and p.b.type in Other.Literal:
                     # should be single character data, can compare
-                    assert len(p.a[1] == 1)
-                    assert len(p.b[1] == 1)
-                    if charclass(p.a[1]) != charclass(p.b[1]):
+                    assert len(p.a.data) == 1
+                    assert len(p.b.data) == 1
+                    if charclass(p.a.data) != charclass(p.b.data):
                         errs.append((num, level, 0, msg % c.start))
                     # only positive ranges are allowed.
-                    if ord(p.a[1]) >= ord(p.b[1]):
-                        errs.append((num, level, 0, 'order %d' % c.start))
-                elif p.a[0] not in Other.Literal and p.b[0] not in Other.Literal:
+                    if ord(p.a.data) >= ord(p.b.data):
+                        errs.append((num, level, 0, msg2 % c.start))
+                elif p.a.type not in Other.Literal and p.b.type not in Other.Literal:
                     # punctuation range?
                     errs.append((num, level, 0, msg % c.start))
                 else:

@@ -82,11 +82,11 @@ class CharClass(Node):
 
     def close(self, pos, data):
         super(CharClass, self).close(pos, data)
-        return
 
         n = []
         it = iter(self.children)
-        for c in it:
+        for child in it:
+            c = child.data
             if not n and c == '^':
                 # caret is special only when the first char
                 self.negated = True
@@ -95,15 +95,15 @@ class CharClass(Node):
                 is_range = bool(n)
                 if is_range:
                     try:
-                        nt, nc = it.next()
+                        next_child = it.next()
                     except StopIteration:
                         is_range = False
                 if is_range:
-                    n.append(CharRange(n.pop(), (nt, nc)))
+                    n.append(CharRange(n.pop(), next_child))
                 else:
-                    n.append((t, c))
+                    n.append(child)
             else:
-                n.append((t, c))
+                n.append(child)
 
         self.chars = n
 

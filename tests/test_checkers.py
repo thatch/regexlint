@@ -59,3 +59,27 @@ class CheckersTests(TestCase):
         check_prefix_ordering(r, errs)
         self.assertEquals(len(errs), 1)
 
+    def test_good_charclass(self):
+        r = Regex().get_parse_tree(r'[a-zA-Z]')
+        print '\n'.join(fmttree(r))
+        errs = []
+        check_charclass_homogeneous_ranges(r, errs)
+        self.assertEquals(len(errs), 0)
+
+    def test_bad_charclass(self):
+        r = Regex().get_parse_tree(r'[A-z]')
+        print '\n'.join(fmttree(r))
+        print r.children[0].chars
+        errs = []
+        check_charclass_homogeneous_ranges(r, errs)
+        print errs
+        self.assertEquals(len(errs), 1)
+
+    def test_bad_charclass2(self):
+        r = Regex().get_parse_tree(r'[z-A]')
+        print '\n'.join(fmttree(r))
+        print r.children[0].chars
+        errs = []
+        check_charclass_homogeneous_ranges(r, errs)
+        print errs
+        self.assertEquals(len(errs), 2)
