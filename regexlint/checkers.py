@@ -44,7 +44,7 @@ def check_no_newlines(reg, errs):
     # Ignore re.VERBOSE modes for now.  I'm not sure how they fit in with
     # Java.
     directives = list(find_all_by_type(reg, Other.Directive))
-    if directives and any('x' in d for d in directives):
+    if directives and any('x' in d.data for d in directives):
         return
 
     pos = reg.raw.find('\n')
@@ -55,9 +55,9 @@ def check_no_empty_alternations(reg, errs):
     num = '103'
     level = logging.ERROR
     msg = 'Empty string allowed in alternation starting at position %d, use *'
-    for n in all_nodes(reg):
-        #print "Node", n
-        if [] in n.alternations:
+    for n in find_all_by_type(reg, Other.Progression):
+        if (not n.children and n._parent and
+            n._parent().type is Other.Alternation):
             errs.append((num, level, n.start or 0, msg % (n.start or 0)))
 
 def check_charclass_homogeneous_ranges(reg, errs):
@@ -91,31 +91,25 @@ def check_prefix_ordering(reg, errs):
     num = '105'
     level = logging.ERROR
     msg = 'Potential out of order alternation between %r and %r'
-    for n in all_nodes(reg):
-        if n.end is not None:
-            # check for whether it's likely to have an end anchor (not 100%)
-            s = reg.raw[n.end:]
-            if ('\\b' in s or '\\s' in s or '\\S' in s or '$' in s or
-                '(?=' in s):
-                continue
-
+    for n in find_all_by_type(reg, Other.Alternation):
+        # TODO: check whether successors have width()
         prev = None
-        if len(n.alternations) > 1:
-            for i in n.alternations:
-                #print i, reg.raw[n.start:n.end]
-                if not all(x[0] in Other.Literal or
-                           x[0] in Other.Literals or
-                           x[0] in Other.Newline or
-                           x[0] in Other.Suspicious
-                           for x in i):
-                    #print "Can't check", i
-                    return
-                t = ''.join(x[1] for x in i)
-                #print "Check", repr(t), repr(prev)
-                if prev is not None and t.startswith(prev):
-                    errs.append((num, level, n.start, msg % (prev, t)))
-                    break
-                prev = t
+        for i in n.children:
+            assert i.type is Other.Progression
+            #print i, reg.raw[n.start:n.end]
+            if not all(x.type in Other.Literal or
+                       x.type in Other.Literals or
+                       x.type in Other.Newline or
+                       x.type in Other.Suspicious
+                       for x in i.children):
+                #print "Can't check", i
+                return
+            t = ''.join(x.data for x in i.children)
+            #print "Check", repr(t), repr(prev)
+            if prev is not None and t.startswith(prev):
+                errs.append((num, level, n.start, msg % (prev, t)))
+                break
+            prev = t
 
 def check_no_python_named_capture_groups(reg, errs):
     num = '106'
@@ -159,17 +153,6 @@ def _alternation_helper(i):
         for j in _alternation_helper(i[1:]):
             yield i[0][1] + j
 
-
-def all_nodes(regex_root):
-    s = [regex_root]
-    while s:
-        i = s.pop(0)
-        assert isinstance(i, Node)
-        for alt in i.alternations:
-            for x in alt:
-                if isinstance(x[1], Node):
-                    s.append(x[1])
-        yield i
 
 def all_charclass(regex_root):
     s = [regex_root]
