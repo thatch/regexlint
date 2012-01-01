@@ -47,7 +47,10 @@ class BasicTests(TestCase):
 
     def test_find_all_by_type(self):
         r = Regex().get_parse_tree(r'(?x)(?i)')
-        self.assertEquals(2, len(list(find_all_by_type(r, Other.Directive))))
+        directives = list(find_all_by_type(r, Other.Directive))
+        self.assertEquals(2, len(directives))
+        self.assertEquals('(?x)', directives[0].data)
+        self.assertEquals('(?i)', directives[1].data)
 
     #def test_char_range(self):
     #    r = Regex().get_parse_tree(r'[a-z]')
