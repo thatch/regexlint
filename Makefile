@@ -14,6 +14,8 @@
 
 PYTHON?=python
 NOSETESTS?=nosetests
+FIGLEAF?=figleaf
+FIGLEAF2HTML?=figleaf2html
 
 .PHONY: all
 all:
@@ -25,3 +27,9 @@ test:
 .PHONY: demo
 demo:
 	$(PYTHON) cmdline.py $$(python -c 'from pygments.lexers._mapping import LEXERS; print "\n".join(set([i[0] for i in LEXERS.values()]))')
+
+.PHONY: coverage
+coverage:
+	rm -rf .figleaf html
+	$(FIGLEAF) `which $(NOSETESTS)`
+	$(FIGLEAF2HTML) -x figleaf_exclude
