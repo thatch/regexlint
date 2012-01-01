@@ -198,7 +198,9 @@ class Regex(RegexLexer):
 
     @classmethod
     def get_parse_tree(cls, s):
-        open_stack = [Node(t=PROGRESSION, data=s, start=0)]
+        n = Node(t=PROGRESSION, data='', start=0)
+        n.raw = s
+        open_stack = [n]
 
         for i, ttype, data in cls().get_tokens_unprocessed(s):
             if ttype in Other.Open:
