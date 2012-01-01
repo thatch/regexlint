@@ -67,7 +67,11 @@ def check_lexer(lexer_name, cls, mod_path):
     for state, pats in cls().tokens.iteritems():
         for i, pat in enumerate(pats):
             #print repr(pat[0])
-            reg = Regex().get_parse_tree(pat[0])
+            try:
+                reg = Regex().get_parse_tree(pat[0])
+            except:
+                print pat[0], cls
+                raise
             # TODO check for verbose mode here.
             errs = run_all_checkers(reg)
             # Note, things like '#pop' and 'next-state' get a pass on this, as
