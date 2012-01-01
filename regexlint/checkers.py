@@ -129,6 +129,22 @@ def manual_toknum(reg, errs, desired_number):
     if n != desired_number:
         errs.append((num, level, 0, msg % (n, desired_number)))
 
+def manual_overlap(reg, errs, desired_number):
+    num = '108'
+    level = logging.ERROR
+    msg = 'Nested/gapped capture groups but using bygroups'
+    n = list(find_all_by_type(reg, Other.Open.Capturing))
+    # The order returned by find_all_by_type need not be the same as python's
+    # group numbers, in the case of nesting.
+    prev_end = 0
+    #print reg.raw, desired_number
+    for i in n:
+        if i.start != prev_end:
+            errs.append((num, level, i.start, msg))
+        prev_end = i.end
+    if prev_end != reg.end:
+        errs.append((num, level, prev_end, msg))
+
 
 def get_alternation_possibilities(alt):
     """

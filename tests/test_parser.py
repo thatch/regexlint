@@ -68,3 +68,8 @@ class BasicTests(TestCase):
         self.assertEquals(10, bar.end)
         self.assertEquals(13, r.end)
 
+    def test_comment(self):
+        r = Regex().get_parse_tree(r'(?#foo)')
+        l = list(find_all_by_type(r, Other.Comment))
+        self.assertEquals(1, len(l))
+        self.assertEquals('(?#foo)', l[0].data)

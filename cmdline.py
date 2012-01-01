@@ -22,7 +22,7 @@ from pygments.lexer import RegexLexer, bygroups
 from pygments.token import Token
 from regexlint import Regex, run_all_checkers
 from regexlint.indicator import find_offending_line, mark
-from regexlint.checkers import manual_toknum
+from regexlint.checkers import manual_toknum, manual_overlap
 
 def import_mod(m):
     mod = __import__(m)
@@ -33,12 +33,21 @@ def import_mod(m):
 def main(argv):
     # currently just a list of module names.
     for module in argv:
+        if ':' in module:
+            module, cls = module.split(':')
+        else:
+            cls = None
         mod = import_mod(module)
         print "Module", module
-        if hasattr(mod, '__all__'):
-            check_lexers(mod, mod.__all__)
+        if cls:
+            lexers = [cls]
         else:
-            check_lexers(mod, mod.__dict__.keys())
+            if hasattr(mod, '__all__'):
+                lexers = mod.__all__
+            else:
+                lexers = mod.__dict__.keys()
+
+        check_lexers(mod, lexers)
 
 def check_lexers(mod, lexer_names):
     for k in lexer_names:
@@ -89,6 +98,9 @@ def check_lexer(lexer_name, cls, mod_path):
             if callable(pat[1]) and pat[1].func_code is bygroups_callback:
                 num_groups = len(pat[1].__closure__[0].cell_contents)
                 manual_toknum(reg, errs, num_groups)
+                # Also make sure that all uses are of the form
+                # (foo)(bar), not (foo) (bar) or (foo(bar))
+                manual_overlap(reg, errs, num_groups)
 
             errs.sort(key=lambda k: (k[1], k[0]))
             if errs:

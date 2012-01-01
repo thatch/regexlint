@@ -140,8 +140,9 @@ class Regex(RegexLexer):
             (r'\(\?!', Other.Open.NegativeLookahead),
             (r'\(\?<!', Other.Open.NegativeLookbehind),
             (r'\(\?<', Other.Open.Lookbehind),
-            # TODO (?P=name) backref
-            # TODO (?#...) comment
+            (r'(\(\?P=)(\w+)(\))', Other.Open.ExistsNamed),
+            (r'\(\?\(\d+\)', Other.Open.Exists),
+            (r'\(\?#.*?\)', Other.Comment),
             (r'\(', Other.Open.Capturing),
             (r'\)', Other.CloseParen),
             (r'\[', Other.CharClass, 'charclass'),
@@ -165,9 +166,11 @@ class Regex(RegexLexer):
         ],
         'meta': [
             (r'\.', Other.Dot),
-            (r'\\\^', Other.Beginning),
-            (r'\\\$', Other.End),
-            (r'\\b', Other.WordBoundary),
+            (r'\\\^', Other.Anchor.Beginning),
+            (r'\\\$', Other.Anchor.End),
+            (r'\\b', Other.Anchor.WordBoundary),
+            (r'\\A', Other.Anchor.BeginningOfString),
+            (r'\\Z', Other.Anchor.EndOfString),
             (r'\*\?', Other.Repetition.NongreedyStar),
             (r'\*', Other.Repetition.Star),
             (r'\+\?', Other.Repetition.NongreedyPlus),
@@ -192,6 +195,7 @@ class Regex(RegexLexer):
             (r'\\\|', Other.Literal.Alternation),
             (r'\\\'', Other.Suspicious.Squo),
             (r'\\\"', Other.Suspicious.Dquo),
+            (r'\\[sSwW]', Other.BuiltinCharclass),
             (r'\\.', Other.Suspicious),
         ],
     }
@@ -284,6 +288,20 @@ def fmttree(t):
     for c in t.children:
         r.extend('  ' + f for f in fmttree(c))
     return r
+
+def width(tok):
+    """Returns whether the given token type might consume characters."""
+    if tok in (Other.BuiltinCharclass,
+               Other.Anchor,
+               Other.Directive,
+               Other.Open.Lookahead,
+               Other.Open.NegativeLookahead,
+               Other.Open.NegativeLookbehind,
+               Other.Open.Lookbehind,
+               Other.Comment):
+        return False
+    else:
+        return True
 
 def main(args):
     if not args:
