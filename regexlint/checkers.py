@@ -154,18 +154,6 @@ def _alternation_helper(i):
             yield i[0][1] + j
 
 
-def all_charclass(regex_root):
-    s = [regex_root]
-    while s:
-        i = s.pop(0)
-        assert isinstance(i, Node)
-        for alt in i.alternations:
-            for x in alt:
-                if isinstance(x[1], Node):
-                    s.append(x[1])
-                elif isinstance(x[1], CharRange):
-                    yield x[1]
-
 def find_all(regex_root):
     regex = regex_root
     while regex:
