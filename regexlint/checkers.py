@@ -116,10 +116,9 @@ def check_no_python_named_capture_groups(reg, errs):
     num = '106'
     level = logging.ERROR
     msg = 'Python named capture group'
-    for n in all_nodes(reg):
-        if n.type in Other.Open.NamedCapturing:
-            errs.append((num, level, n.start, msg))
-            break
+    for n in find_all_by_type(reg, Other.Open.NamedCapturing):
+        errs.append((num, level, n.start, msg))
+        break
 
 def manual_toknum(reg, errs, desired_number):
     num = '107'
@@ -175,7 +174,7 @@ def find_all(regex_root):
 
 def find_all_by_type(regex_root, t):
     for regex in find_all(regex_root):
-        if regex.type == t:
+        if regex.type in t:
             yield regex
 
 def run_all_checkers(regex):
