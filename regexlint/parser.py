@@ -13,55 +13,75 @@
 # limitations under the License.
 
 import sys
+import weakref
 
 from pygments.lexer import RegexLexer, include, using, bygroups
 from pygments.token import Other
 
+
+# Special types, others are used in the parser below in normal Pygments
+# manner.
+
+PROGRESSION = Other.Progression
+ALTERNATION = Other.Alternation
+REPETITON = Other.Repetition
+CHARRANGE = Other.CharRange
+
 class Node(object):
-    def __init__(self, t, start=None):
+    def __init__(self, t, start=None, data=None):
         self.type = t
-        self.alternations = []
+        self.data = data # type-dependent
+        self.children = [] # type-dependent
+
         self.start = start
         self.end = None
+        self._parent = None
+        self._next = None
 
-    def add_token(self, ttyp, data):
-        if not self.alternations:
-            self.alternations.append([])
-        if ttyp is Other.Alternate:
-            self.alternations.append([])
-        else:
-            self.alternations[-1].append((ttyp, data))
+    def add_child(self, obj):
+        obj._parent = weakref.ref(self)
+        if self.children:
+            self.children[-1]._next = weakref.ref(obj)
+        self.children.append(obj)
 
-    def close(self, pos, ttyp, data):
+    def close(self, pos, data):
         self.end = pos + len(data)
-        return True
+
+    def next(self):
+        if self.children:
+            return self.children[0]
+        elif self._next:
+            return self._next()
+        p = self._parent
+        while p:
+            if p()._next:
+                return p()._next()
+            p = p()._parent
 
     def __repr__(self):
-        return '<%s %r>' % (self.type, self.alternations)
+        return '<%s type=%r data=%r %r>' % (self.__class__.__name__,
+                                            self.type, self.data, self.children)
 
 class CharRange(object):
     def __init__(self, a, b):
         self.a = a
         self.b = b
 
-class CharClass(object):
-    def __init__(self, start=None):
+    def __repr__(self):
+        return '<%s %r-%r>' % (self.__class__.__name__, self.a, self.b)
+
+class CharClass(Node):
+    def __init__(self, t, start=None):
+        super(CharClass, self).__init__(t, start)
         self.negated = False
-        self.chars = []
-        self.type = Other.CharClass
-        self.start = start
-        self.end = None
 
-    def add_token(self, ttyp, data):
-        #if not self and data == '^':
-        #    self.negated = True
-        #else:
-        self.chars.append((ttyp, data))
+    def close(self, pos, data):
+        super(CharClass, self).close(pos, data)
+        return
 
-    def close(self, pos, ttyp, data):
         n = []
-        it = iter(self.chars)
-        for t, c in it:
+        it = iter(self.children)
+        for c in it:
             if not n and c == '^':
                 # caret is special only when the first char
                 self.negated = True
@@ -81,10 +101,6 @@ class CharClass(object):
                 n.append((t, c))
 
         self.chars = n
-        self.end = pos + len(data)
-
-    def __repr__(self):
-        return '<CharClass %r>' % (self.chars,)
 
 class Regex(RegexLexer):
     r"""
@@ -139,6 +155,7 @@ class Regex(RegexLexer):
             (r'\]', Other.CloseCharClass, '#pop'),
             (r'\\-', Other.EscapedDash),
             (r'\\.', Other.Suspicious),
+            (r'[\-^]', Other.Special),
             include('simpleliteral'),
         ],
         'meta': [
@@ -146,12 +163,14 @@ class Regex(RegexLexer):
             (r'\\\^', Other.Beginning),
             (r'\\\$', Other.End),
             (r'\\b', Other.WordBoundary),
-            (r'\*\?', Other.NongreedyStar),
-            (r'\*', Other.Star),
-            (r'\+\?', Other.NongreedyPlus),
-            (r'\+', Other.Plus),
-            (r'\?\?', Other.NongreedyQuestion),
-            (r'\?', Other.Question),
+            (r'\*\?', Other.Repetition.NongreedyStar),
+            (r'\*', Other.Repetition.Star),
+            (r'\+\?', Other.Repetition.NongreedyPlus),
+            (r'\+', Other.Repetition.Plus),
+            (r'\?\?', Other.Repetition.NongreedyQuestion),
+            (r'\?', Other.Repetition.Question),
+            (r'\{\d+,(?:\d+)?\}', Other.Repetition.Curly),
+            (r'\{,\d+\}', Other.Repetition.Curly),
 
         ],
         'simpleliteral': [
@@ -174,23 +193,70 @@ class Regex(RegexLexer):
 
     @classmethod
     def get_parse_tree(cls, s):
-        open_stack = [Node(None)]
-        open_stack[0].raw = s
-        open_stack[0].start = 0
+        open_stack = [Node(t=PROGRESSION, data=s, start=0)]
 
         for i, ttype, data in cls().get_tokens_unprocessed(s):
             if ttype in Other.Open:
-                open_stack.append(Node(ttype, i)) # TODO store name of named group
+                # stack depth ++
+                n = Node(t=ttype, start=i)
+                open_stack.append(n)
             elif ttype is Other.CharClass:
-                open_stack.append(CharClass(i))
+                n = CharClass(t=ttype, start=i)
+                open_stack.append(n)
             elif ttype in (Other.CloseParen, Other.CloseCharClass):
-                open_stack[-1].close(i, ttype, data)
-                open_stack[-2].add_token(open_stack[-1].type, open_stack[-1])
+                # stack depth -- or -= 2
+                if open_stack[-2].type is ALTERNATION:
+                    open_stack[-1].close(i, '')
+                    open_stack[-2].add_child(open_stack[-1])
+                    open_stack.pop()
+                    open_stack[-1].close(i, '')
+                    open_stack[-2].add_child(open_stack[-1])
+                    open_stack.pop()
+                assert (open_stack[-1].type in Other.Open or
+                        open_stack[-1].type in Other.CharClass)
+                open_stack[-1].close(i, data)
+                open_stack[-2].add_child(open_stack[-1])
                 open_stack.pop()
+            elif ttype is Other.Alternate:
+                # stack depth same, or +=2
+                if len(open_stack) < 2 or open_stack[-2].type is not ALTERNATION:
+                    # Create new alternation, push 2
+                    n = Node(t=ALTERNATION, start=open_stack[-1].start)
+                    p = Node(t=PROGRESSION, start=open_stack[-1].start) # TODO + data?
+                    for c in open_stack[-1].children:
+                        p.add_child(c) # sets parent
+                    del open_stack[-1].children[:]
+                    open_stack.append(n)
+                    p.close(i, "")
+                    n.add_child(p)
+                    p2 = Node(t=PROGRESSION, start=i)
+                    open_stack.append(p2)
+                else:
+                    # close & swap, replicating close a bit
+                    open_stack[-1].close(i, "") # progression
+                    open_stack[-2].add_child(open_stack[-1])
+                    open_stack[-1] = Node(t=PROGRESSION, start=i+1)
+            elif ttype in Other.Repetition:
+                c = open_stack[-1].children.pop()
+                n = Node(t=REPETITON, data=data, start=c.start)
+                n.add_child(c)
+                open_stack[-1].add_child(n)
             else:
-                open_stack[-1].add_token(ttype, data)
+                # stack depth same
+                n = Node(t=ttype, data=data, start=i)
+                open_stack[-1].add_child(n)
 
-        open_stack[0].close(len(s), None, '')
+        # don't pop here
+        if len(open_stack) == 3 and open_stack[-2].type is ALTERNATION:
+            open_stack[-1].close(len(s), '')
+            open_stack[-2].add_child(open_stack[-1])
+            open_stack[-2].close(len(s), '')
+            open_stack[-3].add_child(open_stack[-2])
+            open_stack.pop()
+            open_stack.pop()
+
+        open_stack[0].close(len(s), '')
+        assert len(open_stack) == 1
         return open_stack[0]
 
 def charclass(c):
@@ -201,12 +267,28 @@ def charclass(c):
     else:
         return 'other'
 
-def main(args):
-    r = Regex()
-    for x in r.get_tokens_unprocessed(r"a(b|c[de])" + '\b'):
-        print x
+def fmttree(t):
+    if not hasattr(t, 'children') or not t.children:
+        return [repr(t)]
 
-    print repr(r.get_parse_tree(r'(foo|bar|[ba]z)'))
+    r = []
+    r.append('<%s type=%r data=%r>' % (t.__class__.__name__, t.type, t.data))
+    for c in t.children:
+        r.extend('  ' + f for f in fmttree(c))
+    return r
+
+def main(args):
+    if not args:
+        regex = r'(foo|bar)|[ba]z'
+    else:
+        regex = args[0]
+
+    r = Regex()
+    #for x in r.get_tokens_unprocessed(regex):
+    #    print x
+
+    tree = r.get_parse_tree(regex)
+    print '\n'.join(fmttree(tree))
 
 if __name__ == '__main__':
-    main(sys.argv)
+    main(sys.argv[1:])
