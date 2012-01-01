@@ -13,13 +13,14 @@
 # limitations under the License.
 
 PYTHON?=python
+NOSETESTS?=nosetests
 
 .PHONY: all
 all:
 
 .PHONY: test
 test:
-	nosetests
+	$(NOSETESTS)
 
 .PHONY: demo
 demo:
