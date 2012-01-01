@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sys
 import logging
 from regexlint.parser import *
 
@@ -176,5 +177,12 @@ def run_all_checkers(regex):
                 errs.append(('999', logging.ERROR, 0, "Checker %s encountered error parsing: %s" % (f, repr(e))))
     return errs
 
+def main(args):
+    if not args:
+        regex = r'(foo|) [a-Mq-&]'
+    else:
+        regex = args[0]
+    print run_all_checkers(Regex().get_parse_tree(regex))
+
 if __name__ == '__main__':
-    print run_all_checkers(Regex().get_parse_tree(r'(foo|) [a-Mq-&]'))
+    main(sys.argv[1:])
