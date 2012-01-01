@@ -183,12 +183,16 @@ def all_charclass(regex_root):
                 elif isinstance(x[1], CharRange):
                     yield x[1]
 
+def find_all(regex_root):
+    regex = regex_root
+    while regex:
+        yield regex
+        regex = regex.next()
+
 def find_all_by_type(regex_root, t):
-    for n in all_nodes(regex_root):
-        for alt in n.alternations:
-            for x in alt:
-                if x[0] == t:
-                    yield x[1]
+    for regex in find_all(regex_root):
+        if regex.type == t:
+            yield regex
 
 def run_all_checkers(regex):
     errs = []
