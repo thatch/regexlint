@@ -198,7 +198,7 @@ class Regex(RegexLexer):
         for i, ttype, data in cls().get_tokens_unprocessed(s):
             if ttype in Other.Open:
                 # stack depth ++
-                n = Node(t=ttype, start=i)
+                n = Node(t=ttype, start=i, data=data)
                 open_stack.append(n)
             elif ttype is Other.CharClass:
                 n = CharClass(t=ttype, start=i)
@@ -221,21 +221,22 @@ class Regex(RegexLexer):
                 # stack depth same, or +=2
                 if len(open_stack) < 2 or open_stack[-2].type is not ALTERNATION:
                     # Create new alternation, push 2
-                    n = Node(t=ALTERNATION, start=open_stack[-1].start)
-                    p = Node(t=PROGRESSION, start=open_stack[-1].start) # TODO + data?
+                    start = open_stack[-1].start + len(open_stack[-1].data)
+                    n = Node(t=ALTERNATION, start=start)
+                    p = Node(t=PROGRESSION, start=start)
                     for c in open_stack[-1].children:
                         p.add_child(c) # sets parent
                     del open_stack[-1].children[:]
                     open_stack.append(n)
                     p.close(i, "")
                     n.add_child(p)
-                    p2 = Node(t=PROGRESSION, start=i)
+                    p2 = Node(t=PROGRESSION, start=i+len(data))
                     open_stack.append(p2)
                 else:
                     # close & swap, replicating close a bit
                     open_stack[-1].close(i, "") # progression
                     open_stack[-2].add_child(open_stack[-1])
-                    open_stack[-1] = Node(t=PROGRESSION, start=i+1)
+                    open_stack[-1] = Node(t=PROGRESSION, start=i+len(data))
             elif ttype in Other.Repetition:
                 c = open_stack[-1].children.pop()
                 n = Node(t=REPETITON, data=data, start=c.start)
