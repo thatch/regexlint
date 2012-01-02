@@ -295,14 +295,10 @@ def fmttree(t):
 
 def width(tok):
     """Returns whether the given token type might consume characters."""
-    if tok in (Other.BuiltinCharclass,
-               Other.Anchor,
-               Other.Directive,
-               Other.Open.Lookahead,
-               Other.Open.NegativeLookahead,
-               Other.Open.NegativeLookbehind,
-               Other.Open.Lookbehind,
-               Other.Comment):
+    if (tok in (Other.Directive,
+                Other.Open.Lookahead, Other.Open.NegativeLookahead,
+                Other.Open.NegativeLookbehind, Other.Open.Lookbehind,
+                Other.Comment) or (tok in Other.Anchor)):
         return False
     else:
         return True

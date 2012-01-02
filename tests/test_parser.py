@@ -15,8 +15,8 @@
 from unittest import TestCase
 from pygments.token import Other
 
-from regexlint.parser import Regex, Node
-from regexlint.checkers import find_all_by_type
+from regexlint.parser import Regex, Node, width
+from regexlint.checkers import find_all, find_all_by_type
 
 class BasicTests(TestCase):
     def do_it(self, s):
@@ -73,3 +73,9 @@ class BasicTests(TestCase):
         l = list(find_all_by_type(r, Other.Comment))
         self.assertEquals(1, len(l))
         self.assertEquals('(?#foo)', l[0].data)
+
+    def test_width(self):
+        r = Regex().get_parse_tree(r'\s(?#foo)\b')
+        l = list(find_all(r))[1:] # skip root
+        self.assertEquals([True, False, False],
+                          [width(i.type) for i in l])
