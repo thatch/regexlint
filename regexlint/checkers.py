@@ -55,7 +55,7 @@ def check_no_newlines(reg, errs):
 def check_no_empty_alternations(reg, errs):
     num = '103'
     level = logging.ERROR
-    msg = 'Empty string allowed in alternation starting at position %d, use *'
+    msg = 'Empty string allowed in alternation starting at position %d, use ?'
     for n in find_all_by_type(reg, Other.Progression):
         if (not n.children and n.parent() and
             n.parent().type is Other.Alternation):
@@ -80,10 +80,10 @@ def check_charclass_homogeneous_ranges(reg, errs):
                         errs.append((num, level, p.a.start, msg2 % p.a.start))
                 elif p.a.type not in Other.Literal and p.b.type not in Other.Literal:
                     # punctuation range?
-                    errs.append((num, level, 0, msg % c.start))
+                    errs.append((num, level, p.a.start, msg % p.a.start))
                 else:
                     # strange range.
-                    errs.append((num, level, 0, msg % c.start))
+                    errs.append((num, level, p.a.start, msg % p.a.start))
 
 def check_prefix_ordering(reg, errs):
     """

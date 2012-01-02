@@ -269,6 +269,7 @@ class Regex(RegexLexer):
                 c = open_stack[-1].children.pop()
                 n = Node(t=REPETITON, data=data, start=c.start)
                 n.add_child(c)
+                n.close(i, data)
                 open_stack[-1].add_child(n)
             else:
                 # stack depth same
