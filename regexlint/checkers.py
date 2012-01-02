@@ -151,25 +151,31 @@ def bygroups_check_overlap(reg, errs, desired_number):
     prev_end = 0
     prev = None
     #print reg.raw, desired_number
-    for i in n:
-        if i.parent().type in Other.Repetition:
-            i = i.parent()
-        #print "Loop", i, i.start, i.end
+    for idx, group in enumerate(n):
+        if group.parent().type in Other.Repetition:
+            group = group.parent()
+        #print "Loop", i, group, group.start, group.end
 
-        if i.start != prev_end:
-            if i.start > prev_end:
-                #print "Have prev"
-                # This code allows a parent to be ok'd, and all children to be
-                # ignored (without having to change between()'s code)
-                j = find_bad_between(prev, i, has_width)
-                if j:
-                    errs.append((num, level, j.start, msg))
+        if group.start > prev_end:
+            #print "Have prev"
+            # This code allows a parent to be ok'd, and all children to be
+            # ignored (without having to change between()'s code)
+            j = find_bad_between(prev, group, has_width)
+            if j:
+                errs.append((num, level, j.start, msg))
+        elif group.start < prev_end:
+            if idx >= desired_number:
+                # This case is uninteresting -- bygroups ignores extra groups,
+                # so it's possible to nest within the last group.
+                errs.append((num, logging.INFO, group.start, msg))
+                group = prev
             else:
-                #print "Boring", i.start, prev_end
-                errs.append((num, level, i.start, msg))
+                #print "Boring", group.start, prev_end
+                errs.append((num, level, group.start, msg))
+                group = prev
 
-        prev_end = i.end
-        prev = i
+        prev_end = group.end
+        prev = group
 
     if prev_end != reg.end:
         #print "End check", prev

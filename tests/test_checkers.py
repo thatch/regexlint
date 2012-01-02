@@ -160,6 +160,24 @@ class CheckersTests(TestCase):
         print errs
         self.assertEquals(len(errs), 0)
 
+    def test_bygroups_check_overlap_nested_length(self):
+        r = Regex().get_parse_tree(r'\b(a)((b)c)$')
+        print '\n'.join(fmttree(r))
+        errs = []
+        bygroups_check_overlap(r, errs, 2)
+        print errs
+        self.assertEquals(len(errs), 1)
+        self.assertEquals(errs[0][1], logging.INFO)
+
+    def test_bygroups_check_overlap_nested_length2(self):
+        r = Regex().get_parse_tree(r'\b(a)((b)c)$')
+        print '\n'.join(fmttree(r))
+        errs = []
+        bygroups_check_overlap(r, errs, 3)
+        print errs
+        self.assertEquals(len(errs), 1)
+        self.assertEquals(errs[0][1], logging.ERROR)
+
     def test_bygroups_check_overlap_lookaround_ok(self):
         r = Regex().get_parse_tree(r'(?<!\.)(Class|Structure|Enum)(\s+)')
         print '\n'.join(fmttree(r))
