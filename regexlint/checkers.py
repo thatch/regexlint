@@ -145,15 +145,51 @@ def manual_overlap(reg, errs, desired_number):
     # The order returned by find_all_by_type need not be the same as python's
     # group numbers, in the case of nesting.
     prev_end = 0
+    prev = None
     #print reg.raw, desired_number
     for i in n:
+        if i.parent().type in Other.Repetition:
+            i = i.parent()
+        #print "Loop", i, i.start, i.end
+
         if i.start != prev_end:
-            errs.append((num, level, i.start, msg))
+            if i.start > prev_end:
+                #print "Have prev"
+                # This code allows a parent to be ok'd, and all children to be
+                # ignored (without having to change between()'s code)
+                ok_obj = None
+                for j in between(prev, i):
+                    print "Intermediate", j, j.type
+                    if ok_obj and j.is_descentant_of(ok_obj):
+                        pass
+                    elif not width(j.type):
+                        ok_obj = j
+                        pass
+                    else:
+                        errs.append((num, level, j.start, msg))
+                        break
+            else:
+                #print "Boring", i.start, prev_end
+                errs.append((num, level, prev_end, msg))
+
         prev_end = i.end
-        if i.parent().type is Other.Repetition:
-            prev_end += len(i.parent().data)
+        prev = i
+
     if prev_end != reg.end:
-        errs.append((num, level, prev_end, msg))
+        #print "End check", prev
+        # This code allows a parent to be ok'd, and all children to be
+        # ignored (without having to change between()'s code)
+        ok_obj = None
+        for j in between(prev, None):
+            print "Intermediate", j, j.type
+            if ok_obj and j.is_descentant_of(ok_obj):
+                pass
+            elif not width(j.type):
+                ok_obj = j
+                pass
+            else:
+                errs.append((num, level, j.start, msg))
+                break
 
 
 def get_alternation_possibilities(alt):
