@@ -153,6 +153,10 @@ def bygroups_check_overlap(reg, errs, desired_number):
     if not n:
         # manual_toknum should already complain about this case.
         return
+    # Ignore re.VERBOSE modes for now.
+    directives = list(find_all_by_type(reg, Other.Directive))
+    if directives and any('x' in d.data for d in directives):
+        return
     # The order returned by find_all_by_type need not be the same as python's
     # group numbers, in the case of nesting.
     prev_end = 0
