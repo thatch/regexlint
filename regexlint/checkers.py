@@ -173,9 +173,11 @@ def _alternation_helper(i):
             yield i[0][1] + j
 
 
-def find_all(regex_root):
-    regex = regex_root
-    while regex:
+def find_all(first, second=None):
+    """Finds all descendants (inorder) of first, including itself.  If second
+    is provided, stops when it is reached."""
+    regex = first
+    while regex and regex is not second:
         yield regex
         regex = regex.next()
 
@@ -183,6 +185,22 @@ def find_all_by_type(regex_root, t):
     for regex in find_all(regex_root):
         if regex.type in t:
             yield regex
+
+def between(first, second):
+    """Yields all nodes between first and second, not including either
+    endpoint.  The special first value None means to start at the beginning,
+    not including the root."""
+    if first is None:
+        first = second
+        while first.parent():
+            first = first.parent()
+        first = first.children[0]
+    else:
+        first = first.next_no_children()
+
+    it = find_all(first, second)
+    for i in it:
+        yield i
 
 def run_all_checkers(regex):
     errs = []

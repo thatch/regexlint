@@ -50,7 +50,11 @@ class Node(object):
     def next(self):
         if self.children:
             return self.children[0]
-        elif self._next:
+        else:
+            return self.next_no_children()
+
+    def next_no_children(self):
+        if self._next:
             return self._next()
         p = self._parent
         while p:
@@ -61,6 +65,15 @@ class Node(object):
     def parent(self):
         if self._parent:
             return self._parent()
+
+    def is_descentant_of(self, other):
+        if self is other:
+            return True
+        p = self._parent
+        while p:
+            if p() is other:
+                return True
+            p = p()._parent
 
     def __repr__(self):
         return '<%s type=%r data=%r %r>' % (self.__class__.__name__,
