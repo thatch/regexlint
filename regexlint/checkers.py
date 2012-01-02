@@ -37,6 +37,14 @@ def check_no_nulls(reg, errs):
     if pos != -1:
         errs.append((num, level, pos, msg))
 
+def check_no_bels(reg, errs):
+    num = '110'
+    level = logging.ERROR
+    msg = 'You probably don\'t want a bell. Use another backslash, raw string, or use \\x08 instead)'
+    pos = reg.raw.find('\b')
+    if pos != -1:
+        errs.append((num, level, pos, msg))
+
 def check_no_newlines(reg, errs):
     num = '102'
     level = logging.ERROR

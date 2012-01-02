@@ -174,3 +174,9 @@ class CheckersTests(TestCase):
         check_no_capture_group_in_repetition(r, errs)
         print errs
         self.assertEquals(len(errs), 0)
+
+    def test_no_bels(self):
+        r = Regex().get_parse_tree('a\bb')
+        errs = []
+        check_no_bels(r, errs)
+        self.assertEquals(len(errs), 1)
