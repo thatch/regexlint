@@ -52,9 +52,9 @@ class BasicTests(TestCase):
         self.assertEquals('(?x)', directives[0].data)
         self.assertEquals('(?i)', directives[1].data)
 
-    #def test_char_range(self):
-    #    r = Regex().get_parse_tree(r'[a-z]')
-    #    self.assertEquals(1, len(r.alternations[0][0][1].chars))
+    def test_char_range(self):
+        r = Regex().get_parse_tree(r'[a-z]')
+        self.assertEquals(1, len(find_all_by_type(r, Other.CharClass).next().chars))
 
     def test_end_set_correctly(self):
         r = Regex().get_parse_tree(r'\b(foo|bar)\b')
