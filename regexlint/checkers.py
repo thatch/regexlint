@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sys
 import logging
 from regexlint.parser import *
 
@@ -73,10 +74,10 @@ def check_charclass_homogeneous_ranges(reg, errs):
                     assert len(p.a.data) == 1
                     assert len(p.b.data) == 1
                     if charclass(p.a.data) != charclass(p.b.data):
-                        errs.append((num, level, 0, msg % c.start))
+                        errs.append((num, level, p.a.start, msg % p.a.start))
                     # only positive ranges are allowed.
                     if ord(p.a.data) >= ord(p.b.data):
-                        errs.append((num, level, 0, msg2 % c.start))
+                        errs.append((num, level, p.a.start, msg2 % p.a.start))
                 elif p.a.type not in Other.Literal and p.b.type not in Other.Literal:
                     # punctuation range?
                     errs.append((num, level, 0, msg % c.start))
@@ -116,10 +117,9 @@ def check_no_python_named_capture_groups(reg, errs):
     num = '106'
     level = logging.ERROR
     msg = 'Python named capture group'
-    for n in all_nodes(reg):
-        if n.type in Other.Open.NamedCapturing:
-            errs.append((num, level, n.start, msg))
-            break
+    for n in find_all_by_type(reg, Other.Open.NamedCapturing):
+        errs.append((num, level, n.start, msg))
+        break
 
 def manual_toknum(reg, errs, desired_number):
     num = '107'
@@ -171,18 +171,6 @@ def _alternation_helper(i):
             yield i[0][1] + j
 
 
-def all_charclass(regex_root):
-    s = [regex_root]
-    while s:
-        i = s.pop(0)
-        assert isinstance(i, Node)
-        for alt in i.alternations:
-            for x in alt:
-                if isinstance(x[1], Node):
-                    s.append(x[1])
-                elif isinstance(x[1], CharRange):
-                    yield x[1]
-
 def find_all(regex_root):
     regex = regex_root
     while regex:
@@ -191,7 +179,7 @@ def find_all(regex_root):
 
 def find_all_by_type(regex_root, t):
     for regex in find_all(regex_root):
-        if regex.type == t:
+        if regex.type in t:
             yield regex
 
 def run_all_checkers(regex):
@@ -205,5 +193,12 @@ def run_all_checkers(regex):
                 errs.append(('999', logging.ERROR, 0, "Checker %s encountered error parsing: %s" % (f, repr(e))))
     return errs
 
+def main(args):
+    if not args:
+        regex = r'(foo|) [a-Mq-&]'
+    else:
+        regex = args[0]
+    print run_all_checkers(Regex().get_parse_tree(regex))
+
 if __name__ == '__main__':
-    print run_all_checkers(Regex().get_parse_tree(r'(foo|) [a-Mq-&]'))
+    main(sys.argv[1:])
