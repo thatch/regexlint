@@ -300,7 +300,7 @@ def charclass(c):
         return 'other'
 
 def fmttree(t):
-    if not hasattr(t, 'children') or not t.children:
+    if not hasattr(t, 'children'):
         return [repr(t)]
 
     r = []
