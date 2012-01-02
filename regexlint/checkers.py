@@ -94,7 +94,15 @@ def check_prefix_ordering(reg, errs):
     level = logging.ERROR
     msg = 'Potential out of order alternation between %r and %r'
     for n in find_all_by_type(reg, Other.Alternation):
-        # TODO: check whether successors have width()
+        run_checks = True
+        for i in between(n, None):
+            # TODO this heuristic is easy to game
+            if i.type in Other.Anchor or i.type in Other.Open or width(i.type):
+                run_checks = False
+                break
+        if not run_checks:
+            continue
+
         prev = None
         for i in n.children:
             assert i.type is Other.Progression
