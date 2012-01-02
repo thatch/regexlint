@@ -177,14 +177,14 @@ class Regex(RegexLexer):
             # TODO parse [][]
             (r'\]', Other.CloseCharClass, '#pop'),
             (r'\\-', Other.EscapedDash),
-            (r'\\.', Other.Suspicious),
             (r'[\-^]', Other.Special),
             include('simpleliteral'),
+            (r'\\.', Other.Suspicious),
         ],
         'meta': [
             (r'\.', Other.Dot),
-            (r'\\\^', Other.Anchor.Beginning),
-            (r'\\\$', Other.Anchor.End),
+            (r'\^', Other.Anchor.Beginning),
+            (r'\$', Other.Anchor.End),
             (r'\\b', Other.Anchor.WordBoundary),
             (r'\\A', Other.Anchor.BeginningOfString),
             (r'\\Z', Other.Anchor.EndOfString),
@@ -202,6 +202,8 @@ class Regex(RegexLexer):
             (r'[^\\^-]', Other.Literal),
             (r'\0[0-7]{0,3}', Other.Literal.Oct), # \0 is legal
             (r'\\x[0-9a-fA-F]{2}', Other.Literal.Hex),
+            (r'\\u[0-9a-fA-F]{4}', Other.Literal.Unicode),
+            (r'\\U[0-9a-fA-F]{8}', Other.Literal.LongUnicode),
             (r'\\[\[\]]', Other.Literal.Bracket),
             (r'\\[()]', Other.Literal.Paren),
             (r'\\n', Other.Newline),
