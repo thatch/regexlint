@@ -15,6 +15,8 @@
 import sys
 import weakref
 
+from regexlint.util import *
+
 from pygments.lexer import RegexLexer, include, using, bygroups
 from pygments.token import Other
 
@@ -24,8 +26,6 @@ from pygments.token import Other
 
 PROGRESSION = Other.Progression
 ALTERNATION = Other.Alternation
-REPETITON = Other.Repetition
-CHARRANGE = Other.CharRange
 
 class Node(object):
     def __init__(self, t, start=None, data=None):
@@ -298,26 +298,6 @@ def charclass(c):
         return 'lower'
     else:
         return 'other'
-
-def fmttree(t):
-    if not hasattr(t, 'children'):
-        return [repr(t)]
-
-    r = []
-    r.append('<%s type=%r data=%r>' % (t.__class__.__name__, t.type, t.data))
-    for c in t.children:
-        r.extend('  ' + f for f in fmttree(c))
-    return r
-
-def width(tok):
-    """Returns whether the given token type might consume characters."""
-    if (tok in (Other.Directive,
-                Other.Open.Lookahead, Other.Open.NegativeLookahead,
-                Other.Open.NegativeLookbehind, Other.Open.Lookbehind,
-                Other.Comment) or (tok in Other.Anchor)):
-        return False
-    else:
-        return True
 
 def main(args):
     if not args:

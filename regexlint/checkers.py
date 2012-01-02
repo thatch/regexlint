@@ -15,18 +15,7 @@
 import sys
 import logging
 from regexlint.parser import *
-
-# no nulls in regex (per docs)
-# no funny literals (use \xnn)
-# charclass range only on alpha
-# no empty alternation
-# no alternation with out of order prefix
-
-def _has_end_anchor(reg):
-    if not isinstance(reg, Node):
-        return False
-
-    return any(_has_end_anchor(s) for s in reg.alternations)
+from regexlint.util import *
 
 
 def check_no_nulls(reg, errs):
@@ -203,75 +192,6 @@ def bygroups_check_no_capture_group_in_repetition(reg, errs, desired_number):
                 errs.append((num, level, capture.start, msg))
             parent = parent.parent()
 
-def get_alternation_possibilities(alt):
-    """
-    alt is the 2d list, i.e. [['a'], ['a', 'b']]
-    """
-    for i in alt:
-        for j in _alternation_helper(i):
-            yield j
-
-def _alternation_helper(i):
-    if not i:
-        yield ''
-        return
-
-    if isinstance(i[0], Node):
-        # BAH
-        raise NotImplementedError("Can't handle alternations with Nodes")
-    elif isinstance(i[0], CharRange):
-        # BAH
-        raise NotImplementedError("Can't handle alternations with CharRange")
-    else:
-        # a literal, I hope!
-        for j in _alternation_helper(i[1:]):
-            yield i[0][1] + j
-
-
-def find_all(first, second=None):
-    """Finds all descendants (inorder) of first, including itself.  If second
-    is provided, stops when it is reached."""
-    regex = first
-    while regex and regex is not second:
-        yield regex
-        regex = regex.next()
-
-def find_all_by_type(regex_root, t):
-    for regex in find_all(regex_root):
-        if regex.type in t:
-            yield regex
-
-def between(first, second):
-    """Yields all nodes between first and second, not including either
-    endpoint.  The special first value None means to start at the beginning,
-    not including the root."""
-    if first is None:
-        first = second
-        while first.parent():
-            first = first.parent()
-        first = first.children[0]
-    else:
-        first = first.next_no_children()
-
-    it = find_all(first, second)
-    for i in it:
-        yield i
-
-def find_bad_between(first, second, fn):
-    """Finds a node in between(first, second) where fn returns True.  If fn
-    returns False, a node won't be descended. """
-    good_obj = None
-    for j in between(first, second):
-        #print "Intermediate", j, j.type
-        if good_obj and j.is_descentant_of(good_obj):
-            pass
-        else:
-            v = fn(j)
-            if v == True:
-                return j
-            elif v == False:
-                good_obj = j
-            # else keep going
 
 def run_all_checkers(regex, expected_groups=None):
     errs = []
@@ -288,10 +208,6 @@ def run_all_checkers(regex, expected_groups=None):
             except Exception, e:
                 errs.append(('999', logging.ERROR, 0, "Checker %s encountered error parsing: %s" % (f, repr(e))))
     return errs
-
-def has_width(node):
-    # returns True/False
-    return width(node.type) > 0
 
 def main(args):
     if not args:
