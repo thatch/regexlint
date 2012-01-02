@@ -109,3 +109,17 @@ class CheckersTests(TestCase):
         print '\n'.join(fmttree(r))
         errs = run_all_checkers(r)
         self.assertEquals(len(errs), 2)
+
+    def test_manual_overlap_success(self):
+        r = Regex().get_parse_tree(r'(a)?(b)')
+        print '\n'.join(fmttree(r))
+        errs = []
+        manual_overlap(r, errs, -1)
+        self.assertEquals(len(errs), 0)
+
+    def test_manual_overlap_fail(self):
+        r = Regex().get_parse_tree(r'z(a)?z(b)z')
+        print '\n'.join(fmttree(r))
+        errs = []
+        manual_overlap(r, errs, -1)
+        self.assertEquals(len(errs), 3)

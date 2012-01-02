@@ -142,6 +142,8 @@ def manual_overlap(reg, errs, desired_number):
         if i.start != prev_end:
             errs.append((num, level, i.start, msg))
         prev_end = i.end
+        if i._parent().type is Other.Repetition:
+            prev_end += len(i._parent().data)
     if prev_end != reg.end:
         errs.append((num, level, prev_end, msg))
 
