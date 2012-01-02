@@ -30,8 +30,17 @@ def import_mod(m):
     return mod
 
 def main(argv):
+    import optparse
+    o = optparse.OptionParser()
+    o.add_option('--min_level',
+                 help='Min level to print (logging constant names like ERROR)',
+                 default='ERROR')
+    opts, args = o.parse_args(argv)
+
+    min_level = getattr(logging, opts.min_level)
+
     # currently just a list of module names.
-    for module in argv:
+    for module in args:
         if ':' in module:
             module, cls = module.split(':')
         else:
@@ -46,13 +55,13 @@ def main(argv):
             else:
                 lexers = mod.__dict__.keys()
 
-        check_lexers(mod, lexers)
+        check_lexers(mod, lexers, min_level=min_level)
 
-def check_lexers(mod, lexer_names):
+def check_lexers(mod, lexer_names, min_level):
     for k in lexer_names:
         v = getattr(mod, k)
         if hasattr(v, '__bases__') and issubclass(v, RegexLexer) and v.tokens:
-            check_lexer(k, v, mod.__file__)
+            check_lexer(k, v, mod.__file__, min_level)
 
 def shorten(s):
     if len(s) < 76:
@@ -65,7 +74,7 @@ def remove_error(errs, *nums):
         if errs[i][0] in nums:
             del errs[i]
 
-def check_lexer(lexer_name, cls, mod_path):
+def check_lexer(lexer_name, cls, mod_path, min_level):
     #print lexer_name
     #print cls().tokens
     has_errors = False
@@ -105,13 +114,14 @@ def check_lexer(lexer_name, cls, mod_path):
                 has_errors = True
                 #print "Errors in", lexer_name, state, "pattern", i
                 for num, severity, pos1, text in errs:
+                    if severity < min_level: continue
                     foo = find_offending_line(mod_path, lexer_name, state, i, pos1)
                     if foo:
                         line = 'L' + str(foo[0])
                     else:
                         line = 'pat#' + str(i+1)
                     print '%s%s:%s:%s:%s: %s' % (
-                        (severity >= logging.ERROR and 'E' or 'W'), num,
+                        logging.getLevelName(severity)[0], num,
                         lexer_name, state, line, text)
                     if foo:
                         mark(*foo)
