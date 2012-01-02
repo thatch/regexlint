@@ -157,3 +157,20 @@ class CheckersTests(TestCase):
         manual_overlap(r, errs, -1)
         print errs
         self.assertEquals(len(errs), 0)
+
+    def test_capture_group_in_repetition(self):
+        r = Regex().get_parse_tree(r'(a)+((b)|c)*')
+        print '\n'.join(fmttree(r))
+        errs = []
+        check_no_capture_group_in_repetition(r, errs)
+        print errs
+        self.assertEquals(len(errs), 3)
+
+    def test_no_capture_group_in_repetition(self):
+        # '?' is special-cased as being an okay repetition.
+        r = Regex().get_parse_tree(r'(a)?(b)')
+        print '\n'.join(fmttree(r))
+        errs = []
+        check_no_capture_group_in_repetition(r, errs)
+        print errs
+        self.assertEquals(len(errs), 0)

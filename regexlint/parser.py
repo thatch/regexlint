@@ -269,7 +269,7 @@ class Regex(RegexLexer):
                     open_stack[-1] = Node(t=PROGRESSION, start=i+len(data))
             elif ttype in Other.Repetition:
                 c = open_stack[-1].children.pop()
-                n = Node(t=REPETITON, data=data, start=c.start)
+                n = Node(t=ttype, data=data, start=c.start)
                 n.add_child(c)
                 n.close(i, data)
                 open_stack[-1].add_child(n)

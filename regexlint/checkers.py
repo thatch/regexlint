@@ -175,6 +175,18 @@ def manual_overlap(reg, errs, desired_number):
         if j:
             errs.append((num, level, j.start, msg))
 
+def check_no_capture_group_in_repetition(reg, errs):
+    num = '109'
+    level = logging.ERROR
+    msg = 'Capture group should not be within a repetition'
+    for capture in find_all_by_type(reg, Other.Open.Capturing):
+        parent = capture.parent()
+        while parent:
+            # Question works in Pygments at the moment, but is subject to change.
+            if (parent.type in Other.Repetition and
+                parent.type is not Other.Repetition.Question):
+                errs.append((num, level, capture.start, msg))
+            parent = parent.parent()
 
 def get_alternation_possibilities(alt):
     """
