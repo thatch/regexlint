@@ -177,7 +177,7 @@ def bygroups_check_overlap(reg, errs, desired_number):
                     errs.append((num, level, j.start, msg))
             else:
                 #print "Boring", i.start, prev_end
-                errs.append((num, level, prev_end, msg))
+                errs.append((num, level, i.start, msg))
 
         prev_end = i.end
         prev = i
