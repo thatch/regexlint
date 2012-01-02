@@ -21,7 +21,7 @@ import logging
 from pygments.lexer import RegexLexer, bygroups
 from pygments.token import Token
 from regexlint import Regex, run_all_checkers
-from regexlint.indicator import find_offending_line, mark
+from regexlint.indicator import find_offending_line, mark, find_substr_pos
 
 def import_mod(m):
     mod = __import__(m)
@@ -63,11 +63,22 @@ def check_lexers(mod, lexer_names, min_level):
         if hasattr(v, '__bases__') and issubclass(v, RegexLexer) and v.tokens:
             check_lexer(k, v, mod.__file__, min_level)
 
-def shorten(s):
-    if len(s) < 76:
-        return repr(s)
-    else:
-        return repr(s)[:72] + '...'
+def shorten(text, start, end):
+    if len(text) < 76:
+        return (text, start, end)
+
+    start_cut = max(0, start - 36)
+    end_cut = min(len(text), start + 36)
+    cut_text = text[start_cut:end_cut]
+    start -= start_cut
+    end -= start_cut
+    if start_cut != 0:
+        cut_text = '...' + cut_text
+        start += 3
+        end += 3
+    if end_cut != len(text):
+        cut_text += '...'
+    return (cut_text, start, end)
 
 def remove_error(errs, *nums):
     for i in range(len(errs)-1, -1, -1):
@@ -126,7 +137,12 @@ def check_lexer(lexer_name, cls, mod_path, min_level):
                     if foo:
                         mark(*foo)
                     else:
-                        print 'Y  ' + shorten(pat[0])
+                        # Substract one for closing quote
+                        start = len(repr(pat[0][:pos1])) - 1
+                        end = len(repr(pat[0][:pos1+1])) - 1
+                        assert end > start
+                        text, start, end = shorten(repr(pat[0]), start, end)
+                        mark(-1, start, end, text)
     if not has_errors:
         print lexer_name, "OK"
 
