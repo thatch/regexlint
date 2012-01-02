@@ -125,7 +125,7 @@ def check_prefix_ordering(reg, errs):
             t = ''.join(x.data for x in i.children)
             #print "Check", repr(t), repr(prev)
             if prev is not None and t.startswith(prev):
-                errs.append((num, level, n.start, msg % (prev, t)))
+                errs.append((num, level, i.start, msg % (prev, t)))
                 break
             prev = t
 

@@ -58,6 +58,16 @@ class CheckersTests(TestCase):
         check_prefix_ordering(r, errs)
         self.assertEquals(len(errs), 1)
 
+    def test_out_of_order_alternation_location(self):
+        r = Regex().get_parse_tree(r'(foo|bar|@|@@)')
+        print '\n'.join(fmttree(r))
+        errs = []
+        check_prefix_ordering(r, errs)
+        self.assertEquals(len(errs), 1)
+        # location of the second one.
+        self.assertEquals(errs[0][2], 11)
+
+
     def test_out_of_order_alternation_with_anchor_after(self):
         r = Regex().get_parse_tree(r'(a|ab)\b')
         print '\n'.join(fmttree(r))
