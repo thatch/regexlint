@@ -157,17 +157,9 @@ def manual_overlap(reg, errs, desired_number):
                 #print "Have prev"
                 # This code allows a parent to be ok'd, and all children to be
                 # ignored (without having to change between()'s code)
-                ok_obj = None
-                for j in between(prev, i):
-                    print "Intermediate", j, j.type
-                    if ok_obj and j.is_descentant_of(ok_obj):
-                        pass
-                    elif not width(j.type):
-                        ok_obj = j
-                        pass
-                    else:
-                        errs.append((num, level, j.start, msg))
-                        break
+                j = find_bad_between(prev, i, has_width)
+                if j:
+                    errs.append((num, level, j.start, msg))
             else:
                 #print "Boring", i.start, prev_end
                 errs.append((num, level, prev_end, msg))
@@ -179,17 +171,9 @@ def manual_overlap(reg, errs, desired_number):
         #print "End check", prev
         # This code allows a parent to be ok'd, and all children to be
         # ignored (without having to change between()'s code)
-        ok_obj = None
-        for j in between(prev, None):
-            print "Intermediate", j, j.type
-            if ok_obj and j.is_descentant_of(ok_obj):
-                pass
-            elif not width(j.type):
-                ok_obj = j
-                pass
-            else:
-                errs.append((num, level, j.start, msg))
-                break
+        j = find_bad_between(prev, None, has_width)
+        if j:
+            errs.append((num, level, j.start, msg))
 
 
 def get_alternation_possibilities(alt):
@@ -246,6 +230,22 @@ def between(first, second):
     for i in it:
         yield i
 
+def find_bad_between(first, second, fn):
+    """Finds a node in between(first, second) where fn returns True.  If fn
+    returns False, a node won't be descended. """
+    good_obj = None
+    for j in between(first, second):
+        #print "Intermediate", j, j.type
+        if good_obj and j.is_descentant_of(good_obj):
+            pass
+        else:
+            v = fn(j)
+            if v == True:
+                return j
+            elif v == False:
+                good_obj = j
+            # else keep going
+
 def run_all_checkers(regex):
     errs = []
     for k, f in globals().iteritems():
@@ -256,6 +256,10 @@ def run_all_checkers(regex):
             except Exception, e:
                 errs.append(('999', logging.ERROR, 0, "Checker %s encountered error parsing: %s" % (f, repr(e))))
     return errs
+
+def has_width(node):
+    # returns True/False
+    return width(node.type) > 0
 
 def main(args):
     if not args:
