@@ -58,6 +58,10 @@ class Node(object):
                 return p()._next()
             p = p()._parent
 
+    def parent(self):
+        if self._parent:
+            return self._parent()
+
     def __repr__(self):
         return '<%s type=%r data=%r %r>' % (self.__class__.__name__,
                                             self.type, self.data, self.children)

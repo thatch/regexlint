@@ -57,8 +57,8 @@ def check_no_empty_alternations(reg, errs):
     level = logging.ERROR
     msg = 'Empty string allowed in alternation starting at position %d, use *'
     for n in find_all_by_type(reg, Other.Progression):
-        if (not n.children and n._parent and
-            n._parent().type is Other.Alternation):
+        if (not n.children and n.parent() and
+            n.parent().type is Other.Alternation):
             errs.append((num, level, n.start or 0, msg % (n.start or 0)))
 
 def check_charclass_homogeneous_ranges(reg, errs):
@@ -142,8 +142,8 @@ def manual_overlap(reg, errs, desired_number):
         if i.start != prev_end:
             errs.append((num, level, i.start, msg))
         prev_end = i.end
-        if i._parent().type is Other.Repetition:
-            prev_end += len(i._parent().data)
+        if i.parent().type is Other.Repetition:
+            prev_end += len(i.parent().data)
     if prev_end != reg.end:
         errs.append((num, level, prev_end, msg))
 
