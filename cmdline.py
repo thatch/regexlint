@@ -22,7 +22,6 @@ from pygments.lexer import RegexLexer, bygroups
 from pygments.token import Token
 from regexlint import Regex, run_all_checkers
 from regexlint.indicator import find_offending_line, mark
-from regexlint.checkers import manual_toknum, manual_overlap
 
 def import_mod(m):
     mod = __import__(m)
@@ -73,6 +72,8 @@ def check_lexer(lexer_name, cls, mod_path):
     if cls.flags & re.VERBOSE:
         print "GRR", lexer_name, "uses verbose mode"
         return
+
+    bygroups_callback = bygroups(1).func_code
     for state, pats in cls().tokens.iteritems():
         for i, pat in enumerate(pats):
             #print repr(pat[0])
@@ -82,7 +83,15 @@ def check_lexer(lexer_name, cls, mod_path):
                 print pat[0], cls
                 raise
             # TODO check for verbose mode here.
-            errs = run_all_checkers(reg)
+            # Special problem: display an error if count of args to
+            # bygroups(...) doesn't match the number of capture groups
+            bygroups_callback = bygroups(1).func_code
+            if callable(pat[1]) and pat[1].func_code is bygroups_callback:
+                num_groups = len(pat[1].__closure__[0].cell_contents)
+            else:
+                num_groups = None
+
+            errs = run_all_checkers(reg, num_groups)
             # Note, things like '#pop' and 'next-state' get a pass on this, as
             # do callback functions, since they are mostly used for advanced
             # features in indent-dependent languages.
@@ -90,17 +99,6 @@ def check_lexer(lexer_name, cls, mod_path):
                 if re.compile(pat[0]).match(''):
                     errs.append(('999', logging.ERROR, 'Matches empty string'))
                 #remove_error(errs, '103')
-
-
-            # Special problem: display an error if count of args to
-            # bygroups(...) doesn't match the number of capture groups
-            bygroups_callback = bygroups(1).func_code
-            if callable(pat[1]) and pat[1].func_code is bygroups_callback:
-                num_groups = len(pat[1].__closure__[0].cell_contents)
-                manual_toknum(reg, errs, num_groups)
-                # Also make sure that all uses are of the form
-                # (foo)(bar), not (foo) (bar) or (foo(bar))
-                manual_overlap(reg, errs, num_groups)
 
             errs.sort(key=lambda k: (k[1], k[0]))
             if errs:

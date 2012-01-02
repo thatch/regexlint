@@ -136,35 +136,35 @@ class CheckersTests(TestCase):
         errs = run_all_checkers(r)
         self.assertEquals(len(errs), 2)
 
-    def test_manual_overlap_success(self):
+    def test_bygroups_check_overlap_success(self):
         r = Regex().get_parse_tree(r'(a)?(b)')
         print '\n'.join(fmttree(r))
         errs = []
-        manual_overlap(r, errs, -1)
+        bygroups_check_overlap(r, errs, -1)
         self.assertEquals(len(errs), 0)
 
-    def test_manual_overlap_fail(self):
+    def test_bygroups_check_overlap_fail(self):
         r = Regex().get_parse_tree(r'z(a)?z(b)z')
         print '\n'.join(fmttree(r))
         errs = []
-        manual_overlap(r, errs, -1)
+        bygroups_check_overlap(r, errs, -1)
         print errs
         self.assertEquals(len(errs), 3)
         # 0 5 9
 
-    def test_manual_overlap_fail2(self):
+    def test_bygroups_check_overlap_fail2(self):
         r = Regex().get_parse_tree(r'\b(a)$')
         print '\n'.join(fmttree(r))
         errs = []
-        manual_overlap(r, errs, -1)
+        bygroups_check_overlap(r, errs, -1)
         print errs
         self.assertEquals(len(errs), 0)
 
-    def test_manual_overlap_lookaround_ok(self):
+    def test_bygroups_check_overlap_lookaround_ok(self):
         r = Regex().get_parse_tree(r'(?<!\.)(Class|Structure|Enum)(\s+)')
         print '\n'.join(fmttree(r))
         errs = []
-        manual_overlap(r, errs, -1)
+        bygroups_check_overlap(r, errs, -1)
         print errs
         self.assertEquals(len(errs), 0)
 
@@ -172,7 +172,7 @@ class CheckersTests(TestCase):
         r = Regex().get_parse_tree(r'(a)+((b)|c)*')
         print '\n'.join(fmttree(r))
         errs = []
-        check_no_capture_group_in_repetition(r, errs)
+        bygroups_check_no_capture_group_in_repetition(r, errs, 1)
         print errs
         self.assertEquals(len(errs), 3)
 
@@ -181,7 +181,7 @@ class CheckersTests(TestCase):
         r = Regex().get_parse_tree(r'(a)?(b)')
         print '\n'.join(fmttree(r))
         errs = []
-        check_no_capture_group_in_repetition(r, errs)
+        bygroups_check_no_capture_group_in_repetition(r, errs, 1)
         print errs
         self.assertEquals(len(errs), 0)
 

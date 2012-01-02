@@ -137,7 +137,7 @@ def check_no_python_named_capture_groups(reg, errs):
         errs.append((num, level, n.start, msg))
         break
 
-def manual_toknum(reg, errs, desired_number):
+def bygroups_check_toknum(reg, errs, desired_number):
     num = '107'
     level = logging.ERROR
     msg = 'Wrong number of groups(%d) for bygroups(%d)'
@@ -145,7 +145,7 @@ def manual_toknum(reg, errs, desired_number):
     if n != desired_number:
         errs.append((num, level, 0, msg % (n, desired_number)))
 
-def manual_overlap(reg, errs, desired_number):
+def bygroups_check_overlap(reg, errs, desired_number):
     num = '108'
     level = logging.ERROR
     msg = 'Nested/gapped capture groups but using bygroups'
@@ -186,7 +186,7 @@ def manual_overlap(reg, errs, desired_number):
         if j:
             errs.append((num, level, j.start, msg))
 
-def check_no_capture_group_in_repetition(reg, errs):
+def bygroups_check_no_capture_group_in_repetition(reg, errs, desired_number):
     num = '109'
     level = logging.ERROR
     msg = 'Capture group should not be within a repetition'
@@ -269,13 +269,18 @@ def find_bad_between(first, second, fn):
                 good_obj = j
             # else keep going
 
-def run_all_checkers(regex):
+def run_all_checkers(regex, expected_groups=None):
     errs = []
     for k, f in globals().iteritems():
         if k.startswith('check_'):
             #print 'running', k
             try:
                 f(regex, errs)
+            except Exception, e:
+                errs.append(('999', logging.ERROR, 0, "Checker %s encountered error parsing: %s" % (f, repr(e))))
+        elif k.startswith('bygroups_check_') and expected_groups:
+            try:
+                f(regex, errs, expected_groups)
             except Exception, e:
                 errs.append(('999', logging.ERROR, 0, "Checker %s encountered error parsing: %s" % (f, repr(e))))
     return errs
