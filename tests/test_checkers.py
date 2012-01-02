@@ -51,6 +51,22 @@ class CheckersTests(TestCase):
         check_prefix_ordering(r, errs)
         self.assertEquals(len(errs), 1)
 
+    def test_out_of_order_alternation_longer(self):
+        r = Regex().get_parse_tree(r'(a|ab|c)')
+        print '\n'.join(fmttree(r))
+        errs = []
+        check_prefix_ordering(r, errs)
+        self.assertEquals(len(errs), 1)
+
+    def test_out_of_order_alternation_with_anchor_after(self):
+        r = Regex().get_parse_tree(r'(a|ab)\b')
+        print '\n'.join(fmttree(r))
+        errs = []
+        check_prefix_ordering(r, errs)
+        print errs
+        self.assertEquals(len(errs), 0)
+
+
     def test_out_of_order_crazy_complicated(self):
         r = Regex().get_parse_tree(r'''(!=|#|&&|&|\(|\)|\*|\+|,|-|-\.)''')
         #|->|\.|\.\.|::|:=|:>|:|;;|;|<|<-|=|>|>]|>}|\?|\?\?|\[|\[<|\[>|\[\||]|_|`|{|{<|\||\|]|}|~)''')
@@ -122,4 +138,22 @@ class CheckersTests(TestCase):
         print '\n'.join(fmttree(r))
         errs = []
         manual_overlap(r, errs, -1)
+        print errs
         self.assertEquals(len(errs), 3)
+        # 0 5 9
+
+    def test_manual_overlap_fail2(self):
+        r = Regex().get_parse_tree(r'\b(a)$')
+        print '\n'.join(fmttree(r))
+        errs = []
+        manual_overlap(r, errs, -1)
+        print errs
+        self.assertEquals(len(errs), 0)
+
+    def test_manual_overlap_lookaround_ok(self):
+        r = Regex().get_parse_tree(r'(?<!\.)(Class|Structure|Enum)(\s+)')
+        print '\n'.join(fmttree(r))
+        errs = []
+        manual_overlap(r, errs, -1)
+        print errs
+        self.assertEquals(len(errs), 0)
