@@ -74,10 +74,10 @@ def check_charclass_homogeneous_ranges(reg, errs):
                     assert len(p.a.data) == 1
                     assert len(p.b.data) == 1
                     if charclass(p.a.data) != charclass(p.b.data):
-                        errs.append((num, level, 0, msg % c.start))
+                        errs.append((num, level, p.a.start, msg % p.a.start))
                     # only positive ranges are allowed.
                     if ord(p.a.data) >= ord(p.b.data):
-                        errs.append((num, level, 0, msg2 % c.start))
+                        errs.append((num, level, p.a.start, msg2 % p.a.start))
                 elif p.a.type not in Other.Literal and p.b.type not in Other.Literal:
                     # punctuation range?
                     errs.append((num, level, 0, msg % c.start))
