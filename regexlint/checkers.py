@@ -66,7 +66,7 @@ def check_charclass_homogeneous_ranges(reg, errs):
     for c in find_all_by_type(reg, Other.CharClass):
         for p in c.chars:
             if isinstance(p, CharRange):
-                if p.a.type in Other.Literal and p.b.type in Other.Literal:
+                if p.a.type is Other.Literal and p.b.type is Other.Literal:
                     # should be single character data, can compare
                     assert len(p.a.data) == 1
                     assert len(p.b.data) == 1
