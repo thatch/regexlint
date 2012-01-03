@@ -139,6 +139,8 @@ def bygroups_check_toknum(reg, errs, desired_number):
     if n < desired_number:
         errs.append((num, level, 0, msg % (n, desired_number)))
     elif n > desired_number:
+        # If there are nested groups anywhere but the last, check_overlap will
+        # find them.  This checker doesn't look at start/stop positions.
         errs.append((num, logging.INFO, 0,
                      (msg % (n, desired_number)) + ' (extra groups)'))
 
@@ -148,7 +150,7 @@ def bygroups_check_overlap(reg, errs, desired_number):
     msg = 'Nested/gapped capture groups but using bygroups'
     n = list(find_all_by_type(reg, Other.Open.Capturing))
     if not n:
-        # manual_toknum should already complain about this case.
+        # bygroups_check_toknum should already complain about this case.
         return
     # Ignore re.VERBOSE modes for now.
     directives = list(find_all_by_type(reg, Other.Directive))
