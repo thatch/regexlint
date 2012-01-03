@@ -263,3 +263,26 @@ class CheckersTests(TestCase):
         print errs
         self.assertEquals(len(errs), 1)
         self.assertEquals(('111', logging.WARNING, 1), errs[0][:3])
+
+    def test_toknum_good(self):
+        r = Regex().get_parse_tree('(a)(b)')
+        errs = []
+        bygroups_check_toknum(r, errs, 2)
+        print errs
+        self.assertEquals(len(errs), 0)
+
+    def test_toknum_too_few(self):
+        r = Regex().get_parse_tree('(a)')
+        errs = []
+        bygroups_check_toknum(r, errs, 2)
+        print errs
+        self.assertEquals(len(errs), 1)
+        self.assertEquals(('107', logging.ERROR, 0), errs[0][:3])
+
+    def test_toknum_too_many(self):
+        r = Regex().get_parse_tree('((a)b)')
+        errs = []
+        bygroups_check_toknum(r, errs, 1)
+        print errs
+        self.assertEquals(len(errs), 1)
+        self.assertEquals(('107', logging.INFO, 0), errs[0][:3])
