@@ -119,6 +119,44 @@ class CheckersTests(TestCase):
         print errs
         self.assertEquals(len(errs), 0)
 
+    def test_dash_begins_charclass(self):
+        r = Regex().get_parse_tree(r'[-_]')
+        print '\n'.join(fmttree(r))
+        print r.children[0].chars
+        errs = []
+        check_charclass_homogeneous_ranges(r, errs)
+        print errs
+        self.assertEquals(len(errs), 0)
+        self.assertEquals(len(r.children[0].chars), 2)
+        self.assertEquals(r.children[0].chars[0].data, '-')
+        self.assertEquals(r.children[0].chars[1].data, '_')
+
+    def test_dash_ends_charclass(self):
+        r = Regex().get_parse_tree(r'[_-]')
+        print '\n'.join(fmttree(r))
+        print r.children[0].chars
+        errs = []
+        check_charclass_homogeneous_ranges(r, errs)
+        print errs
+        self.assertEquals(len(errs), 0)
+        self.assertEquals(len(r.children[0].chars), 2)
+        self.assertEquals(r.children[0].chars[0].data, '_')
+        self.assertEquals(r.children[0].chars[1].data, '-')
+
+    def test_dash_after_range_charclass(self):
+        r = Regex().get_parse_tree(r'[0-9-_]')
+        print '\n'.join(fmttree(r))
+        print r.children[0].chars
+        errs = []
+        check_charclass_homogeneous_ranges(r, errs)
+        print errs
+        self.assertEquals(len(errs), 0)
+        self.assertEquals(len(r.children[0].chars), 3)
+        self.assertEquals(r.children[0].chars[0].a.data, '0')
+        self.assertEquals(r.children[0].chars[0].b.data, '9')
+        self.assertEquals(r.children[0].chars[1].data, '-')
+        self.assertEquals(r.children[0].chars[2].data, '_')
+
     def test_python_named_capture_groups(self):
         r = Regex().get_parse_tree(r'(?P<name>x)')
         print '\n'.join(fmttree(r))

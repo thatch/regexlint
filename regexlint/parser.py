@@ -108,14 +108,15 @@ class CharClass(Node):
                 # caret is special only when the first char
                 self.negated = True
             elif c == '-':
-                # dash is special only when not the first or last char.
-                is_range = bool(n)
-                if is_range:
+                # dash is special only when it's the first char or directly
+                # follows another range (say, [0-9-x]).
+                next_child = None
+                if n and not isinstance(n[-1], CharRange):
                     try:
                         next_child = it.next()
                     except StopIteration:
-                        is_range = False
-                if is_range:
+                        next_child = None
+                if next_child:
                     n.append(CharRange(n.pop(), next_child))
                 else:
                     n.append(child)
