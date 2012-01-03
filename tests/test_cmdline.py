@@ -25,6 +25,19 @@ class CmdlineTests(TestCase):
         self.assertEquals(golden, myrepr(eval(golden)))
 
     def test_myrepr_unicode(self):
-        golden = r"u'text\u1234text\U00101234text'"
+        golden = r"u'text\u1234text'"
         print repr(eval(golden))
         self.assertEquals(golden, myrepr(eval(golden)))
+
+    def test_myrepr_wide_unicode(self):
+        try:
+            unichr(0x100001)
+        except:
+            # Python build doesn't handle 32-bit unicode
+            # TODO: say that the test was skipped
+            pass
+        else:
+            # Python build handles 32-bit unicode
+            golden = r"u'text\U00101234text'"
+            print repr(eval(golden))
+            self.assertEquals(golden, myrepr(eval(golden)))
