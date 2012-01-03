@@ -233,6 +233,38 @@ class CheckersTests(TestCase):
         print errs
         self.assertEquals(len(errs), 0)
 
+    def test_bygroups_check_overlap_descending(self):
+        r = Regex().get_parse_tree(r'(?:^|\b)(foo)')
+        print '\n'.join(fmttree(r))
+        errs = []
+        bygroups_check_overlap(r, errs, 1)
+        print errs
+        self.assertEquals(len(errs), 0)
+
+    def test_bygroups_check_overlap_descending(self):
+        r = Regex().get_parse_tree(r'(?:^|xx)(foo)')
+        print '\n'.join(fmttree(r))
+        errs = []
+        bygroups_check_overlap(r, errs, 1)
+        print errs
+        self.assertEquals(len(errs), 1)
+
+    def test_bygroups_check_overlap_descending_with_capture(self):
+        r = Regex().get_parse_tree(r'(?:([A-Za-z_][A-Za-z0-9_]*)(\.))?([A-Za-z_][A-Za-z0-9_]*)')
+        print '\n'.join(fmttree(r))
+        errs = []
+        bygroups_check_overlap(r, errs, 3)
+        print errs
+        self.assertEquals(len(errs), 0)
+
+    def test_bygroups_check_overlap_descending_with_capture_and_gap(self):
+        r = Regex().get_parse_tree(r'(?:([A-Za-z_][A-Za-z0-9_]*)x(\.))?([A-Za-z_][A-Za-z0-9_]*)')
+        print '\n'.join(fmttree(r))
+        errs = []
+        bygroups_check_overlap(r, errs, 3)
+        print errs
+        self.assertEquals(len(errs), 1)
+
     def test_capture_group_in_repetition(self):
         r = Regex().get_parse_tree(r'(a)+((b)|c)*')
         print '\n'.join(fmttree(r))

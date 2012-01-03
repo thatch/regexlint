@@ -85,8 +85,8 @@ def find_bad_between(first, second, fn):
             # else keep going
 
 def has_width(node):
-    # returns True/False
-    return width(node.type) > 0
+    # returns True/False/None
+    return width(node.type)
 
 def fmttree(t):
     if not hasattr(t, 'children'):
@@ -105,5 +105,8 @@ def width(tok):
                 Other.Open.NegativeLookbehind, Other.Open.Lookbehind,
                 Other.Comment) or (tok in Other.Anchor)):
         return False
+    elif (tok in Other.Open or tok in Other.Alternation or tok in
+          Other.Progression or tok in Other.Repetition):
+        return None # unsure if it has width, must descend
     else:
         return True
