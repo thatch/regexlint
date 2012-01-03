@@ -34,7 +34,7 @@ def main(argv):
     o = optparse.OptionParser()
     o.add_option('--min_level',
                  help='Min level to print (logging constant names like ERROR)',
-                 default='ERROR')
+                 default='WARNING')
     opts, args = o.parse_args(argv)
 
     min_level = getattr(logging, opts.min_level)
