@@ -208,3 +208,11 @@ class CheckersTests(TestCase):
         errs = []
         check_no_bels(r, errs)
         self.assertEquals(len(errs), 1)
+
+    def test_consecutive_dots(self):
+        r = Regex().get_parse_tree('a...')
+        errs = []
+        check_no_consecutive_dots(r, errs)
+        print errs
+        self.assertEquals(len(errs), 1)
+        self.assertEquals(('111', logging.WARNING, 1), errs[0][:3])

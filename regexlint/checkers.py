@@ -205,6 +205,16 @@ def bygroups_check_no_capture_group_in_repetition(reg, errs, desired_number):
             parent = parent.parent()
 
 
+def check_no_consecutive_dots(reg, errs):
+    num = '111'
+    level = logging.WARNING
+    msg = 'Consecutive dots, use .{2} if this is intentional'
+    for x in find_all_by_type(reg, Other.Dot):
+        n = x.next_no_children()
+        if n and n.type is Other.Dot:
+            errs.append((num, level, x.start, msg))
+            break
+
 def run_all_checkers(regex, expected_groups=None):
     errs = []
     for k, f in globals().iteritems():
