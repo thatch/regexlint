@@ -3,23 +3,38 @@ Regexlint
 
 Regexlint will examine all regular expressions in an importable Pygments
 lexer, and report things that are probably not doing what you think they're
-doing.  For example, patterns like:
+doing.  For example, patterns like::
 
     (elseif|else)
 
-It can also warn about a few syntax problems, for example
+It can also warn about a few syntax problems, for example this has two
+problems -- the \s+ outside the groups, and not enough actions in bygroups::
 
     (r'(foo)\s+(bar)', bygroups(Blah)),
+
+
+Usage
+-----
+
+::
+
+    make demo
+        or
+    python2 cmdline.py pygments.lexers.web
+        or
+    python2 cmdline.py pygments.lexers.web:HtmlLexer
 
 
 Todo
 ----
 
 * Parse verbose regular expressions
-* Fix bygroups-checking to catch more errors (like ``\s`` above outside
-  capturing)
-* Fix alternation-inversion-checking to understand anchors
-* Add lots of checks for character classes
+* Improve checks for character classes
+* Add a third case for the width() function, that will descend into the node
+  yet not mark as good or bad (e.g. '(?:')
+* Write the alternation expander, so that ([ax]|a[bc]) fails the alternation
+  order checks
+* Make more general than just for Pygments
 
 
 License
