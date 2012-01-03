@@ -140,6 +140,10 @@ def check_lexer(lexer_name, cls, mod_path, min_level):
                         # Substract one for closing quote
                         start = len(repr(pat[0][:pos1])) - 1
                         end = len(repr(pat[0][:pos1+1])) - 1
+                        if start == end:
+                            # This handles the case where pos1 points to the end of
+                            # the string. Regex "|" with pos1 = 1.
+                            end += 1
                         assert end > start
                         text, start, end = shorten(repr(pat[0]), start, end)
                         mark(-1, start, end, text)
