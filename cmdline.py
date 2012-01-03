@@ -80,6 +80,30 @@ def shorten(text, start, end):
         cut_text += '...'
     return (cut_text, start, end)
 
+def myrepr(s):
+    special = {
+        '\n': '\\n',
+        '\t': '\\t',
+        '\\': '\\\\',
+        '\'': '\\\'',
+    }
+    rep = ['\'']
+    if isinstance(s, unicode):
+        rep.insert(0, 'u')
+    for char in s:
+        if char in special:
+            rep.append(special[char])
+        elif isinstance(s, unicode) and ord(char) > 0xFFFF:
+            rep.append('\\U%08x' % ord(char))
+        elif isinstance(s, unicode) and ord(char) > 126:
+            rep.append('\\u%04x' % ord(char))
+        elif ord(char) < 32 or ord(char) > 126:
+            rep.append('\\x%02x' % ord(char))
+        else:
+            rep.append(char)
+    rep.append('\'')
+    return ''.join(rep)
+
 def remove_error(errs, *nums):
     for i in range(len(errs)-1, -1, -1):
         if errs[i][0] in nums:
@@ -138,8 +162,8 @@ def check_lexer(lexer_name, cls, mod_path, min_level):
                         mark(*foo)
                     else:
                         # Substract one for closing quote
-                        start = len(repr(pat[0][:pos1])) - 1
-                        end = len(repr(pat[0][:pos1+1])) - 1
+                        start = len(myrepr(pat[0][:pos1])) - 1
+                        end = len(myrepr(pat[0][:pos1+1])) - 1
                         if start == end:
                             # This handles the case where pos1 points to the end of
                             # the string. Regex "|" with pos1 = 1.
