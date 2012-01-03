@@ -78,6 +78,11 @@ def check_charclass_homogeneous_ranges(reg, errs):
                 elif p.a.type not in Other.Literal and p.b.type not in Other.Literal:
                     # punctuation range?
                     errs.append((num, level, p.a.start, msg % p.a.start))
+                elif (p.a.type in (Other.Literal.Unicode,
+                                   Other.Literal.LongUnicode) and
+                      p.b.type in (Other.Literal.Unicode,
+                                   Other.Literal.LongUnicode)):
+                    pass # ok
                 else:
                     # strange range.
                     errs.append((num, level, p.a.start, msg % p.a.start))

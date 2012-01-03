@@ -110,6 +110,15 @@ class CheckersTests(TestCase):
         print errs
         self.assertEquals(len(errs), 2)
 
+    def test_good_unicode_charclass(self):
+        r = Regex().get_parse_tree(r'[\u0000-\uffff]')
+        print '\n'.join(fmttree(r))
+        print r.children[0].chars
+        errs = []
+        check_charclass_homogeneous_ranges(r, errs)
+        print errs
+        self.assertEquals(len(errs), 0)
+
     def test_python_named_capture_groups(self):
         r = Regex().get_parse_tree(r'(?P<name>x)')
         print '\n'.join(fmttree(r))
