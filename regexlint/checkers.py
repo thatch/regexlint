@@ -131,8 +131,11 @@ def bygroups_check_toknum(reg, errs, desired_number):
     level = logging.ERROR
     msg = 'Wrong number of groups(%d) for bygroups(%d)'
     n = len(list(find_all_by_type(reg, Other.Open.Capturing)))
-    if n != desired_number:
+    if n < desired_number:
         errs.append((num, level, 0, msg % (n, desired_number)))
+    elif n > desired_number:
+        errs.append((num, logging.INFO, 0,
+                     (msg % (n, desired_number)) + ' (extra groups)'))
 
 def bygroups_check_overlap(reg, errs, desired_number):
     num = '108'
@@ -167,7 +170,7 @@ def bygroups_check_overlap(reg, errs, desired_number):
             if idx >= desired_number:
                 # This case is uninteresting -- bygroups ignores extra groups,
                 # so it's possible to nest within the last group.
-                errs.append((num, logging.INFO, group.start, msg))
+                errs.append((num, logging.INFO, group.start, msg + ' (extra groups)'))
                 group = prev
             else:
                 #print "Boring", group.start, prev_end
@@ -189,13 +192,16 @@ def bygroups_check_no_capture_group_in_repetition(reg, errs, desired_number):
     num = '109'
     level = logging.ERROR
     msg = 'Capture group should not be within a repetition'
-    for capture in find_all_by_type(reg, Other.Open.Capturing):
+    for idx, capture in enumerate(find_all_by_type(reg, Other.Open.Capturing)):
         parent = capture.parent()
         while parent:
             # Question works in Pygments at the moment, but is subject to change.
             if (parent.type in Other.Repetition and
                 parent.type is not Other.Repetition.Question):
-                errs.append((num, level, capture.start, msg))
+                if idx >= desired_number:
+                    errs.append((num, logging.INFO, capture.start, msg + ' (extra groups)'))
+                else:
+                    errs.append((num, level, capture.start, msg))
             parent = parent.parent()
 
 
