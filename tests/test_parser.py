@@ -15,7 +15,7 @@
 from unittest import TestCase
 from pygments.token import Other
 
-from regexlint.parser import Regex, Node, width
+from regexlint.parser import Regex, Node, width, fmttree
 from regexlint.checkers import find_all, find_all_by_type
 
 class BasicTests(TestCase):
@@ -79,3 +79,31 @@ class BasicTests(TestCase):
         l = list(find_all(r))[1:] # skip root
         self.assertEquals([True, False, False],
                           [width(i.type) for i in l])
+
+    def test_repetition_plus(self):
+        r = Regex().get_parse_tree(r'x+')
+        l = list(find_all(r))[1:] # skip root
+        self.assertEquals(2, len(l))
+        # l[0] is Repetition, l[1] is Literal(x)
+        self.assertEquals(1, l[0].min)
+        self.assertEquals(None, l[0].max)
+        self.assertEquals(True, l[0].greedy)
+
+    def test_repetition_curly1(self):
+        r = Regex().get_parse_tree(r'x{5,5}?')
+        print '\n'.join(fmttree(r))
+        l = list(find_all(r))[1:] # skip root
+        self.assertEquals(2, len(l))
+        # l[0] is Repetition, l[1] is Literal(x)
+        self.assertEquals(5, l[0].min)
+        self.assertEquals(5, l[0].max)
+        self.assertEquals(False, l[0].greedy)
+
+    def test_repetition_curly2(self):
+        r = Regex().get_parse_tree(r'x{2,5}')
+        l = list(find_all(r))[1:] # skip root
+        self.assertEquals(2, len(l))
+        # l[0] is Repetition, l[1] is Literal(x)
+        self.assertEquals(2, l[0].min)
+        self.assertEquals(5, l[0].max)
+        self.assertEquals(True, l[0].greedy)

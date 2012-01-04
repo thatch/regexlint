@@ -125,6 +125,40 @@ class CharClass(Node):
 
         self.chars = n
 
+class Repetition(Node):
+    def __init__(self, t, start=None, data=None):
+        super(Repetition, self).__init__(t, start, data)
+        self.min = None
+        self.max = None
+        self.greedy = None
+
+    def close(self, pos, data):
+        super(Repetition, self).close(pos, data)
+
+        if '*' in self.data:
+            self.min, self.max = (0, None)
+        elif '+' in self.data:
+            self.min, self.max = (1, None)
+        elif self.data[0] == '?':
+            self.min, self.max = (0, 1)
+        else:
+            t = self.data.strip('{}?') # strip curlies
+            if ',' in t:
+                a, b = t.split(',')
+                if a:
+                    self.min = int(a)
+                else:
+                    self.min = 0
+                if b:
+                    self.max = int(b)
+                else:
+                    self.max = None
+            else:
+                self.min, self.max = (int(t), int(t))
+
+        self.greedy = not (self.data.endswith('?') and self.data != '?')
+
+
 class Regex(RegexLexer):
     r"""
     This is a RegexLexer that parses python regex syntax.  The included helper
@@ -195,8 +229,8 @@ class Regex(RegexLexer):
             (r'\+', Other.Repetition.Plus),
             (r'\?\?', Other.Repetition.NongreedyQuestion),
             (r'\?', Other.Repetition.Question),
-            (r'\{\d+,(?:\d+)?\}', Other.Repetition.Curly),
-            (r'\{,\d+\}', Other.Repetition.Curly),
+            (r'\{\d+,(?:\d+)?\}\??', Other.Repetition.Curly),
+            (r'\{,?\d+\}\??', Other.Repetition.Curly),
 
         ],
         'simpleliteral': [
@@ -270,7 +304,7 @@ class Regex(RegexLexer):
                     open_stack[-1] = Node(t=PROGRESSION, start=i+len(data))
             elif ttype in Other.Repetition:
                 c = open_stack[-1].children.pop()
-                n = Node(t=ttype, data=data, start=c.start)
+                n = Repetition(t=ttype, data=data, start=c.start)
                 n.add_child(c)
                 n.close(i, data)
                 open_stack[-1].add_child(n)
