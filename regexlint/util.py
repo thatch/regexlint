@@ -110,3 +110,15 @@ def width(tok):
         return None # unsure if it has width, must descend
     else:
         return True
+
+def eval_char(c):
+    if len(c) == 1:
+        return ord(c)
+    else:
+        try:
+            return ord(eval("'%s'" % c))
+        except:
+            return ord(eval("'%s'" % c))
+    # TODO any other cases?
+
+class Break(Exception): pass

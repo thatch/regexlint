@@ -334,3 +334,54 @@ class CheckersTests(TestCase):
         print errs
         self.assertEquals(len(errs), 1)
         self.assertEquals(('112', logging.ERROR, 0), errs[0][:3])
+
+    def test_unnecessary_i_flag(self):
+        r = Regex().get_parse_tree(r'(?i).')
+        errs = []
+        check_bad_flags(r, errs)
+        print errs
+        self.assertEquals(len(errs), 1)
+        self.assertEquals(('113', logging.WARNING, 0), errs[0][:3])
+
+    def test_necessary_i_flag(self):
+        r = Regex().get_parse_tree(r'(?i)(a|b)')
+        errs = []
+        check_bad_flags(r, errs)
+        print errs
+        self.assertEquals(len(errs), 0)
+
+    def test_necessary_i_flag_in_alternation1(self):
+        r = Regex().get_parse_tree(r'(?i)[a-c]')
+        errs = []
+        check_bad_flags(r, errs)
+        print errs
+        self.assertEquals(len(errs), 0)
+
+    def test_necessary_i_flag_in_alternation2(self):
+        r = Regex().get_parse_tree(r'(?i)[a]')
+        errs = []
+        check_bad_flags(r, errs)
+        print errs
+        self.assertEquals(len(errs), 0)
+
+    def test_necessary_i_flag_in_alternation3(self):
+        r = Regex().get_parse_tree(r'(?i)[\x00-\x67]')
+        errs = []
+        check_bad_flags(r, errs)
+        print errs
+        self.assertEquals(len(errs), 0)
+
+    def test_unnecessary_m_flag(self):
+        r = Regex().get_parse_tree(r'(?m).')
+        errs = []
+        check_bad_flags(r, errs)
+        print errs
+        self.assertEquals(len(errs), 1)
+        self.assertEquals(('113', logging.WARNING, 0), errs[0][:3])
+
+    def test_necessary_i_flag(self):
+        r = Regex().get_parse_tree(r'(?m).$')
+        errs = []
+        check_bad_flags(r, errs)
+        print errs
+        self.assertEquals(len(errs), 0)

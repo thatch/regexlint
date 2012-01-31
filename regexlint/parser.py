@@ -88,6 +88,8 @@ class CharRange(object):
     def __init__(self, a, b):
         self.a = a
         self.b = b
+        self.codepoint_a = eval_char(a.data)
+        self.codepoint_b = eval_char(b.data)
 
     def __repr__(self):
         return '<%s %r-%r>' % (self.__class__.__name__, self.a, self.b)

@@ -231,6 +231,56 @@ def check_unicode_escapes(reg, errs):
     for m in r_unicode.finditer(reg.raw):
         errs.append((num, level, m.start(), msg))
 
+def check_bad_flags(reg, errs):
+    num = '113'
+    level = logging.WARNING
+    msg = 'Manually set flag %r, but do not need it'
+
+    directives = list(find_all_by_type(reg, Other.Directive))
+    # TODO flag the correct directive
+    flags = ''.join(d.data for d in directives)
+    if not flags:
+        return
+
+    if 'x' in flags:
+        # TODO See if there's bare whitespace
+        pass
+
+    if 'i' in flags:
+        # See if there are a-zA-Z
+        try:
+            for char in find_all_by_type(reg, Other.Literal):
+                if 'a' <= char.data <= 'z' or 'A' <= char.data <= 'Z':
+                    raise Break()
+
+            # This part only checks ranges, because the single characters were
+            # already checked directly above.
+            import string
+            alpha = set(map(ord, string.letters))
+            for cc in find_all_by_type(reg, Other.CharClass):
+                for char in cc.chars:
+                    if isinstance(char, CharRange):
+                        this_range = set(range(char.codepoint_a, char.codepoint_b))
+                        if this_range & alpha:
+                            raise Break()
+        except Break:
+            print 'Broke'
+        else:
+            errs.append((num, level, directives[0].start, msg % 'i'))
+
+    if 's' in flags:
+        # See if there are any dots.
+        dots = list(find_all_by_type(reg, Other.Dot))
+        if not dots:
+            errs.append((num, level, directives[0].start, msg % 's'))
+
+    if 'm' in flags:
+        # Only ^$ differ in this mode.
+        anchors = list(find_all_by_type(reg, (Other.Anchor.Beginning, Other.Anchor.End)))
+        if not anchors:
+            errs.append((num, level, directives[0].start, msg % 'm'))
+
+
 def run_all_checkers(regex, expected_groups=None):
     errs = []
     for k, f in globals().iteritems():
