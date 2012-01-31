@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import re
 import sys
 import logging
 from regexlint.parser import *
@@ -221,6 +222,14 @@ def check_no_consecutive_dots(reg, errs):
         if n and n.type is Other.Dot:
             errs.append((num, level, x.start, msg))
             break
+
+def check_unicode_escapes(reg, errs):
+    num = '112'
+    level = logging.ERROR
+    msg = 'Regex parser does not handle unicode, use ur"" string.'
+    r_unicode = re.compile(r'\\[uU][0-9a-fA-F]|\\N{')
+    for m in r_unicode.finditer(reg.raw):
+        errs.append((num, level, m.start(), msg))
 
 def run_all_checkers(regex, expected_groups=None):
     errs = []

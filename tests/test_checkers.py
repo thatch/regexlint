@@ -318,3 +318,19 @@ class CheckersTests(TestCase):
         print errs
         self.assertEquals(len(errs), 1)
         self.assertEquals(('107', logging.INFO, 0), errs[0][:3])
+
+    def test_unicode_escapes(self):
+        r = Regex().get_parse_tree(r'\u0000')
+        errs = []
+        check_unicode_escapes(r, errs)
+        print errs
+        self.assertEquals(len(errs), 1)
+        self.assertEquals(('112', logging.ERROR, 0), errs[0][:3])
+
+    def test_unicode_named_escapes(self):
+        r = Regex().get_parse_tree(r'\N{space}')
+        errs = []
+        check_unicode_escapes(r, errs)
+        print errs
+        self.assertEquals(len(errs), 1)
+        self.assertEquals(('112', logging.ERROR, 0), errs[0][:3])
