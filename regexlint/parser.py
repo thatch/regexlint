@@ -237,8 +237,6 @@ class Regex(RegexLexer):
             (r'[^\\^-]', Other.Literal),
             (r'\0[0-7]{0,3}', Other.Literal.Oct), # \0 is legal
             (r'\\x[0-9a-fA-F]{2}', Other.Literal.Hex),
-            (r'\\u[0-9a-fA-F]{4}', Other.Literal.Unicode),
-            (r'\\U[0-9a-fA-F]{8}', Other.Literal.LongUnicode),
             (r'\\[\[\]]', Other.Literal.Bracket),
             (r'\\[()]', Other.Literal.Paren),
             (r'\\n', Other.Newline),
