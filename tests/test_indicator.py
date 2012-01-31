@@ -32,6 +32,11 @@ class foo(object):
 newlines1
 newlines2""", Other),
         ],
+        'char': stringy(String.Char),
+        'string': stringy(String.Double),
+        'breakout': [
+            (r'abcdefg', Text),
+        ],
     }
 '''
 
@@ -56,6 +61,10 @@ class IndicatorTests(unittest.TestCase):
     def test_find_offending_line_newline_triplequote3(self):
         ret = find_offending_line(fakemod, 'foo', 'other', 2, 4)
         self.assertEquals((13, 0, 1, 'newlines1'), ret)
+    def test_find_offending_line_in_function(self):
+        # Based off a real failure in p.l.functional:SMLLexer
+        ret = find_offending_line(fakemod, 'foo', 'char', 2, 5)
+        self.assertEquals(None, ret)
 
 
 
