@@ -249,8 +249,8 @@ class Regex(RegexLexer):
             (r'\\\|', Other.Literal.Alternation),
             (r'\\\'', Other.Suspicious.Squo),
             (r'\\\"', Other.Suspicious.Dquo),
-            (r'\\[sSwW]', Other.BuiltinCharclass),
             (r'\\.', Other.Suspicious),
+            (r'\\[sSwWdD]', Other.BuiltinCharclass),
         ],
     }
 
