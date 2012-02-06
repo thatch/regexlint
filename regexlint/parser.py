@@ -85,8 +85,9 @@ class Node(object):
             p = p()._parent
 
     def __repr__(self):
-        return '<%s type=%r data=%r %r>' % (self.__class__.__name__,
-                                            self.type, self.data, self.children)
+        return '<%s type=%r data=%r start=%r end=%r %r>' % (
+            self.__class__.__name__, self.type, self.data, self.start,
+            self.end, self.children)
 
     def __eq__(self, obj):
         return (self.type == obj.type and self.data == obj.data and
