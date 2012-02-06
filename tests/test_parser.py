@@ -41,15 +41,16 @@ class BasicTests(TestCase):
         r = self.do_it(r'\]')
 
     def test_find_by_type(self):
-        golden = [Node(t=Other.Directive, start=0, data='(?xi)')]
-        r = Regex().get_parse_tree(r'(?xi)')
+        golden = [Node(t=Other.Directive, start=0, parsed_start=0,
+                       data='(?mi)')]
+        r = Regex().get_parse_tree(r'(?mi)')
         self.assertEquals(golden, list(find_all_by_type(r, Other.Directive)))
 
     def test_find_all_by_type(self):
-        r = Regex().get_parse_tree(r'(?x)(?i)')
+        r = Regex().get_parse_tree(r'(?m)(?i)')
         directives = list(find_all_by_type(r, Other.Directive))
         self.assertEquals(2, len(directives))
-        self.assertEquals('(?x)', directives[0].data)
+        self.assertEquals('(?m)', directives[0].data)
         self.assertEquals('(?i)', directives[1].data)
 
     def test_char_range(self):
