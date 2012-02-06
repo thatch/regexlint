@@ -68,12 +68,14 @@ def find_offending_line(mod, clsname, state, idx, pos):
         #print "  inner fail"
         return False
 
-    def until(t):
+    def until(t, match_braces=False):
         #print "until", t
         for x in it:
             if t == x[-1]:
                 #print "  found", repr(x[-1])
                 return
+            elif match_braces and x[-1] in open_braces:
+                match_brace(x[-1])
 
     level = 0
     tuple_idx = 0
@@ -120,11 +122,27 @@ def find_offending_line(mod, clsname, state, idx, pos):
         elif level == 1 and ttyp in String:
             #print "key", text
             key = eval(text, {}, {})
+
+            # next is expected to be the colon.
+            it.next()
+            # next is either a left brace, or maybe a function call
+            t = ''
+            try:
+                while not t.strip():
+                    _, _, _, t = it.next()
+            except StopIteration:
+                return None
+            # t is now the first token of the value, either '[' or 'SomeFunc'
+
             if key != state:
-                until('[')
-                match_brace('[')
+                if t == '[':
+                    match_brace('[')
+                else:
+                    until(',', match_braces=True)
             else:
                 level = 2
+                if t != '[':
+                    return None
         elif level == 2:
             if text == '(':
                 # open a tuple
