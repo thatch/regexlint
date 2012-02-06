@@ -385,3 +385,24 @@ class CheckersTests(TestCase):
         check_bad_flags(r, errs)
         print errs
         self.assertEquals(len(errs), 0)
+
+    def test_unnecessary_x_flag(self):
+        r = Regex.get_parse_tree(r'(?x)foo[ ]')
+        errs = []
+        check_bad_flags(r, errs)
+        print errs
+        self.assertEquals(len(errs), 1)
+
+    def test_necessary_x_flag(self):
+        r = Regex.get_parse_tree(r'(?x)foo ')
+        errs = []
+        check_bad_flags(r, errs)
+        print errs
+        self.assertEquals(len(errs), 0)
+
+    def test_necessary_x_flag_2(self):
+        r = Regex.get_parse_tree(r'(?x)foo#comment')
+        errs = []
+        check_bad_flags(r, errs)
+        print errs
+        self.assertEquals(len(errs), 0)
