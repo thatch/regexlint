@@ -28,10 +28,9 @@ Usage
 Todo
 ----
 
-* Parse verbose regular expressions
 * Improve checks for character classes
-* Add a third case for the width() function, that will descend into the node
-  yet not mark as good or bad (e.g. '(?:')
+* Parse some exceptions like []]
+* Figure out which phase should remove unnecessary backslashes
 * Write the alternation expander, so that ([ax]|a[bc]) fails the alternation
   order checks
 * Make more general than just for Pygments
