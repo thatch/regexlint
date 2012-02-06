@@ -12,24 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from cmdline import *
+from regexlint.util import *
 from unittest import TestCase
 
 class CmdlineTests(TestCase):
-    def test_myrepr_empty(self):
+    def test_consistent_repr_empty(self):
         golden = r"''"
-        self.assertEquals(golden, myrepr(eval(golden)))
+        self.assertEquals(golden, consistent_repr(eval(golden)))
 
-    def test_myrepr(self):
+    def test_consistent_repr(self):
         golden = r"""'azAZ09!#-$_\\/\'"\n\t\x02\xf3'"""
-        self.assertEquals(golden, myrepr(eval(golden)))
+        self.assertEquals(golden, consistent_repr(eval(golden)))
 
-    def test_myrepr_unicode(self):
+    def test_consistent_repr_unicode(self):
         golden = r"u'text\u1234text'"
         print repr(eval(golden))
-        self.assertEquals(golden, myrepr(eval(golden)))
+        self.assertEquals(golden, consistent_repr(eval(golden)))
 
-    def test_myrepr_wide_unicode(self):
+    def test_consistent_repr_wide_unicode(self):
         try:
             unichr(0x100001)
         except:
@@ -40,4 +40,4 @@ class CmdlineTests(TestCase):
             # Python build handles 32-bit unicode
             golden = r"u'text\U00101234text'"
             print repr(eval(golden))
-            self.assertEquals(golden, myrepr(eval(golden)))
+            self.assertEquals(golden, consistent_repr(eval(golden)))

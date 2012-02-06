@@ -125,3 +125,48 @@ def eval_char(c):
     # TODO any other cases?
 
 class Break(Exception): pass
+
+def consistent_repr(s):
+    """Returns a string that represents repr(s), but without the logic that
+    switches between single and double quotes."""
+    special = {
+        '\n': '\\n',
+        '\t': '\\t',
+        '\\': '\\\\',
+        '\'': '\\\'',
+    }
+    rep = ['\'']
+    if isinstance(s, unicode):
+        rep.insert(0, 'u')
+    for char in s:
+        if char in special:
+            rep.append(special[char])
+        elif isinstance(s, unicode) and ord(char) > 0xFFFF:
+            rep.append('\\U%08x' % ord(char))
+        elif isinstance(s, unicode) and ord(char) > 126:
+            rep.append('\\u%04x' % ord(char))
+        elif ord(char) < 32 or ord(char) > 126:
+            rep.append('\\x%02x' % ord(char))
+        else:
+            rep.append(char)
+    rep.append('\'')
+    return ''.join(rep)
+
+def shorten(text, start, end):
+    """Returns a substring of text, so that its length is < 80 or so."""
+    if len(text) < 76:
+        return (text, start, end)
+
+    start_cut = max(0, start - 36)
+    end_cut = min(len(text), start + 36)
+    cut_text = text[start_cut:end_cut]
+    start -= start_cut
+    end -= start_cut
+    if start_cut != 0:
+        cut_text = '...' + cut_text
+        start += 3
+        end += 3
+    if end_cut != len(text):
+        cut_text += '...'
+    return (cut_text, start, end)
+

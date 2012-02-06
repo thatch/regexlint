@@ -22,6 +22,7 @@ from pygments.lexer import RegexLexer, bygroups
 from pygments.token import Token
 from regexlint import Regex, run_all_checkers
 from regexlint.indicator import find_offending_line, mark, find_substr_pos
+from regexlint.util import consistent_repr, shorten
 
 def import_mod(m):
     mod = __import__(m)
@@ -62,47 +63,6 @@ def check_lexers(mod, lexer_names, min_level):
         v = getattr(mod, k)
         if hasattr(v, '__bases__') and issubclass(v, RegexLexer) and v.tokens:
             check_lexer(k, v, mod.__file__, min_level)
-
-def shorten(text, start, end):
-    if len(text) < 76:
-        return (text, start, end)
-
-    start_cut = max(0, start - 36)
-    end_cut = min(len(text), start + 36)
-    cut_text = text[start_cut:end_cut]
-    start -= start_cut
-    end -= start_cut
-    if start_cut != 0:
-        cut_text = '...' + cut_text
-        start += 3
-        end += 3
-    if end_cut != len(text):
-        cut_text += '...'
-    return (cut_text, start, end)
-
-def myrepr(s):
-    special = {
-        '\n': '\\n',
-        '\t': '\\t',
-        '\\': '\\\\',
-        '\'': '\\\'',
-    }
-    rep = ['\'']
-    if isinstance(s, unicode):
-        rep.insert(0, 'u')
-    for char in s:
-        if char in special:
-            rep.append(special[char])
-        elif isinstance(s, unicode) and ord(char) > 0xFFFF:
-            rep.append('\\U%08x' % ord(char))
-        elif isinstance(s, unicode) and ord(char) > 126:
-            rep.append('\\u%04x' % ord(char))
-        elif ord(char) < 32 or ord(char) > 126:
-            rep.append('\\x%02x' % ord(char))
-        else:
-            rep.append(char)
-    rep.append('\'')
-    return ''.join(rep)
 
 def remove_error(errs, *nums):
     for i in range(len(errs)-1, -1, -1):
@@ -160,8 +120,8 @@ def check_lexer(lexer_name, cls, mod_path, min_level):
                         mark(*foo)
                     else:
                         # Substract one for closing quote
-                        start = len(myrepr(pat[0][:pos1])) - 1
-                        end = len(myrepr(pat[0][:pos1+1])) - 1
+                        start = len(consistent_repr(pat[0][:pos1])) - 1
+                        end = len(consistent_repr(pat[0][:pos1+1])) - 1
                         if start == end:
                             # This handles the case where pos1 points to the end of
                             # the string. Regex "|" with pos1 = 1.
