@@ -75,10 +75,10 @@ def find_offending_line(mod, clsname, state, idx, pos):
         rawstr = "\n".join(lines)
 
         strRe = re.compile("[uU]?[rR]?(?:"
-            "'(?:[^\\\\]|\\\\.)*?'|"
-            '"(?:[^\\\\]|\\\\.)*?"|'
             "'''(?:[^\\\\]|\\\\.)*?'''|"
-            '"""(?:[^\\\\]|\\\\.)*?"""'
+            '"""(?:[^\\\\]|\\\\.)*?"""|'
+            "'(?:[^\\\\]|\\\\.)*?'|"
+            '"(?:[^\\\\]|\\\\.)*?"'
             ")", re.DOTALL)
         print "rawstr:", repr(rawstr)
         for match in strRe.finditer(rawstr):
