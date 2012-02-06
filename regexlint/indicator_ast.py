@@ -57,18 +57,45 @@ def find_offending_line(mod, clsname, state, idx, pos):
             continue
         if len(idxTuple.elts) < 2 or not isinstance(idxTuple.elts[0], ast.Str):
             continue
-        s = idxTuple.elts[0]
         lines = []
+        startline = idxTuple.elts[0].lineno - 1
+        startchar = idxTuple.elts[0].col_offset
         stopline = idxTuple.elts[1].lineno
         stopchar = idxTuple.elts[1].col_offset
-        print idxTuple.col_offset, idxTuple.elts[0].col_offset, idxTuple.elts[1].col_offset
-        print idxTuple.lineno, idxTuple.elts[0].lineno, idxTuple.elts[1].lineno
-        print mod_text.splitlines()[14-1]
-        for i, line in enumerate(mod_text.splitlines()[s.lineno-1:], s.lineno):
+
+        #print "Block"
+        #print idxTuple.col_offset, idxTuple.elts[0].col_offset, idxTuple.elts[1].col_offset
+        #print idxTuple.lineno, idxTuple.elts[0].lineno, idxTuple.elts[1].lineno
+        #print mod_text.splitlines()[idxTuple.lineno-1]
+
+        # HACK HACK HACK
+        if idxTuple.elts[0].col_offset == -1:
+            # When col_offset==-1 then the string is split across multiple
+            # lines. This generally means it's a triplequoted string, which
+            # can be located with a dumb heuristic.
+            _lines = mod_text.splitlines()
+            if '"""' in _lines[startline]:
+                target = '"""'
+            elif "'''" in _lines[startline]:
+                target = "'''"
+            else:
+                #print "Cannot locate beginning string"
+                return None
+
+            for i in range(startline-1, -1, -1):
+                if target in _lines[i]:
+                    #print "Adjusted start line from", startline, "to", i
+                    startline = i
+                    startchar = _lines[i].rindex(target) - 2 # for 'ur'
+                    break
+
+        # END HACK
+
+        for i, line in enumerate(mod_text.splitlines()[startline:], startline):
             if i == stopline:
                 line = line[:stopchar]
-            if i == s.lineno:
-                line = line[s.col_offset:]
+            if i == startline:
+                line = line[startchar:]
             lines.append(line)
             if i >= stopline:
                 break
@@ -80,9 +107,9 @@ def find_offending_line(mod, clsname, state, idx, pos):
             "'(?:[^\\\\]|\\\\.)*?'|"
             '"(?:[^\\\\]|\\\\.)*?"'
             ")", re.DOTALL)
-        print "rawstr:", repr(rawstr)
+        #print "rawstr:", repr(rawstr)
         for match in strRe.finditer(rawstr):
-            print "match:", repr(match.group(0))
+            #print "match:", repr(match.group(0))
             strInst = match.group(0)
             try:
                 (dx, d1, d2) = find_substr_pos(strInst, pos)
@@ -91,10 +118,10 @@ def find_offending_line(mod, clsname, state, idx, pos):
                 continue
             before_match = rawstr[:match.start(0)]
             match_lineno_in_rawstr = before_match.count("\n")
-            lineno = s.lineno + match_lineno_in_rawstr
+            lineno = startline + 1 + match_lineno_in_rawstr
             col_offset = match.start(0) - (before_match.rfind("\n") + 1)
             if match_lineno_in_rawstr == 0:
-                col_offset += s.col_offset
+                col_offset += startchar
             if dx == 0:
                 d1 += col_offset
                 d2 += col_offset
