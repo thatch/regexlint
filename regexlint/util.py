@@ -112,13 +112,16 @@ def width(tok):
         return True
 
 def eval_char(c):
+    tab = {'\\t': '\t', '\\n': '\n', '\\\'': '\'', '\\"': '"'}
     if len(c) == 1:
         return ord(c)
-    else:
-        try:
-            return ord(eval("'%s'" % c))
-        except:
-            return ord(eval("'%s'" % c))
+    elif c in tab:
+        return ord(tab[c])
+    elif c[0] == '\\' and c[1] not in 'x01234567':
+        c = c[1:] # unnecessary backslash?
+
+    #print repr(c)
+    return ord(eval("'%s'" % c))
     # TODO any other cases?
 
 class Break(Exception): pass
