@@ -30,7 +30,7 @@ def check_no_nulls(reg, errs):
 def check_no_bels(reg, errs):
     num = '110'
     level = logging.ERROR
-    msg = 'You probably don\'t want a bell. Use another backslash, raw string, or use \\x08 instead)'
+    msg = 'You probably don\'t want a backspace. Use another backslash, raw string, or use \\x08 instead)'
     pos = reg.raw.find('\b')
     if pos != -1:
         errs.append((num, level, pos, msg))
@@ -199,7 +199,7 @@ def bygroups_check_overlap(reg, errs, desired_number):
 def bygroups_check_no_capture_group_in_repetition(reg, errs, desired_number):
     num = '109'
     level = logging.ERROR
-    msg = 'Capture group should not be within a repetition'
+    msg = 'Capture group should not be within a repetition when using bygroups'
     for idx, capture in enumerate(find_all_by_type(reg, Other.Open.Capturing)):
         parent = capture.parent()
         while parent:
