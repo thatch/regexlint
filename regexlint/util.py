@@ -170,3 +170,19 @@ def shorten(text, start, end):
         cut_text += '...'
     return (cut_text, start, end)
 
+def get_module_text(mod):
+    if '\n' in mod:
+        mod_text = mod
+    else:
+        if mod.endswith('.pyc') or mod.endswith('.pyo'):
+            mod = mod[:-1]
+        with file(mod, 'r') as f:
+            mod_text = f.read()
+    return mod_text
+
+def rindex(a, x):
+    for i in range(len(a)-1, -1, -1):
+        if a[i] == x:
+            return i
+    raise ValueError("Not found")
+
