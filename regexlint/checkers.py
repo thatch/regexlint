@@ -148,17 +148,14 @@ def bygroups_check_toknum(reg, errs, desired_number):
 def bygroups_check_overlap(reg, errs, desired_number):
     num = '108'
     level = logging.ERROR
-    msg = 'Nested/gapped capture groups but using bygroups'
+    msg = 'Nested capture group other than the final one using bygroups'
+    msg2 = 'Gap in capture groups using bygroups'
     n = list(find_all_by_type(reg, Other.Open.Capturing))
     if not n:
         # bygroups_check_toknum should already complain about this case.
         return
-    # Ignore re.VERBOSE modes for now.
-    directives = list(find_all_by_type(reg, Other.Directive))
-    if directives and any('x' in d.data for d in directives):
-        return
-    # The order returned by find_all_by_type need not be the same as python's
-    # group numbers, in the case of nesting.
+    # The order returned by find_all_by_type appears to be the same as python's
+    # group numbers (matters most when nesting).
     prev_end = 0
     prev = None
     #print reg.raw, desired_number
@@ -167,28 +164,31 @@ def bygroups_check_overlap(reg, errs, desired_number):
             group = group.parent()
         #print "Loop", i, group, group.start, group.end
 
-        if group.start > prev_end:
+        if group.parsed_start > prev_end:
             #print "Have prev"
             # This code allows a parent to be ok'd, and all children to be
             # ignored (without having to change between()'s code)
             j = find_bad_between(prev, group, has_width)
             if j:
-                errs.append((num, level, j.start, msg))
-        elif group.start < prev_end:
+                errs.append((num, level, j.start, msg2))
+        elif group.parsed_start < prev_end:
             if idx >= desired_number:
                 # This case is uninteresting -- bygroups ignores extra groups,
                 # so it's possible to nest within the last group.
-                errs.append((num, logging.INFO, group.start, msg + ' (extra groups)'))
+                errs.append((num, logging.INFO, group.start,
+                             msg + ' (extra groups)'))
                 group = prev
             else:
+                # This is a nested group with the outer one prior to the last
+                # one bygroups cares about
                 #print "Boring", group.start, prev_end
                 errs.append((num, level, group.start, msg))
                 group = prev
 
-        prev_end = group.end
+        prev_end = group.parsed_end
         prev = group
 
-    if prev_end != reg.end:
+    if prev_end != reg.parsed_end:
         #print "End check", prev
         # This code allows a parent to be ok'd, and all children to be
         # ignored (without having to change between()'s code)
@@ -243,6 +243,12 @@ def check_bad_flags(reg, errs):
         return
 
     if 'x' in flags:
+        # In order for x to matter, there must exist a node that has start !=
+        # parsed_start.  The easiest place to find this is on the last one, since
+        # both values should be nondecreasing.
+        if reg.children[-1].parsed_end == len(reg.raw):
+            errs.append((num, level, directives[0].start, msg % 'x'))
+
         # TODO See if there's bare whitespace
         pass
 
@@ -264,7 +270,7 @@ def check_bad_flags(reg, errs):
                         if this_range & alpha:
                             raise Break()
         except Break:
-            print 'Broke'
+            pass
         else:
             errs.append((num, level, directives[0].start, msg % 'i'))
 

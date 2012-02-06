@@ -28,13 +28,21 @@ PROGRESSION = Other.Progression
 ALTERNATION = Other.Alternation
 
 class Node(object):
-    def __init__(self, t, start=None, data=None):
+    def __init__(self, t, start=None, parsed_start=None, data=None):
         self.type = t
         self.data = data # type-dependent
         self.children = [] # type-dependent
 
         self.start = start
-        self.end = None
+        self.parsed_start = parsed_start
+        # This clause is necessary for simple tokens that don't have children
+        # -- they need to essentially be autoclosed, here.
+        if start is not None and parsed_start is not None and data is not None:
+            self.end = start + len(data)
+            self.parsed_end = parsed_start + len(data)
+        else:
+            self.end = None
+            self.parsed_end = None
         self._parent = None
         self._next = None
 
@@ -44,8 +52,9 @@ class Node(object):
             self.children[-1]._next = weakref.ref(obj)
         self.children.append(obj)
 
-    def close(self, pos, data):
+    def close(self, pos, parsed_pos, data):
         self.end = pos + len(data)
+        self.parsed_end = parsed_pos + len(data)
 
     def next(self):
         if self.children:
@@ -95,12 +104,12 @@ class CharRange(object):
         return '<%s %r-%r>' % (self.__class__.__name__, self.a, self.b)
 
 class CharClass(Node):
-    def __init__(self, t, start=None):
-        super(CharClass, self).__init__(t, start)
+    def __init__(self, t, start=None, parsed_start=None):
+        super(CharClass, self).__init__(t, start, parsed_start)
         self.negated = False
 
-    def close(self, pos, data):
-        super(CharClass, self).close(pos, data)
+    def close(self, pos, parsed_pos, data):
+        super(CharClass, self).close(pos, parsed_pos, data)
 
         n = []
         it = iter(self.children)
@@ -128,14 +137,14 @@ class CharClass(Node):
         self.chars = n
 
 class Repetition(Node):
-    def __init__(self, t, start=None, data=None):
-        super(Repetition, self).__init__(t, start, data)
+    def __init__(self, t, start=None, parsed_start=None, data=None):
+        super(Repetition, self).__init__(t, start, parsed_start, data)
         self.min = None
         self.max = None
         self.greedy = None
 
-    def close(self, pos, data):
-        super(Repetition, self).close(pos, data)
+    def close(self, pos, parsed_pos, data):
+        super(Repetition, self).close(pos, parsed_pos, data)
 
         if '*' in self.data:
             self.min, self.max = (0, None)
@@ -161,28 +170,10 @@ class Repetition(Node):
         self.greedy = not (self.data.endswith('?') and self.data != '?')
 
 
-class Regex(RegexLexer):
-    r"""
-    This is a RegexLexer that parses python regex syntax.  The included helper
-    functions will turn its token stream into a psuedo-syntax-tree.  The goal
-    is to recognize strange, error-prone regex constructs and provide warnings
-    to users.  Examples of the sort of error-prone things:
+class VerboseRegexTryAgain(Exception): pass
 
-    bad     good
-    [][] = [\[\]]
-    [A-z] = [\x41-\x7a] or [A-Za-z]
-    '\n' = r'\n' or '\\n'
 
-    Just because I wrote a parser in Pygments doesn't mean that it's generally
-    a good idea.  Remember that.  This started because I need to run a regex
-    lint against the Python strings, before the regex simplifier gets its hands
-    on it.  This is fairly close to the best possible, but doesn't catch a few
-    things (mainly in non-raw strings).
-    """
-    name = 'regex'
-    mimetypes = ['text/x-regex']
-    filenames = ['*.regex'] # fake
-    flags = 0 # not multiline
+class BaseRegex(object):
 
     tokens = {
         'root': [
@@ -200,7 +191,8 @@ class Regex(RegexLexer):
             (r'\(', Other.Open.Capturing),
             (r'\)', Other.CloseParen),
             (r'\[', Other.CharClass, 'charclass'),
-            # TODO backreferences
+            (r'\\[1-9][0-9]?', Other.Backref),
+            include('only_in_verbose'),
             include('suspicious'),
             include('meta'),
             include('simpleliteral'),
@@ -237,49 +229,86 @@ class Regex(RegexLexer):
         ],
         'simpleliteral': [
             (r'[^\\^-]', Other.Literal),
-            (r'\0[0-7]{0,3}', Other.Literal.Oct), # \0 is legal
+            (r'\\0[0-7]{0,3}', Other.Literal.Oct), # \0 is legal
             (r'\\x[0-9a-fA-F]{2}', Other.Literal.Hex),
             (r'\\[\[\]]', Other.Literal.Bracket),
             (r'\\[()]', Other.Literal.Paren),
+            (r'\\t', Other.Tab),
             (r'\\n', Other.Newline),
             (r'\\\.', Other.Literal.Dot),
             (r'\\\\', Other.Literal.Backslash),
             (r'\\\*', Other.Literal.Star),
             (r'\\\+', Other.Literal.Plus),
             (r'\\\|', Other.Literal.Alternation),
+            (r'\\\^', Other.Literal.Caret),
+            (r'\\\$', Other.Literal.Dollar),
+            (r'\\\?', Other.Literal.Question),
+            (r'\\[{}]', Other.Literal.Curly),
             (r'\\\'', Other.Suspicious.Squo),
             (r'\\\"', Other.Suspicious.Dquo),
-            (r'\\.', Other.Suspicious),
             (r'\\[sSwWdD]', Other.BuiltinCharclass),
+            (r'\\.', Other.Suspicious), # Other unnecessary escapes
         ],
+        'only_in_verbose': [],
     }
 
     @classmethod
-    def get_parse_tree(cls, s):
-        n = Node(t=PROGRESSION, data='', start=0)
+    def get_parse_tree(cls, s, verbose=False):
+        if verbose:
+            return VerboseRegex._get_parse_tree(s, True)
+        else:
+            try:
+                tree = cls._get_parse_tree(s, False)
+            except VerboseRegexTryAgain:
+                #print "Using verbose mode"
+                tree = VerboseRegex._get_parse_tree(s, True)
+            return tree
+
+    @classmethod
+    def _get_parse_tree(cls, s, verbose):
+        n = Node(t=PROGRESSION, data='', start=0, parsed_start=0)
         n.raw = s
         open_stack = [n]
+        verbose_offset = 0
+        #print "Using class", cls, cls.tokens['only_in_verbose']
 
+        # these two need default values because normally they would be set in
+        # the last iteration of the loop, but this doesn't happen for empty
+        # string.
+        j = 0
+        data = ''
+
+        # i, j are the raw position and parsed position, respectively.
         for i, ttype, data in cls().get_tokens_unprocessed(s):
+            if not verbose and ttype in Other.Directive and 'x' in data:
+                raise VerboseRegexTryAgain()
+
+            if ttype in Other.Verbose:
+                #print "Found verbose token"
+                verbose_offset += len(data)
+                continue
+            else:
+                j = i - verbose_offset
+
             if ttype in Other.Open:
                 # stack depth ++
-                n = Node(t=ttype, start=i, data=data)
+                n = Node(t=ttype, start=i, parsed_start=j, data=data)
                 open_stack.append(n)
             elif ttype is Other.CharClass:
-                n = CharClass(t=ttype, start=i)
+                n = CharClass(t=ttype, start=i, parsed_start=j)
                 open_stack.append(n)
             elif ttype in (Other.CloseParen, Other.CloseCharClass):
                 # stack depth -- or -= 2
                 if open_stack[-2].type is ALTERNATION:
-                    open_stack[-1].close(i, '')
+                    open_stack[-1].close(i, j, '')
                     open_stack[-2].add_child(open_stack[-1])
                     open_stack.pop()
-                    open_stack[-1].close(i, '')
+                    open_stack[-1].close(i, j, '')
                     open_stack[-2].add_child(open_stack[-1])
                     open_stack.pop()
                 assert (open_stack[-1].type in Other.Open or
                         open_stack[-1].type in Other.CharClass)
-                open_stack[-1].close(i, data)
+                open_stack[-1].close(i, j, data)
                 open_stack[-2].add_child(open_stack[-1])
                 open_stack.pop()
             elif ttype is Other.Alternate:
@@ -287,44 +316,87 @@ class Regex(RegexLexer):
                 if len(open_stack) < 2 or open_stack[-2].type is not ALTERNATION:
                     # Create new alternation, push 2
                     start = open_stack[-1].start + len(open_stack[-1].data)
-                    n = Node(t=ALTERNATION, start=start)
-                    p = Node(t=PROGRESSION, start=start)
+                    parsed_start = open_stack[-1].parsed_start + len(open_stack[-1].data)
+                    n = Node(t=ALTERNATION, start=start, parsed_start=parsed_start)
+                    p = Node(t=PROGRESSION, start=start, parsed_start=parsed_start)
                     for c in open_stack[-1].children:
                         p.add_child(c) # sets parent
                     del open_stack[-1].children[:]
                     open_stack.append(n)
-                    p.close(i, "")
+                    p.close(i, j, "")
                     n.add_child(p)
-                    p2 = Node(t=PROGRESSION, start=i+len(data))
+                    p2 = Node(t=PROGRESSION, start=i+len(data), parsed_start=j+len(data))
                     open_stack.append(p2)
                 else:
                     # close & swap, replicating close a bit
-                    open_stack[-1].close(i, "") # progression
+                    open_stack[-1].close(i, j, "") # progression
                     open_stack[-2].add_child(open_stack[-1])
-                    open_stack[-1] = Node(t=PROGRESSION, start=i+len(data))
+                    open_stack[-1] = Node(t=PROGRESSION, start=i+len(data),
+                                          parsed_start=j+len(data))
             elif ttype in Other.Repetition:
                 c = open_stack[-1].children.pop()
-                n = Repetition(t=ttype, data=data, start=c.start)
+                n = Repetition(t=ttype, data=data, start=c.start,
+                               parsed_start=c.parsed_start)
                 n.add_child(c)
-                n.close(i, data)
+                n.close(i, j, data)
                 open_stack[-1].add_child(n)
             else:
                 # stack depth same
-                n = Node(t=ttype, data=data, start=i)
+                n = Node(t=ttype, data=data, start=i, parsed_start=j)
                 open_stack[-1].add_child(n)
 
         # don't pop here
         if len(open_stack) == 3 and open_stack[-2].type is ALTERNATION:
-            open_stack[-1].close(len(s), '')
+            # TODO len(data) might fail if the regex is empty string, so
+            # default above...
+            open_stack[-1].close(len(s), j+len(data), '')
             open_stack[-2].add_child(open_stack[-1])
-            open_stack[-2].close(len(s), '')
+            open_stack[-2].close(len(s), j+len(data), '')
             open_stack[-3].add_child(open_stack[-2])
             open_stack.pop()
             open_stack.pop()
 
-        open_stack[0].close(len(s), '')
+        open_stack[0].close(len(s), j+len(data), '')
         assert len(open_stack) == 1
         return open_stack[0]
+
+
+class Regex(BaseRegex, RegexLexer):
+    r"""
+    This is a RegexLexer that parses python regex syntax.  The included helper
+    functions will turn its token stream into a psuedo-syntax-tree.  The goal
+    is to recognize strange, error-prone regex constructs and provide warnings
+    to users.  Examples of the sort of error-prone things:
+
+    bad     good
+    [][] = [\[\]]
+    [A-z] = [\x41-\x7a] or [A-Za-z]
+    '\n' = r'\n' or '\\n'
+
+    Just because I wrote a parser in Pygments doesn't mean that it's generally
+    a good idea.  Remember that.  This started because I need to run a regex
+    lint against the Python strings, before the regex simplifier gets its hands
+    on it.  This is fairly close to the best possible, but doesn't catch a few
+    things (mainly in non-raw strings).
+    """
+    name = 'regex'
+    mimetypes = ['text/x-regex']
+    filenames = ['*.regex'] # fake
+    flags = 0 # not multiline
+
+
+class VerboseRegex(BaseRegex, RegexLexer):
+    name = 'verbose_regex'
+    mimetypes = ['text/x-verbose-regex']
+    filenames = ['*.regex'] # fake
+    flags = 0 # not multiline
+
+    tokens = dict(BaseRegex.tokens)
+    tokens['only_in_verbose'] = [
+        (r'\s+', Other.Verbose.Whitespace),
+        (r'#.*', Other.Verbose.Comment),
+    ]
+
 
 def charclass(c):
     if 'A' <= c <= 'Z':

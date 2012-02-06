@@ -107,3 +107,31 @@ class BasicTests(TestCase):
         self.assertEquals(2, l[0].min)
         self.assertEquals(5, l[0].max)
         self.assertEquals(True, l[0].greedy)
+
+class VerboseModeTests(TestCase):
+    def test_basic_verbose_parsing(self):
+        r = Regex().get_parse_tree(r'''(?x)  a   b # comment
+                        c
+                        d''')
+        l = list(find_all(r))[1:] # skip root
+        print '\n'.join(fmttree(r))
+        self.assertEquals(5, len(l))
+        self.assertEquals((4, 6), (l[1].parsed_start, l[1].start))
+        self.assertEquals('d', l[-1].data)
+        self.assertEquals((7, 72), (l[-1].parsed_start, l[-1].start))
+
+    def test_escaped_space_parsing(self):
+        r = Regex().get_parse_tree(r'\ a')
+        l = list(find_all(r))[1:] # skip root
+        print '\n'.join(fmttree(r))
+        self.assertEquals(2, len(l))
+        self.assertEquals(r'\ ', l[0].data)
+        self.assertEquals(Other.Suspicious, l[0].type)
+
+    def test_charclass_parsing(self):
+        r = Regex().get_parse_tree(r'[ a]')
+        l = list(find_all(r))[1:] # skip root
+        print '\n'.join(fmttree(r))
+        self.assertEquals(3, len(l))
+        self.assertEquals(r' ', l[1].data)
+        self.assertEquals(r'a', l[2].data)

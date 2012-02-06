@@ -113,16 +113,14 @@ def check_lexer(lexer_name, cls, mod_path, min_level):
     #print lexer_name
     #print cls().tokens
     has_errors = False
-    if cls.flags & re.VERBOSE:
-        print "GRR", lexer_name, "uses verbose mode"
-        return
+    verbose = bool(cls.flags & re.VERBOSE)
 
     bygroups_callback = bygroups(1).func_code
     for state, pats in cls().tokens.iteritems():
         for i, pat in enumerate(pats):
             #print repr(pat[0])
             try:
-                reg = Regex().get_parse_tree(pat[0])
+                reg = Regex().get_parse_tree(pat[0], verbose=verbose)
             except:
                 print pat[0], cls
                 raise
