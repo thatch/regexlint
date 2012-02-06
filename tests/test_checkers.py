@@ -18,19 +18,19 @@ from unittest import TestCase
 
 class CheckersTests(TestCase):
     def test_null(self):
-        r = Regex().get_parse_tree('a\x00b')
+        r = Regex.get_parse_tree('a\x00b')
         errs = []
         check_no_nulls(r, errs)
         self.assertEquals(len(errs), 1)
 
     def test_newline(self):
-        r = Regex().get_parse_tree('a\nb')
+        r = Regex.get_parse_tree('a\nb')
         errs = []
         check_no_newlines(r, errs)
         self.assertEquals(len(errs), 1)
 
     def test_empty_alternation(self):
-        r = Regex().get_parse_tree(r'(a|)')
+        r = Regex.get_parse_tree(r'(a|)')
         print '\n'.join(fmttree(r))
         errs = []
         check_no_empty_alternations(r, errs)
@@ -38,28 +38,28 @@ class CheckersTests(TestCase):
 
     def test_empty_alternation_in_root(self):
         # special case because linenum is bogus on root.
-        r = Regex().get_parse_tree(r'a|')
+        r = Regex.get_parse_tree(r'a|')
         print '\n'.join(fmttree(r))
         errs = []
         check_no_empty_alternations(r, errs)
         self.assertEquals(len(errs), 1)
 
     def test_out_of_order_alternation_in_root(self):
-        r = Regex().get_parse_tree(r'a|ab')
+        r = Regex.get_parse_tree(r'a|ab')
         print '\n'.join(fmttree(r))
         errs = []
         check_prefix_ordering(r, errs)
         self.assertEquals(len(errs), 1)
 
     def test_out_of_order_alternation_longer(self):
-        r = Regex().get_parse_tree(r'(a|ab|c)')
+        r = Regex.get_parse_tree(r'(a|ab|c)')
         print '\n'.join(fmttree(r))
         errs = []
         check_prefix_ordering(r, errs)
         self.assertEquals(len(errs), 1)
 
     def test_out_of_order_alternation_location(self):
-        r = Regex().get_parse_tree(r'(foo|bar|@|@@)')
+        r = Regex.get_parse_tree(r'(foo|bar|@|@@)')
         print '\n'.join(fmttree(r))
         errs = []
         check_prefix_ordering(r, errs)
@@ -69,7 +69,7 @@ class CheckersTests(TestCase):
 
 
     def test_out_of_order_alternation_with_anchor_after(self):
-        r = Regex().get_parse_tree(r'(a|ab)\b')
+        r = Regex.get_parse_tree(r'(a|ab)\b')
         print '\n'.join(fmttree(r))
         errs = []
         check_prefix_ordering(r, errs)
@@ -78,7 +78,7 @@ class CheckersTests(TestCase):
 
 
     def test_out_of_order_crazy_complicated(self):
-        r = Regex().get_parse_tree(r'''(!=|#|&&|&|\(|\)|\*|\+|,|-|-\.)''')
+        r = Regex.get_parse_tree(r'''(!=|#|&&|&|\(|\)|\*|\+|,|-|-\.)''')
         #|->|\.|\.\.|::|:=|:>|:|;;|;|<|<-|=|>|>]|>}|\?|\?\?|\[|\[<|\[>|\[\||]|_|`|{|{<|\||\|]|}|~)''')
         print '\n'.join(fmttree(r))
         errs = []
@@ -86,14 +86,14 @@ class CheckersTests(TestCase):
         self.assertEquals(len(errs), 1)
 
     def test_good_charclass(self):
-        r = Regex().get_parse_tree(r'[a-zA-Z]')
+        r = Regex.get_parse_tree(r'[a-zA-Z]')
         print '\n'.join(fmttree(r))
         errs = []
         check_charclass_homogeneous_ranges(r, errs)
         self.assertEquals(len(errs), 0)
 
     def test_bad_charclass(self):
-        r = Regex().get_parse_tree(r'[A-z]')
+        r = Regex.get_parse_tree(r'[A-z]')
         print '\n'.join(fmttree(r))
         print r.children[0].chars
         errs = []
@@ -102,7 +102,7 @@ class CheckersTests(TestCase):
         self.assertEquals(len(errs), 1)
 
     def test_bad_charclass2(self):
-        r = Regex().get_parse_tree(r'[z-A]')
+        r = Regex.get_parse_tree(r'[z-A]')
         print '\n'.join(fmttree(r))
         print r.children[0].chars
         errs = []
@@ -111,7 +111,7 @@ class CheckersTests(TestCase):
         self.assertEquals(len(errs), 2)
 
     def test_good_unicode_charclass(self):
-        r = Regex().get_parse_tree(ur'[\u1000-\uffff]')
+        r = Regex.get_parse_tree(ur'[\u1000-\uffff]')
         print '\n'.join(fmttree(r))
         print r.children[0].chars
         errs = []
@@ -120,7 +120,7 @@ class CheckersTests(TestCase):
         self.assertEquals(len(errs), 0)
 
     def test_dash_begins_charclass(self):
-        r = Regex().get_parse_tree(r'[-_]')
+        r = Regex.get_parse_tree(r'[-_]')
         print '\n'.join(fmttree(r))
         print r.children[0].chars
         errs = []
@@ -132,7 +132,7 @@ class CheckersTests(TestCase):
         self.assertEquals(r.children[0].chars[1].data, '_')
 
     def test_dash_ends_charclass(self):
-        r = Regex().get_parse_tree(r'[_-]')
+        r = Regex.get_parse_tree(r'[_-]')
         print '\n'.join(fmttree(r))
         print r.children[0].chars
         errs = []
@@ -144,7 +144,7 @@ class CheckersTests(TestCase):
         self.assertEquals(r.children[0].chars[1].data, '-')
 
     def test_dash_after_range_charclass(self):
-        r = Regex().get_parse_tree(r'[0-9-_]')
+        r = Regex.get_parse_tree(r'[0-9-_]')
         print '\n'.join(fmttree(r))
         print r.children[0].chars
         errs = []
@@ -158,40 +158,40 @@ class CheckersTests(TestCase):
         self.assertEquals(r.children[0].chars[2].data, '_')
 
     def test_python_named_capture_groups(self):
-        r = Regex().get_parse_tree(r'(?P<name>x)')
+        r = Regex.get_parse_tree(r'(?P<name>x)')
         print '\n'.join(fmttree(r))
         errs = []
         check_no_python_named_capture_groups(r, errs)
         self.assertEquals(len(errs), 1)
 
     def test_no_python_named_capture_groups(self):
-        r = Regex().get_parse_tree(r'(x)')
+        r = Regex.get_parse_tree(r'(x)')
         print '\n'.join(fmttree(r))
         errs = []
         check_no_python_named_capture_groups(r, errs)
         self.assertEquals(len(errs), 0)
 
     def test_run_all_checkers_no_errors(self):
-        r = Regex().get_parse_tree(r'(x)')
+        r = Regex.get_parse_tree(r'(x)')
         print '\n'.join(fmttree(r))
         errs = run_all_checkers(r)
         self.assertEquals(len(errs), 0)
 
     def test_run_all_checkers_errors(self):
-        r = Regex().get_parse_tree(r'(?P<name>x|)')
+        r = Regex.get_parse_tree(r'(?P<name>x|)')
         print '\n'.join(fmttree(r))
         errs = run_all_checkers(r)
         self.assertEquals(len(errs), 2)
 
     def test_bygroups_check_overlap_success(self):
-        r = Regex().get_parse_tree(r'(a)?(b)')
+        r = Regex.get_parse_tree(r'(a)?(b)')
         print '\n'.join(fmttree(r))
         errs = []
         bygroups_check_overlap(r, errs, -1)
         self.assertEquals(len(errs), 0)
 
     def test_bygroups_check_overlap_fail(self):
-        r = Regex().get_parse_tree(r'z(a)?z(b)z')
+        r = Regex.get_parse_tree(r'z(a)?z(b)z')
         print '\n'.join(fmttree(r))
         errs = []
         bygroups_check_overlap(r, errs, -1)
@@ -200,7 +200,7 @@ class CheckersTests(TestCase):
         # 0 5 9
 
     def test_bygroups_check_overlap_fail2(self):
-        r = Regex().get_parse_tree(r'\b(a)$')
+        r = Regex.get_parse_tree(r'\b(a)$')
         print '\n'.join(fmttree(r))
         errs = []
         bygroups_check_overlap(r, errs, -1)
@@ -208,7 +208,7 @@ class CheckersTests(TestCase):
         self.assertEquals(len(errs), 0)
 
     def test_bygroups_check_overlap_nested_length(self):
-        r = Regex().get_parse_tree(r'\b(a)((b)c)$')
+        r = Regex.get_parse_tree(r'\b(a)((b)c)$')
         print '\n'.join(fmttree(r))
         errs = []
         bygroups_check_overlap(r, errs, 2)
@@ -217,7 +217,7 @@ class CheckersTests(TestCase):
         self.assertEquals(errs[0][1], logging.INFO)
 
     def test_bygroups_check_overlap_nested_length2(self):
-        r = Regex().get_parse_tree(r'\b(a)((b)c)$')
+        r = Regex.get_parse_tree(r'\b(a)((b)c)$')
         print '\n'.join(fmttree(r))
         errs = []
         bygroups_check_overlap(r, errs, 3)
@@ -226,7 +226,7 @@ class CheckersTests(TestCase):
         self.assertEquals(errs[0][1], logging.ERROR)
 
     def test_bygroups_check_overlap_lookaround_ok(self):
-        r = Regex().get_parse_tree(r'(?<!\.)(Class|Structure|Enum)(\s+)')
+        r = Regex.get_parse_tree(r'(?<!\.)(Class|Structure|Enum)(\s+)')
         print '\n'.join(fmttree(r))
         errs = []
         bygroups_check_overlap(r, errs, -1)
@@ -234,7 +234,7 @@ class CheckersTests(TestCase):
         self.assertEquals(len(errs), 0)
 
     def test_bygroups_check_overlap_descending(self):
-        r = Regex().get_parse_tree(r'(?:^|\b)(foo)')
+        r = Regex.get_parse_tree(r'(?:^|\b)(foo)')
         print '\n'.join(fmttree(r))
         errs = []
         bygroups_check_overlap(r, errs, 1)
@@ -242,7 +242,7 @@ class CheckersTests(TestCase):
         self.assertEquals(len(errs), 0)
 
     def test_bygroups_check_overlap_descending(self):
-        r = Regex().get_parse_tree(r'(?:^|xx)(foo)')
+        r = Regex.get_parse_tree(r'(?:^|xx)(foo)')
         print '\n'.join(fmttree(r))
         errs = []
         bygroups_check_overlap(r, errs, 1)
@@ -250,7 +250,7 @@ class CheckersTests(TestCase):
         self.assertEquals(len(errs), 1)
 
     def test_bygroups_check_overlap_descending_with_capture(self):
-        r = Regex().get_parse_tree(r'(?:([A-Za-z_][A-Za-z0-9_]*)(\.))?([A-Za-z_][A-Za-z0-9_]*)')
+        r = Regex.get_parse_tree(r'(?:([A-Za-z_][A-Za-z0-9_]*)(\.))?([A-Za-z_][A-Za-z0-9_]*)')
         print '\n'.join(fmttree(r))
         errs = []
         bygroups_check_overlap(r, errs, 3)
@@ -258,7 +258,7 @@ class CheckersTests(TestCase):
         self.assertEquals(len(errs), 0)
 
     def test_bygroups_check_overlap_descending_with_capture_and_gap(self):
-        r = Regex().get_parse_tree(r'(?:([A-Za-z_][A-Za-z0-9_]*)x(\.))?([A-Za-z_][A-Za-z0-9_]*)')
+        r = Regex.get_parse_tree(r'(?:([A-Za-z_][A-Za-z0-9_]*)x(\.))?([A-Za-z_][A-Za-z0-9_]*)')
         print '\n'.join(fmttree(r))
         errs = []
         bygroups_check_overlap(r, errs, 3)
@@ -266,7 +266,7 @@ class CheckersTests(TestCase):
         self.assertEquals(len(errs), 1)
 
     def test_capture_group_in_repetition(self):
-        r = Regex().get_parse_tree(r'(a)+((b)|c)*')
+        r = Regex.get_parse_tree(r'(a)+((b)|c)*')
         print '\n'.join(fmttree(r))
         errs = []
         bygroups_check_no_capture_group_in_repetition(r, errs, 1)
@@ -275,7 +275,7 @@ class CheckersTests(TestCase):
 
     def test_no_capture_group_in_repetition(self):
         # '?' is special-cased as being an okay repetition.
-        r = Regex().get_parse_tree(r'(a)?(b)')
+        r = Regex.get_parse_tree(r'(a)?(b)')
         print '\n'.join(fmttree(r))
         errs = []
         bygroups_check_no_capture_group_in_repetition(r, errs, 1)
@@ -283,13 +283,13 @@ class CheckersTests(TestCase):
         self.assertEquals(len(errs), 0)
 
     def test_no_bels(self):
-        r = Regex().get_parse_tree('a\bb')
+        r = Regex.get_parse_tree('a\bb')
         errs = []
         check_no_bels(r, errs)
         self.assertEquals(len(errs), 1)
 
     def test_consecutive_dots(self):
-        r = Regex().get_parse_tree('a...')
+        r = Regex.get_parse_tree('a...')
         errs = []
         check_no_consecutive_dots(r, errs)
         print errs
@@ -297,14 +297,14 @@ class CheckersTests(TestCase):
         self.assertEquals(('111', logging.WARNING, 1), errs[0][:3])
 
     def test_toknum_good(self):
-        r = Regex().get_parse_tree('(a)(b)')
+        r = Regex.get_parse_tree('(a)(b)')
         errs = []
         bygroups_check_toknum(r, errs, 2)
         print errs
         self.assertEquals(len(errs), 0)
 
     def test_toknum_too_few(self):
-        r = Regex().get_parse_tree('(a)')
+        r = Regex.get_parse_tree('(a)')
         errs = []
         bygroups_check_toknum(r, errs, 2)
         print errs
@@ -312,7 +312,7 @@ class CheckersTests(TestCase):
         self.assertEquals(('107', logging.ERROR, 0), errs[0][:3])
 
     def test_toknum_too_many(self):
-        r = Regex().get_parse_tree('((a)b)')
+        r = Regex.get_parse_tree('((a)b)')
         errs = []
         bygroups_check_toknum(r, errs, 1)
         print errs
@@ -320,7 +320,7 @@ class CheckersTests(TestCase):
         self.assertEquals(('107', logging.INFO, 0), errs[0][:3])
 
     def test_unicode_escapes(self):
-        r = Regex().get_parse_tree(r'\u0000')
+        r = Regex.get_parse_tree(r'\u0000')
         errs = []
         check_unicode_escapes(r, errs)
         print errs
@@ -328,7 +328,7 @@ class CheckersTests(TestCase):
         self.assertEquals(('112', logging.ERROR, 0), errs[0][:3])
 
     def test_unicode_named_escapes(self):
-        r = Regex().get_parse_tree(r'\N{space}')
+        r = Regex.get_parse_tree(r'\N{space}')
         errs = []
         check_unicode_escapes(r, errs)
         print errs
@@ -336,7 +336,7 @@ class CheckersTests(TestCase):
         self.assertEquals(('112', logging.ERROR, 0), errs[0][:3])
 
     def test_unnecessary_i_flag(self):
-        r = Regex().get_parse_tree(r'(?i).')
+        r = Regex.get_parse_tree(r'(?i).')
         errs = []
         check_bad_flags(r, errs)
         print errs
@@ -344,35 +344,35 @@ class CheckersTests(TestCase):
         self.assertEquals(('113', logging.WARNING, 0), errs[0][:3])
 
     def test_necessary_i_flag(self):
-        r = Regex().get_parse_tree(r'(?i)(a|b)')
+        r = Regex.get_parse_tree(r'(?i)(a|b)')
         errs = []
         check_bad_flags(r, errs)
         print errs
         self.assertEquals(len(errs), 0)
 
     def test_necessary_i_flag_in_alternation1(self):
-        r = Regex().get_parse_tree(r'(?i)[a-c]')
+        r = Regex.get_parse_tree(r'(?i)[a-c]')
         errs = []
         check_bad_flags(r, errs)
         print errs
         self.assertEquals(len(errs), 0)
 
     def test_necessary_i_flag_in_alternation2(self):
-        r = Regex().get_parse_tree(r'(?i)[a]')
+        r = Regex.get_parse_tree(r'(?i)[a]')
         errs = []
         check_bad_flags(r, errs)
         print errs
         self.assertEquals(len(errs), 0)
 
     def test_necessary_i_flag_in_alternation3(self):
-        r = Regex().get_parse_tree(r'(?i)[\x00-\x67]')
+        r = Regex.get_parse_tree(r'(?i)[\x00-\x67]')
         errs = []
         check_bad_flags(r, errs)
         print errs
         self.assertEquals(len(errs), 0)
 
     def test_unnecessary_m_flag(self):
-        r = Regex().get_parse_tree(r'(?m).')
+        r = Regex.get_parse_tree(r'(?m).')
         errs = []
         check_bad_flags(r, errs)
         print errs
@@ -380,7 +380,7 @@ class CheckersTests(TestCase):
         self.assertEquals(('113', logging.WARNING, 0), errs[0][:3])
 
     def test_necessary_i_flag(self):
-        r = Regex().get_parse_tree(r'(?m).$')
+        r = Regex.get_parse_tree(r'(?m).$')
         errs = []
         check_bad_flags(r, errs)
         print errs

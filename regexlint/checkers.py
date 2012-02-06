@@ -308,7 +308,7 @@ def main(args):
         regex = r'(foo|) [a-Mq-&]'
     else:
         regex = args[0]
-    print run_all_checkers(Regex().get_parse_tree(regex))
+    print run_all_checkers(Regex.get_parse_tree(regex))
 
 if __name__ == '__main__':
     main(sys.argv[1:])

@@ -80,7 +80,7 @@ def check_lexer(lexer_name, cls, mod_path, min_level):
         for i, pat in enumerate(pats):
             #print repr(pat[0])
             try:
-                reg = Regex().get_parse_tree(pat[0], verbose=verbose)
+                reg = Regex.get_parse_tree(pat[0], verbose=verbose)
             except:
                 print pat[0], cls
                 raise
