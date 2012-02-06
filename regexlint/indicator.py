@@ -12,17 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-This script is several layered hacks to be able to point out clang-style errors
-for a specific line of Python code (likely in a string literal).  Do not take
-as an example of well-written Python.
-"""
 import re
 
 from pygments.lexers.agile import PythonLexer
 from pygments.token import Punctuation, Name, Text, String
 
-from regexlint.indicator_pyg import find_offending_line, find_substr_pos
+from regexlint.indicator_ast import find_offending_line, find_substr_pos
 
 
 def mark(lineno, d1, d2, text):
