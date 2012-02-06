@@ -37,6 +37,8 @@ newlines2""", Other),
         'breakout': [
             (r'abcdefg', Text),
         ],
+        'evil': func({'foo': 'bar', 'baz': [('a', String)]}),
+        'baz': [('b', String)],
     }
 '''
 
@@ -65,6 +67,10 @@ class IndicatorTests(unittest.TestCase):
         # Based off a real failure in p.l.functional:SMLLexer
         ret = find_offending_line(fakemod, 'foo', 'char', 2, 5)
         self.assertEquals(None, ret)
+    def test_find_offending_line_after_comma(self):
+        # Ignore commas that might occur in function calls.
+        ret = find_offending_line(fakemod, 'foo', 'baz', 0, 0)
+        self.assertEquals((22, 18, 19, "        'baz': [('b', String)],"), ret)
 
 
 
