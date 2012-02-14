@@ -29,6 +29,18 @@ class CheckersTests(TestCase):
         check_no_newlines(r, errs)
         self.assertEquals(len(errs), 1)
 
+    def test_newline_ok_in_verbose(self):
+        r = Regex.get_parse_tree('a\nb', re.VERBOSE)
+        errs = []
+        check_no_newlines(r, errs)
+        self.assertEquals(len(errs), 0)
+
+    def test_newline_ok_in_verbose2(self):
+        r = Regex.get_parse_tree('(?x)a\nb')
+        errs = []
+        check_no_newlines(r, errs)
+        self.assertEquals(len(errs), 0)
+
     def test_empty_alternation(self):
         r = Regex.get_parse_tree(r'(a|)')
         print '\n'.join(fmttree(r))

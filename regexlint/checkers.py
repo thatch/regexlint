@@ -42,8 +42,7 @@ def check_no_newlines(reg, errs):
 
     # Ignore re.VERBOSE modes for now.  I'm not sure how they fit in with
     # Java.
-    directives = list(find_all_by_type(reg, Other.Directive))
-    if directives and any('x' in d.data for d in directives):
+    if reg.flags & re.VERBOSE:
         return
 
     pos = reg.raw.find('\n')
