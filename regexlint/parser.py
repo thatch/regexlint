@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import re
 import sys
 import weakref
 
@@ -254,21 +255,24 @@ class BaseRegex(object):
     }
 
     @classmethod
-    def get_parse_tree(cls, s, verbose=False):
-        if verbose:
-            return VerboseRegex._get_parse_tree(s, True)
+    def get_parse_tree(cls, s, flags=0):
+        if flags & re.VERBOSE:
+            return VerboseRegex._get_parse_tree(s, flags)
         else:
             try:
-                tree = cls._get_parse_tree(s, False)
+                tree = cls._get_parse_tree(s, flags)
             except VerboseRegexTryAgain:
                 #print "Using verbose mode"
-                tree = VerboseRegex._get_parse_tree(s, True)
+                tree = VerboseRegex._get_parse_tree(s, flags | re.VERBOSE)
             return tree
 
     @classmethod
-    def _get_parse_tree(cls, s, verbose):
+    def _get_parse_tree(cls, s, flags):
         n = Node(t=PROGRESSION, data='', start=0, parsed_start=0)
         n.raw = s
+        n.flags = flags
+        verbose = flags & re.VERBOSE
+
         open_stack = [n]
         verbose_offset = 0
         #print "Using class", cls, cls.tokens['only_in_verbose']

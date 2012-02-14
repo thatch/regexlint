@@ -73,14 +73,13 @@ def check_lexer(lexer_name, cls, mod_path, min_level):
     #print lexer_name
     #print cls().tokens
     has_errors = False
-    verbose = bool(cls.flags & re.VERBOSE)
 
     bygroups_callback = bygroups(1).func_code
     for state, pats in cls().tokens.iteritems():
         for i, pat in enumerate(pats):
             #print repr(pat[0])
             try:
-                reg = Regex.get_parse_tree(pat[0], verbose=verbose)
+                reg = Regex.get_parse_tree(pat[0], cls.flags)
             except:
                 print pat[0], cls
                 raise
