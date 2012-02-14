@@ -287,6 +287,24 @@ def check_bad_flags(reg, errs):
             errs.append((num, level, directives[0].start, msg % 'm'))
 
 
+def check_suspicious_anchors(reg, errs):
+    num = '114'
+    level = logging.WARNING
+    msg = 'Suspicious use of anchors in alternation'
+
+    for rep in find_all_by_type(reg, Other.Alternation):
+        first = rep
+        while first.children:
+            first = first.children[0]
+
+        last = rep
+        while last.children:
+            last = last.children[-1]
+
+        if first.type in Other.Anchor and last.type in Other.Anchor:
+            errs.append((num, level, first.start, msg))
+
+
 def run_all_checkers(regex, expected_groups=None):
     errs = []
     for k, f in globals().iteritems():

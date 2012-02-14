@@ -406,3 +406,24 @@ class CheckersTests(TestCase):
         check_bad_flags(r, errs)
         print errs
         self.assertEquals(len(errs), 0)
+
+    def test_suspicious_anchors_ok(self):
+        r = Regex.get_parse_tree(r'^(a|b)$')
+        errs = []
+        check_suspicious_anchors(r, errs)
+        print errs
+        self.assertEquals(len(errs), 0)
+
+    def test_suspicious_anchors(self):
+        r = Regex.get_parse_tree(r'^a|b$')
+        errs = []
+        check_suspicious_anchors(r, errs)
+        print errs
+        self.assertEquals(len(errs), 1)
+
+    def test_suspicious_whole_string_anchors(self):
+        r = Regex.get_parse_tree(r'\Aa|b|c\Z')
+        errs = []
+        check_suspicious_anchors(r, errs)
+        print errs
+        self.assertEquals(len(errs), 1)
