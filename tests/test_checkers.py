@@ -427,3 +427,31 @@ class CheckersTests(TestCase):
         check_suspicious_anchors(r, errs)
         print errs
         self.assertEquals(len(errs), 1)
+
+    def test_single_charclass_ok(self):
+        r = Regex.get_parse_tree(r'[a-c]')
+        errs = []
+        check_single_character_classes(r, errs)
+        print errs
+        self.assertEquals(len(errs), 0)
+
+    def test_single_charclass_bad(self):
+        r = Regex.get_parse_tree(r'[a-a]')
+        errs = []
+        check_single_character_classes(r, errs)
+        print errs
+        self.assertEquals(len(errs), 1)
+
+    def test_single_charclass_bad2(self):
+        r = Regex.get_parse_tree(r'[ ]')
+        errs = []
+        check_single_character_classes(r, errs)
+        print errs
+        self.assertEquals(len(errs), 1)
+
+    def test_single_charclass_ok_if_repeated(self):
+        r = Regex.get_parse_tree(r'[ ]?')
+        errs = []
+        check_single_character_classes(r, errs)
+        print errs
+        self.assertEquals(len(errs), 0)

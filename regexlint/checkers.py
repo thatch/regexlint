@@ -305,6 +305,20 @@ def check_suspicious_anchors(reg, errs):
             errs.append((num, level, first.start, msg))
 
 
+def check_single_character_classes(reg, errs):
+    num = '115'
+    level = logging.INFO # harmless, for now
+    msg = 'Only a single character in character class'
+
+    for cc in find_all_by_type(reg, Other.CharClass):
+        if (len(cc.chars) == 1 and
+            not cc.negated and
+            cc.parent().type not in Other.Repetition and
+            (not isinstance(cc.chars[0], CharRange) or
+             cc.chars[0].codepoint_a == cc.chars[0].codepoint_b)):
+            errs.append((num, level, cc.start, msg))
+
+
 def run_all_checkers(regex, expected_groups=None):
     errs = []
     for k, f in globals().iteritems():
