@@ -1,4 +1,4 @@
-# Copyright 2011 Google Inc.
+# Copyright 2011-2012 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -33,3 +33,12 @@ coverage:
 	rm -rf .figleaf html
 	$(FIGLEAF) `which $(NOSETESTS)`
 	$(FIGLEAF2HTML) -x figleaf_exclude
+
+.PHONY: updatecopyright
+updatecopyright: COPYING Makefile *.py */*.py
+	export THIS_YEAR=$$(date +%Y) && \
+	sed -i.bak \
+		-e "s/Copyright \(....\) Google/Copyright \\1-$$THIS_YEAR Google/" \
+		-e "s/Copyright \(....-\)\(....\) Google/Copyright \\1$$THIS_YEAR Google/" \
+		-e "s/Copyright $${THIS_YEAR}-$${THIS_YEAR} Google/Copyright $$THIS_YEAR Google/" \
+		$^
