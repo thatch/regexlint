@@ -2,3 +2,6 @@
 *~
 html/
 .figleaf
+*.sw[a-z]
+*.bak
+*.orig
