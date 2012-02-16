@@ -64,6 +64,7 @@ class Node(object):
             return self.next_no_children()
 
     def next_no_children(self):
+        # pylint: disable-msg=E1102
         if self._next:
             return self._next()
         p = self._parent
@@ -71,12 +72,14 @@ class Node(object):
             if p()._next:
                 return p()._next()
             p = p()._parent
+        # pylint: enable-msg=E1102
 
     def parent(self):
         if self._parent:
-            return self._parent()
+            return self._parent()  # pylint: disable-msg=E1102
 
     def is_descentant_of(self, other):
+        # pylint: disable-msg=E1102
         if self is other:
             return True
         p = self._parent
@@ -84,6 +87,7 @@ class Node(object):
             if p() is other:
                 return True
             p = p()._parent
+        # pylint: enable-msg=E1102
 
     def __repr__(self):
         return '<%s type=%r data=%r start=%r end=%r %r>' % (
@@ -284,7 +288,7 @@ class BaseRegex(object):
         data = ''
 
         # i, j are the raw position and parsed position, respectively.
-        for i, ttype, data in cls().get_tokens_unprocessed(s):
+        for i, ttype, data in cls().get_tokens_unprocessed(s):  # pylint: disable-msg=E1101
             if not verbose and ttype in Other.Directive and 'x' in data:
                 raise VerboseRegexTryAgain()
 
@@ -411,7 +415,7 @@ def charclass(c):
     else:
         return 'other'
 
-def main(args):
+def parser_main(args):
     if not args:
         regex = r'(foo|bar)|[ba]z'
     else:
@@ -425,4 +429,4 @@ def main(args):
     print '\n'.join(fmttree(tree))
 
 if __name__ == '__main__':
-    main(sys.argv[1:])
+    parser_main(sys.argv[1:])
