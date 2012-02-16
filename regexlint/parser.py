@@ -99,6 +99,14 @@ class Node(object):
                 self.children == obj.children and self.start == obj.start and
                 self.end == obj.end)
 
+
+class RootNode(Node):
+    def __init__(self, t, start=None, parsed_start=None, data=None, raw=None, flags=None):
+        super(RootNode, self).__init__(t, start, parsed_start, data)
+        self.raw = raw
+        self.flags = flags
+
+
 class CharRange(object):
     def __init__(self, a, b):
         self.a = a
@@ -273,9 +281,8 @@ class BaseRegex(object):
 
     @classmethod
     def _get_parse_tree(cls, s, flags):
-        n = Node(t=PROGRESSION, data='', start=0, parsed_start=0)
-        n.raw = s
-        n.flags = flags
+        n = RootNode(t=PROGRESSION, data='', start=0, parsed_start=0, raw=s,
+                     flags=flags)
         verbose = flags & re.VERBOSE
 
         open_stack = [n]
