@@ -23,7 +23,7 @@ from pygments.lexers.agile import PythonLexer
 from pygments.token import Punctuation, Name, Text, String
 
 from regexlint.indicator_substr import find_substr_pos
-from regexlint.util import get_module_text, rindex
+from regexlint.util import get_module_text
 
 R_CLASSEXTRACT = re.compile(r'class (\w+).*:\n([\w\W]*?)(?=^class|\Z)', re.MULTILINE)
 

@@ -124,7 +124,8 @@ def eval_char(c):
     return ord(eval("'%s'" % c))
     # TODO any other cases?
 
-class Break(Exception): pass
+class Break(Exception):
+    pass
 
 def consistent_repr(s):
     """Returns a string that represents repr(s), but without the logic that

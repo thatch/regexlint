@@ -109,6 +109,7 @@ class CharRange(object):
     def __repr__(self):
         return '<%s %r-%r>' % (self.__class__.__name__, self.a, self.b)
 
+
 class CharClass(Node):
     def __init__(self, t, start=None, parsed_start=None):
         super(CharClass, self).__init__(t, start, parsed_start)
