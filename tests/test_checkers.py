@@ -467,3 +467,17 @@ class CheckersTests(TestCase):
         check_single_character_classes(r, errs)
         print errs
         self.assertEquals(len(errs), 0)
+
+    def test_unicode_for_no_reason(self):
+        r = Regex.get_parse_tree(u'abc')
+        errs = []
+        check_unicode_strings_actually_contain_unicode(r, errs)
+        print errs
+        self.assertEquals(len(errs), 1)
+
+    def test_unicode_for_good_reason(self):
+        r = Regex.get_parse_tree(u'abc\u21d2')
+        errs = []
+        check_unicode_strings_actually_contain_unicode(r, errs)
+        print errs
+        self.assertEquals(len(errs), 0)
