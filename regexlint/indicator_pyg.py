@@ -99,7 +99,7 @@ def find_offending_line(mod, clsname, state, idx, pos):
             yield line, col, b, c
             line += c.count('\n')
             if '\n' in c:
-                col = len(c) - c.index('\n') - 1 # TODO unsure of this number.
+                col = len(c) - c.rindex('\n') - 1
             else:
                 col += len(c)
 
