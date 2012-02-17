@@ -481,3 +481,25 @@ class CheckersTests(TestCase):
         check_unicode_strings_actually_contain_unicode(r, errs)
         print errs
         self.assertEquals(len(errs), 0)
+
+    def test_charclass_overlap(self):
+        r = Regex.get_parse_tree(r'[\d\d]')
+        errs = []
+        check_charclass_overlap(r, errs)
+        print errs
+        self.assertEquals(len(errs), 1)
+
+    def test_charclass_overlap2(self):
+        r = Regex.get_parse_tree(r'[\d1]')
+        errs = []
+        check_charclass_overlap(r, errs)
+        print errs
+        self.assertEquals(len(errs), 1)
+
+    def test_charclass_overlap3(self):
+        r = Regex.get_parse_tree(r'[\dx]')
+        errs = []
+        check_charclass_overlap(r, errs)
+        print errs
+        self.assertEquals(len(errs), 0)
+

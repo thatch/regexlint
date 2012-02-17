@@ -328,6 +328,16 @@ def check_unicode_strings_actually_contain_unicode(reg, errs):
             errs.append((num, level, 0, msg))
 
 
+def check_charclass_overlap(reg, errs):
+    num = '117'
+    level = logging.WARNING
+    msg = 'Overlap in character class'
+
+    for cc in find_all_by_type(reg, Other.CharClass):
+        if len(set(cc.matching_character_codes)) != len(cc.matching_character_codes):
+            errs.append((num, level, cc.start, msg))
+
+
 def run_all_checkers(regex, expected_groups=None):
     errs = []
     for k, f in globals().iteritems():

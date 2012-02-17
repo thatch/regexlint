@@ -109,7 +109,7 @@ def eval_char(c):
         return ord(c)
     elif c[-1] == "'":
         return ord("'")
-    elif c[0] == '\\' and c[1] not in 'abtrnvfx01234567':
+    elif c[0] == '\\' and c[1] not in 'abtrnvfx01234567\\':
         c = c[1:] # unnecessary backslash?
 
     #print repr(c)

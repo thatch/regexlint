@@ -22,6 +22,10 @@ from pygments.lexer import RegexLexer, include, using, bygroups
 from pygments.token import Other
 
 
+WHITESPACE = ' \t\n\r\f\v'
+DIGITS = '0123456789'
+WORD = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ' + DIGITS + '_'
+
 # Special types, others are used in the parser below in normal Pygments
 # manner.
 
@@ -163,6 +167,26 @@ class CharClass(Node):
                     n.append(child)
             else:
                 n.append(child)
+
+        # One of the checkers may care about order, so don't set-ify yet
+        self.matching_character_codes = []
+        for i in n:
+            if isinstance(i, CharRange):
+                self.matching_character_codes.extend(range(eval_char(i.a.data), eval_char(i.b.data)+1))
+            elif i.data == r'\s':
+                self.matching_character_codes.extend(map(ord, WHITESPACE))
+            elif i.data == r'\w':
+                self.matching_character_codes.extend(map(ord, WORD))
+            elif i.data == r'\d':
+                self.matching_character_codes.extend(map(ord, DIGITS))
+            elif i.data == r'\S':
+                pass  # TODO
+            elif i.data == r'\W':
+                pass  # TODO
+            elif i.data == r'\D':
+                pass  # TODO
+            else:
+                self.matching_character_codes.append(eval_char(i.data))
 
         self.chars = n
 

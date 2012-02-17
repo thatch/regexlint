@@ -12,10 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sre_parse
+
 from unittest import TestCase
 from pygments.token import Other
 
-from regexlint.parser import Regex, Node, width, fmttree
+from regexlint.parser import Regex, Node, width, fmttree, \
+                             WHITESPACE, DIGITS, WORD
 from regexlint.checkers import find_all, find_all_by_type
 
 SAMPLE_PATTERNS = [
@@ -25,6 +28,22 @@ SAMPLE_PATTERNS = [
     r'x*',
     r'x{1,}',
     r'x{,5}?',
+]
+
+CHARCLASS_PATTERNS = [
+    r'[aa]',
+    r'[ab]',
+    r'[a-b]',
+    r'[\a-\b]',
+    r'[a\-b]',
+    r'[a-]',
+    r'[][]',
+    r'[\[\]]',
+    r'[\w]',
+    r'[\w\s\d]',
+    r'[^xx]',
+    r'[^x\s]',
+    #r'[^x\S]'
 ]
 
 class BasicTests(TestCase):
@@ -155,3 +174,38 @@ def reconstruct_runner(pat):
 def test_reconstruct():
     for p in SAMPLE_PATTERNS:
         yield reconstruct_runner, p
+
+SRE_CATS = {'category_space': map(ord, WHITESPACE),
+            'category_digit': map(ord, DIGITS),
+            'category_word': map(ord, WORD),
+           }
+
+def expand_sre_in(x):
+    for (typ, value) in x:
+        if typ in ('literal', 'not_literal'):
+            yield value
+        elif typ == 'range':
+            for i in range(value[0], value[1]+1):
+                yield i
+        elif typ == 'category':
+            for i in SRE_CATS[value]:
+                yield i
+        elif typ == 'negate':
+            pass
+        else:
+            raise NotImplementedError("Unknown type %s" % typ)
+
+def charclass_runner(pat):
+    r = Regex().get_parse_tree(pat)
+    regexlint_version = r.children[0].matching_character_codes
+    sre_parsed = sre_parse.parse(pat)
+    print sre_parsed
+    golden = list(expand_sre_in(sre_parsed[0][1]))
+    print golden
+
+    print regexlint_version
+    assert golden == regexlint_version
+
+def test_charclass():
+    for i in CHARCLASS_PATTERNS:
+        yield charclass_runner, i
