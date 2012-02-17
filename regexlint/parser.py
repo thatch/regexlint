@@ -206,14 +206,14 @@ class Repetition(Node):
     def close(self, pos, parsed_pos, data):
         super(Repetition, self).close(pos, parsed_pos, data)
 
-        if '*' in self.data:
+        if '*' in self.end_data:
             self.min, self.max = (0, None)
-        elif '+' in self.data:
+        elif '+' in self.end_data:
             self.min, self.max = (1, None)
-        elif self.data[0] == '?':
+        elif self.end_data[0] == '?':
             self.min, self.max = (0, 1)
         else:
-            t = self.data.strip('{}?') # strip curlies
+            t = self.end_data.strip('{}?') # strip curlies
             if ',' in t:
                 a, b = t.split(',')
                 if a:
@@ -227,7 +227,7 @@ class Repetition(Node):
             else:
                 self.min, self.max = (int(t), int(t))
 
-        self.greedy = not (self.data.endswith('?') and self.data != '?')
+        self.greedy = not (self.end_data.endswith('?') and self.end_data != '?')
 
 
 class VerboseRegexTryAgain(Exception): pass
@@ -397,7 +397,7 @@ class BaseRegex(object):
                                           parsed_start=j+len(data))
             elif ttype in Other.Repetition:
                 c = open_stack[-1].children.pop()
-                n = Repetition(t=ttype, data=data, start=c.start,
+                n = Repetition(t=ttype, data='', start=c.start,
                                parsed_start=c.parsed_start)
                 n.add_child(c)
                 n.close(i, j, data)
