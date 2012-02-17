@@ -113,7 +113,14 @@ def eval_char(c):
         c = c[1:] # unnecessary backslash?
 
     #print repr(c)
-    return ord(eval("'%s'" % c))
+    if len(c) == 1 and ord(c) >= 128:
+        return c
+
+    try:
+        return ord(eval("'%s'" % c))
+    except TypeError:
+        print "C is", repr(c), len(c)
+        raise
     # TODO any other cases?
 
 class Break(Exception):

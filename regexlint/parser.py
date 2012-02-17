@@ -383,6 +383,7 @@ class BaseRegex(object):
                 # stack depth same, or +=2
                 if len(open_stack) < 2 or open_stack[-2].type is not ALTERNATION:
                     # Create new alternation, push 2
+                    #print s, open_stack[-1]
                     start = open_stack[-1].start + len(open_stack[-1].data)
                     parsed_start = open_stack[-1].parsed_start + len(open_stack[-1].data)
                     n = Node(t=ALTERNATION, start=start, parsed_start=parsed_start)
