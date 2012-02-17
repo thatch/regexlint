@@ -165,6 +165,13 @@ class VerboseModeTests(TestCase):
         self.assertEquals(r' ', l[1].data)
         self.assertEquals(r'a', l[2].data)
 
+    def test_complex_charclass(Self):
+        r = Regex.get_parse_tree(r'[]\[:_@\".{}()|;,]')
+        l = list(find_all(r))[1:] # skip root
+        print '\n'.join(fmttree(r))
+        #self.assertEquals(3, len(l))
+
+
 
 def reconstruct_runner(pat):
     r = Regex.get_parse_tree(pat)

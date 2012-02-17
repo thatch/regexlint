@@ -29,7 +29,6 @@ Todo
 ----
 
 * Improve checks for character classes
-* Parse some exceptions like []]
 * Figure out which phase should remove unnecessary backslashes
 * Write the alternation expander, so that ([ax]|a[bc]) fails the alternation
   order checks

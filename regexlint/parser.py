@@ -99,7 +99,7 @@ class Node(object):
         """Return the regex string for this branch of the tree."""
         r = []
         # Special case for repetition
-        if self.data is not None and self.data != self.end_data:
+        if self.data and self.data != self.end_data:
             r.append(self.data)
         for i, c in enumerate(self.children):
             r.append(c.reconstruct())
@@ -250,7 +250,7 @@ class BaseRegex(object):
             (r'\(\?#.*?\)', Other.Comment),
             (r'\(', Other.Open.Capturing),
             (r'\)', Other.CloseParen),
-            (r'\[', Other.CharClass, 'charclass'),
+            (r'\[', Other.CharClass, 'charclass_start'),
             (r'\\[1-9][0-9]?', Other.Backref),
             include('only_in_verbose'),
             include('suspicious'),
@@ -262,9 +262,12 @@ class BaseRegex(object):
             # misdone backreferences, tabs, newlines, and bel
             (r'[\x00-\x08\x0a\x0d]', Other.Suspicious),
         ],
-        'charclass': [
-            # TODO parse [][]
-            (r'\]', Other.CloseCharClass, '#pop'),
+        'charclass_start': [
+            (r'\]', Other.Literal.CloseCharClass),
+            (r'', Other.Continue, 'charclass_rest'),
+        ],
+        'charclass_rest': [
+            (r'\]', Other.CloseCharClass, '#pop:2'),
             (r'\\-', Other.EscapedDash),
             (r'[\-^]', Other.Special),
             include('simpleliteral'),
@@ -342,6 +345,9 @@ class BaseRegex(object):
 
         # i, j are the raw position and parsed position, respectively.
         for i, ttype, data in cls().get_tokens_unprocessed(s):  # pylint: disable-msg=E1101
+            #print i, ttype, data
+            if not data: continue  # HACK for '' match for [][]
+
             if not verbose and ttype in Other.Directive and 'x' in data:
                 raise VerboseRegexTryAgain()
 
@@ -356,7 +362,7 @@ class BaseRegex(object):
                 # stack depth ++
                 n = Node(t=ttype, start=i, parsed_start=j, data=data)
                 open_stack.append(n)
-            elif ttype is Other.CharClass:
+            elif ttype is Other.CharClass and open_stack[-1].type is not Other.CharClass:
                 n = CharClass(t=ttype, start=i, parsed_start=j)
                 open_stack.append(n)
             elif ttype in (Other.CloseParen, Other.CloseCharClass):
