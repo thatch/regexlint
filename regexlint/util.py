@@ -112,12 +112,13 @@ def width(tok):
         return True
 
 def eval_char(c):
-    tab = {'\\t': '\t', '\\n': '\n', '\\\'': '\'', '\\"': '"'}
+    """Returns the character code of the string s, which may contain
+    escapes."""
     if len(c) == 1:
         return ord(c)
-    elif c in tab:
-        return ord(tab[c])
-    elif c[0] == '\\' and c[1] not in 'x01234567':
+    elif c[-1] == "'":
+        return ord("'")
+    elif c[0] == '\\' and c[1] not in 'abtrnvfx01234567':
         c = c[1:] # unnecessary backslash?
 
     #print repr(c)
