@@ -23,15 +23,18 @@ def find_all(first, second=None):
         yield regex
         regex = regex.next()
 
+
 def find_all_by_type(regex_root, t):
     for regex in find_all(regex_root):
         if regex.type in t:
             yield regex
 
+
 def between(first, second):
     """Yields all nodes between first and second, not including either
     endpoint.  The special first value None means to start at the beginning,
-    not including the root."""
+    not including the root.  The special second value None means to go until
+    the end, but either first or second must be provided."""
     if first is None:
         first = second
         while first.parent():
@@ -44,9 +47,14 @@ def between(first, second):
     for i in it:
         yield i
 
+
 def find_bad_between(first, second, fn):
-    """Finds a node in between(first, second) where fn returns True.  If fn
-    returns False, a node won't be descended. """
+    """Finds the first node in between(first, second) where fn returns True.
+    If fn returns None, the node will be descended, False, it will be ignored.
+    The default return value is None."""
+
+    # Rather than a complex, fast solution, this simply walks all nodes, and
+    # ignores the ones that already have a whitelisted parent.
     good_obj = None
     for j in between(first, second):
         #print "Intermediate", j, j.type
@@ -60,11 +68,17 @@ def find_bad_between(first, second, fn):
                 good_obj = j
             # else keep going
 
+
 def has_width(node):
+    """Helper for use with find_bad_between."""
     # returns True/False/None
     return width(node.type)
 
+
 def fmttree(t):
+    """Returns a list of lines containing a pretty-printed tree.
+    The tree is any regex node, passed in as t.  Indent is two spaces.
+    """
     if not hasattr(t, 'children'):
         return [repr(t)]
 
@@ -73,6 +87,7 @@ def fmttree(t):
     for c in t.children:
         r.extend('  ' + f for f in fmttree(c))
     return r
+
 
 def width(tok):
     """Returns whether the given token type might consume characters."""
