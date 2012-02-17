@@ -18,6 +18,15 @@ from pygments.token import Other
 from regexlint.parser import Regex, Node, width, fmttree
 from regexlint.checkers import find_all, find_all_by_type
 
+SAMPLE_PATTERNS = [
+    r'a|b|',
+    r'((a(?:b))|)',
+    r'[a-bb]',
+    r'x*',
+    r'x{1,}',
+    r'x{,5}?',
+]
+
 class BasicTests(TestCase):
     def do_it(self, s):
         # for debugging
@@ -136,3 +145,13 @@ class VerboseModeTests(TestCase):
         self.assertEquals(3, len(l))
         self.assertEquals(r' ', l[1].data)
         self.assertEquals(r'a', l[2].data)
+
+
+def reconstruct_runner(pat):
+    r = Regex.get_parse_tree(pat)
+    rec = r.reconstruct()
+    assert pat == rec
+
+def test_reconstruct():
+    for p in SAMPLE_PATTERNS:
+        yield reconstruct_runner, p

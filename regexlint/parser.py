@@ -32,6 +32,7 @@ class Node(object):
     def __init__(self, t, start=None, parsed_start=None, data=None):
         self.type = t
         self.data = data # type-dependent
+        self.end_data = ''
         self.children = [] # type-dependent
 
         self.start = start
@@ -56,6 +57,7 @@ class Node(object):
     def close(self, pos, parsed_pos, data):
         self.end = pos + len(data)
         self.parsed_end = parsed_pos + len(data)
+        self.end_data = data
 
     def next(self):
         if self.children:
@@ -88,6 +90,19 @@ class Node(object):
                 return True
             p = p()._parent
         # pylint: enable-msg=E1102
+
+    def reconstruct(self):
+        """Return the regex string for this branch of the tree."""
+        r = []
+        # Special case for repetition
+        if self.data is not None and self.data != self.end_data:
+            r.append(self.data)
+        for i, c in enumerate(self.children):
+            r.append(c.reconstruct())
+            if self.type is ALTERNATION and i < len(self.children) - 1:
+                r.append('|')
+        r.append(self.end_data)
+        return ''.join(r)
 
     def __repr__(self):
         return '<%s type=%r data=%r start=%r end=%r %r>' % (
@@ -150,6 +165,12 @@ class CharClass(Node):
                 n.append(child)
 
         self.chars = n
+
+    def reconstruct(self):
+        return '[%s%s]' % ('^' if self.negated else '',
+                           ''.join((x.a.data + '-' + x.b.data) if
+                            isinstance(x, CharRange) else x.data
+                            for x in self.chars))
 
 class Repetition(Node):
     def __init__(self, t, start=None, parsed_start=None, data=None):
