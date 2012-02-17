@@ -14,30 +14,6 @@
 
 from pygments.token import Other
 
-def get_alternation_possibilities(alt):
-    """
-    alt is the 2d list, i.e. [['a'], ['a', 'b']]
-    """
-    for i in alt:
-        for j in _alternation_helper(i):
-            yield j
-
-def _alternation_helper(i):
-    if not i:
-        yield ''
-        return
-
-    #if isinstance(i[0], Node):
-    #    # BAH
-    #    raise NotImplementedError("Can't handle alternations with Nodes")
-    #elif isinstance(i[0], CharRange):
-    #    # BAH
-    #    raise NotImplementedError("Can't handle alternations with CharRange")
-    #else:
-    # a literal, I hope!
-    for j in _alternation_helper(i[1:]):
-        yield i[0][1] + j
-
 
 def find_all(first, second=None):
     """Finds all descendants (inorder) of first, including itself.  If second
