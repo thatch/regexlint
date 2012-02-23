@@ -12,9 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from unittest import TestCase
+
+from pygments.token import Text, Name, Punctuation
+
 from regexlint.checkers import *
 from regexlint.parser import fmttree
-from unittest import TestCase
 
 class CheckersTests(TestCase):
     def test_null(self):
@@ -199,14 +202,14 @@ class CheckersTests(TestCase):
         r = Regex.get_parse_tree(r'(a)?(b)')
         print '\n'.join(fmttree(r))
         errs = []
-        bygroups_check_overlap(r, errs, -1)
+        bygroups_check_overlap(r, errs, (Text, Text))
         self.assertEquals(len(errs), 0)
 
     def test_bygroups_check_overlap_fail(self):
         r = Regex.get_parse_tree(r'z(a)?z(b)z')
         print '\n'.join(fmttree(r))
         errs = []
-        bygroups_check_overlap(r, errs, -1)
+        bygroups_check_overlap(r, errs, (Text, Text))
         print errs
         self.assertEquals(len(errs), 3)
         # 0 5 9
@@ -215,7 +218,7 @@ class CheckersTests(TestCase):
         r = Regex.get_parse_tree(r'\b(a)$')
         print '\n'.join(fmttree(r))
         errs = []
-        bygroups_check_overlap(r, errs, -1)
+        bygroups_check_overlap(r, errs, (Text,))
         print errs
         self.assertEquals(len(errs), 0)
 
@@ -223,7 +226,7 @@ class CheckersTests(TestCase):
         r = Regex.get_parse_tree(r'\b(a)((b)c)$')
         print '\n'.join(fmttree(r))
         errs = []
-        bygroups_check_overlap(r, errs, 2)
+        bygroups_check_overlap(r, errs, (Text, Text))
         print errs
         self.assertEquals(len(errs), 1)
         self.assertEquals(errs[0][1], logging.INFO)
@@ -232,7 +235,7 @@ class CheckersTests(TestCase):
         r = Regex.get_parse_tree(r'\b(a)((b)c)$')
         print '\n'.join(fmttree(r))
         errs = []
-        bygroups_check_overlap(r, errs, 3)
+        bygroups_check_overlap(r, errs, (Text, Text, Text))
         print errs
         self.assertEquals(len(errs), 1)
         self.assertEquals(errs[0][1], logging.ERROR)
@@ -241,7 +244,7 @@ class CheckersTests(TestCase):
         r = Regex.get_parse_tree(r'(?<!\.)(Class|Structure|Enum)(\s+)')
         print '\n'.join(fmttree(r))
         errs = []
-        bygroups_check_overlap(r, errs, -1)
+        bygroups_check_overlap(r, errs, (Text, Text))
         print errs
         self.assertEquals(len(errs), 0)
 
@@ -249,7 +252,7 @@ class CheckersTests(TestCase):
         r = Regex.get_parse_tree(r'(?:^|\b)(foo)')
         print '\n'.join(fmttree(r))
         errs = []
-        bygroups_check_overlap(r, errs, 1)
+        bygroups_check_overlap(r, errs, (Text,))
         print errs
         self.assertEquals(len(errs), 0)
 
@@ -257,7 +260,7 @@ class CheckersTests(TestCase):
         r = Regex.get_parse_tree(r'(?:^|xx)(foo)')
         print '\n'.join(fmttree(r))
         errs = []
-        bygroups_check_overlap(r, errs, 1)
+        bygroups_check_overlap(r, errs, (Text,))
         print errs
         self.assertEquals(len(errs), 1)
 
@@ -265,7 +268,7 @@ class CheckersTests(TestCase):
         r = Regex.get_parse_tree(r'(?:([A-Za-z_][A-Za-z0-9_]*)(\.))?([A-Za-z_][A-Za-z0-9_]*)')
         print '\n'.join(fmttree(r))
         errs = []
-        bygroups_check_overlap(r, errs, 3)
+        bygroups_check_overlap(r, errs, (Text, Text, Text))
         print errs
         self.assertEquals(len(errs), 0)
 
@@ -273,15 +276,23 @@ class CheckersTests(TestCase):
         r = Regex.get_parse_tree(r'(?:([A-Za-z_][A-Za-z0-9_]*)x(\.))?([A-Za-z_][A-Za-z0-9_]*)')
         print '\n'.join(fmttree(r))
         errs = []
-        bygroups_check_overlap(r, errs, 3)
+        bygroups_check_overlap(r, errs, (Text, Text, Text))
         print errs
         self.assertEquals(len(errs), 1)
+
+    def test_bygroups_check_overlap_but_none_for_token(self):
+        r = Regex.get_parse_tree(r'(<(%)?)(\w+)((?(2)%)>)')
+        print '\n'.join(fmttree(r))
+        errs = []
+        bygroups_check_overlap(r, errs, (Punctuation, None, Name, Punctuation))
+        print errs
+        self.assertEquals(len(errs), 0)
 
     def test_capture_group_in_repetition(self):
         r = Regex.get_parse_tree(r'(a)+((b)|c)*')
         print '\n'.join(fmttree(r))
         errs = []
-        bygroups_check_no_capture_group_in_repetition(r, errs, 1)
+        bygroups_check_no_capture_group_in_repetition(r, errs, (Text, Text))
         print errs
         self.assertEquals(len(errs), 3)
 
@@ -290,7 +301,7 @@ class CheckersTests(TestCase):
         r = Regex.get_parse_tree(r'(a)?(b)')
         print '\n'.join(fmttree(r))
         errs = []
-        bygroups_check_no_capture_group_in_repetition(r, errs, 1)
+        bygroups_check_no_capture_group_in_repetition(r, errs, (Text, Text))
         print errs
         self.assertEquals(len(errs), 0)
 
@@ -311,14 +322,14 @@ class CheckersTests(TestCase):
     def test_toknum_good(self):
         r = Regex.get_parse_tree('(a)(b)')
         errs = []
-        bygroups_check_toknum(r, errs, 2)
+        bygroups_check_toknum(r, errs, (Text, Text))
         print errs
         self.assertEquals(len(errs), 0)
 
     def test_toknum_too_few(self):
         r = Regex.get_parse_tree('(a)')
         errs = []
-        bygroups_check_toknum(r, errs, 2)
+        bygroups_check_toknum(r, errs, (Text, Text))
         print errs
         self.assertEquals(len(errs), 1)
         self.assertEquals(('107', logging.ERROR, 0), errs[0][:3])
@@ -326,7 +337,7 @@ class CheckersTests(TestCase):
     def test_toknum_too_many(self):
         r = Regex.get_parse_tree('((a)b)')
         errs = []
-        bygroups_check_toknum(r, errs, 1)
+        bygroups_check_toknum(r, errs, (Text,))
         print errs
         self.assertEquals(len(errs), 1)
         self.assertEquals(('107', logging.INFO, 0), errs[0][:3])

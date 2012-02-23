@@ -133,11 +133,12 @@ def check_no_python_named_capture_groups(reg, errs):
         errs.append((num, level, n.start, msg))
         break
 
-def bygroups_check_toknum(reg, errs, desired_number):
+def bygroups_check_toknum(reg, errs, desired_groups):
     num = '107'
     level = logging.ERROR
     msg = 'Wrong number of groups(%d) for bygroups(%d)'
     n = len(list(find_all_by_type(reg, Other.Open.Capturing)))
+    desired_number = len(desired_groups)
     if n < desired_number:
         errs.append((num, level, 0, msg % (n, desired_number)))
     elif n > desired_number:
@@ -146,7 +147,7 @@ def bygroups_check_toknum(reg, errs, desired_number):
         errs.append((num, logging.INFO, 0,
                      (msg % (n, desired_number)) + ' (extra groups)'))
 
-def bygroups_check_overlap(reg, errs, desired_number):
+def bygroups_check_overlap(reg, errs, desired_groups):
     num = '108'
     level = logging.ERROR
     msg = 'Nested capture group other than the final one using bygroups'
@@ -155,6 +156,7 @@ def bygroups_check_overlap(reg, errs, desired_number):
     if not n:
         # bygroups_check_toknum should already complain about this case.
         return
+    desired_number = len(desired_groups)
     # The order returned by find_all_by_type appears to be the same as python's
     # group numbers (matters most when nesting).
     prev_end = 0
@@ -183,7 +185,8 @@ def bygroups_check_overlap(reg, errs, desired_number):
                 # This is a nested group with the outer one prior to the last
                 # one bygroups cares about
                 #print "Boring", group.start, prev_end
-                errs.append((num, level, group.start, msg))
+                if desired_groups[idx] is not None:
+                    errs.append((num, level, group.start, msg))
                 group = prev
 
         prev_end = group.parsed_end
@@ -197,10 +200,11 @@ def bygroups_check_overlap(reg, errs, desired_number):
         if j:
             errs.append((num, level, j.start, msg))
 
-def bygroups_check_no_capture_group_in_repetition(reg, errs, desired_number):
+def bygroups_check_no_capture_group_in_repetition(reg, errs, desired_groups):
     num = '109'
     level = logging.ERROR
     msg = 'Capture group should not be within a repetition when using bygroups'
+    desired_number = len(desired_groups)
     for idx, capture in enumerate(find_all_by_type(reg, Other.Open.Capturing)):
         parent = capture.parent()
         while parent:

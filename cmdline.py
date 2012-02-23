@@ -89,11 +89,11 @@ def check_lexer(lexer_name, cls, mod_path, min_level):
             # bygroups(...) doesn't match the number of capture groups
             bygroups_callback = bygroups(1).func_code
             if callable(pat[1]) and pat[1].func_code is bygroups_callback:
-                num_groups = len(pat[1].__closure__[0].cell_contents)
+                by_groups = pat[1].__closure__[0].cell_contents
             else:
-                num_groups = None
+                by_groups = None
 
-            errs = run_all_checkers(reg, num_groups)
+            errs = run_all_checkers(reg, by_groups)
             # Special case for empty string, since it needs action.
             manual_check_for_empty_string_match(reg, errs, pat)
 
