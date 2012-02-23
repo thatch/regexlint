@@ -503,3 +503,23 @@ class CheckersTests(TestCase):
         print errs
         self.assertEquals(len(errs), 0)
 
+    def test_manual_empty_string(self):
+        r = Regex.get_parse_tree('')
+        errs = []
+        manual_check_for_empty_string_match(r, errs, ('', Token))
+        print errs
+        self.assertEquals(len(errs), 1)
+
+    def test_manual_empty_string_after_word(self):
+        r = Regex.get_parse_tree(r'$\b')
+        errs = []
+        manual_check_for_empty_string_match(r, errs, (r'$\b', Token))
+        print errs
+        self.assertEquals(len(errs), 1)
+
+    def test_manual_empty_string_ok_when_pop(self):
+        r = Regex.get_parse_tree(r'$\b')
+        errs = []
+        manual_check_for_empty_string_match(r, errs, (r'$\b', Token, '#pop'))
+        print errs
+        self.assertEquals(len(errs), 0)

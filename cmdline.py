@@ -21,6 +21,7 @@ import logging
 from pygments.lexer import RegexLexer, bygroups
 from pygments.token import Token
 from regexlint import Regex, run_all_checkers
+from regexlint.checkers import manual_check_for_empty_string_match
 from regexlint.indicator import find_offending_line, mark, find_substr_pos
 from regexlint.util import consistent_repr, shorten
 
@@ -93,13 +94,8 @@ def check_lexer(lexer_name, cls, mod_path, min_level):
                 num_groups = None
 
             errs = run_all_checkers(reg, num_groups)
-            # Note, things like '#pop' and 'next-state' get a pass on this, as
-            # do callback functions, since they are mostly used for advanced
-            # features in indent-dependent languages.
-            if len(pat) < 3 and isinstance(pat[1], Token):
-                if re.compile(pat[0]).match(''):
-                    errs.append(('999', logging.ERROR, 'Matches empty string'))
-                #remove_error(errs, '103')
+            # Special case for empty string, since it needs action.
+            manual_check_for_empty_string_match(reg, errs, pat)
 
             errs.sort(key=lambda k: (k[1], k[0]))
             if errs:

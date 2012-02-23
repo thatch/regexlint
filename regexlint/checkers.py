@@ -15,9 +15,11 @@
 import re
 import sys
 import logging
+
+from pygments.token import Token
+
 from regexlint.parser import *
 from regexlint.util import *
-
 
 def check_no_nulls(reg, errs):
     num = '101'
@@ -341,6 +343,18 @@ def check_charclass_overlap(reg, errs):
                 counts[i] += 1
             dupes = [chr(k) for k, v in counts.iteritems() if v > 1]
             errs.append((num, level, cc.start, msg % (dupes,)))
+
+
+def manual_check_for_empty_string_match(reg, errs, raw_pat):
+    # Note, things like '#pop' and 'next-state' get a pass on this, as
+    # do callback functions, since they are mostly used for advanced
+    # features in indent-dependent languages.
+    if len(raw_pat) < 3 and isinstance(raw_pat[1], Token.__class__):
+        regex = re.compile(raw_pat[0])
+        # Either match on empty string, or empty string at the end of a word
+        if regex.match('') or regex.match('a', 1):
+            errs.append(('999', logging.ERROR, 0, 'Matches empty string'))
+        #remove_error(errs, '103')
 
 
 def run_all_checkers(regex, expected_groups=None):
