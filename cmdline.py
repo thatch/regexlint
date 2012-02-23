@@ -99,10 +99,14 @@ def check_lexer(lexer_name, cls, mod_path, min_level):
 
             errs.sort(key=lambda k: (k[1], k[0]))
             if errs:
-                has_errors = True
                 #print "Errors in", lexer_name, state, "pattern", i
                 for num, severity, pos1, text in errs:
                     if severity < min_level: continue
+
+                    # Only set this if we're going to output something --
+                    # otherwise the [Lexer] OK won't print
+                    has_errors = True
+
                     foo = find_offending_line(mod_path, lexer_name, state, i, pos1)
                     if foo:
                         line = 'L' + str(foo[0])
