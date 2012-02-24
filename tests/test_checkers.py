@@ -107,6 +107,13 @@ class CheckersTests(TestCase):
         check_charclass_homogeneous_ranges(r, errs)
         self.assertEquals(len(errs), 0)
 
+    def test_good_charclass_hex(self):
+        r = Regex.get_parse_tree(r'[\x00-\xff]')
+        print '\n'.join(fmttree(r))
+        errs = []
+        check_charclass_homogeneous_ranges(r, errs)
+        self.assertEquals(len(errs), 0)
+
     def test_bad_charclass(self):
         r = Regex.get_parse_tree(r'[A-z]')
         print '\n'.join(fmttree(r))
@@ -124,6 +131,15 @@ class CheckersTests(TestCase):
         check_charclass_homogeneous_ranges(r, errs)
         print errs
         self.assertEquals(len(errs), 2)
+
+    def test_bad_charclass3(self):
+        r = Regex.get_parse_tree(r'[\010-\020]')
+        print '\n'.join(fmttree(r))
+        print r.children[0].chars
+        errs = []
+        check_charclass_homogeneous_ranges(r, errs)
+        print errs
+        self.assertEquals(len(errs), 1)
 
     def test_good_unicode_charclass(self):
         r = Regex.get_parse_tree(ur'[\u1000-\uffff]')
