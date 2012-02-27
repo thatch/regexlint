@@ -216,7 +216,7 @@ def bygroups_check_no_capture_group_in_repetition(reg, errs, desired_groups):
                 parent.type is not Other.Repetition.Question):
                 if idx >= desired_number:
                     errs.append((num, logging.INFO, capture.start, msg + ' (extra groups)'))
-                else:
+                elif desired_groups[idx] is not None:
                     errs.append((num, level, capture.start, msg))
             parent = parent.parent()
 
@@ -350,6 +350,46 @@ def check_charclass_overlap(reg, errs):
                 counts[i] += 1
             dupes = [chr(k) for k, v in counts.iteritems() if v > 1]
             errs.append((num, level, cc.start, msg % (dupes,)))
+
+COMMON_SINGLE_CHAR_CODES = map(ord, '()*+. ')
+
+def check_charclass_len(reg, errs):
+    num = '118'
+    level = logging.WARNING
+    msg = 'Superfluous character class when only one char'
+
+    for cc in find_all_by_type(reg, Other.CharClass):
+        if not cc.negated and len(cc.matching_character_codes) == 1:
+            # Some people use [*] instead of \* -- allow this for now as an INFO
+            if (cc.matching_character_codes[0] in COMMON_SINGLE_CHAR_CODES
+                or cc.parent().type in Other.Repetition):
+                errs.append((num, logging.INFO, cc.start, msg))
+            else:
+                errs.append((num, level, cc.start, msg))
+
+
+def check_charclass_negation(reg, errs):
+    num = '119'
+    level = logging.WARNING
+    msg = 'Instead of negating character class, flip case of builtin class'
+
+    for cc in find_all_by_type(reg, Other.CharClass):
+        if cc.negated and all(c.type in Other.BuiltinCharclass for c in
+                              cc.children[1:]):
+            errs.append((num, level, cc.start, msg))
+
+
+def check_multiline_anchors(reg, errs):
+    num = '120'
+    level = logging.WARNING
+    msg = 'Use of ^ or $ without multiline mode: use \\A or \\Z explicitly.'
+
+    if reg.flags & re.M:
+        return
+
+    for anchor in find_all_by_type(reg, (Other.Anchor.Beginning,
+                                         Other.Anchor.End)):
+        errs.append((num, level, anchor.start, msg))
 
 
 def manual_check_for_empty_string_match(reg, errs, raw_pat):
