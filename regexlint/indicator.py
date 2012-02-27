@@ -12,11 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import re
-
-from pygments.lexers.agile import PythonLexer
-from pygments.token import Punctuation, Name, Text, String
-
 from regexlint.indicator_ast import find_offending_line, find_substr_pos
 
 

@@ -172,7 +172,8 @@ class CharClass(Node):
         self.matching_character_codes = []
         for i in n:
             if isinstance(i, CharRange):
-                self.matching_character_codes.extend(range(eval_char(i.a.data), eval_char(i.b.data)+1))
+                self.matching_character_codes.extend(
+                    range(eval_char(i.a.data), eval_char(i.b.data)+1))
             elif i.data == r'\s':
                 self.matching_character_codes.extend(map(ord, WHITESPACE))
             elif i.data == r'\w':

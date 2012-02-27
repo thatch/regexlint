@@ -84,10 +84,8 @@ def check_lexer(lexer_name, cls, mod_path, min_level):
             except:
                 print pat[0], cls
                 raise
-            # TODO check for verbose mode here.
             # Special problem: display an error if count of args to
             # bygroups(...) doesn't match the number of capture groups
-            bygroups_callback = bygroups(1).func_code
             if callable(pat[1]) and pat[1].func_code is bygroups_callback:
                 by_groups = pat[1].__closure__[0].cell_contents
             else:
@@ -107,7 +105,8 @@ def check_lexer(lexer_name, cls, mod_path, min_level):
                     # otherwise the [Lexer] OK won't print
                     has_errors = True
 
-                    foo = find_offending_line(mod_path, lexer_name, state, i, pos1)
+                    foo = find_offending_line(mod_path, lexer_name, state, i,
+                                              pos1)
                     if foo:
                         line = 'L' + str(foo[0])
                     else:
@@ -122,8 +121,8 @@ def check_lexer(lexer_name, cls, mod_path, min_level):
                         start = len(consistent_repr(pat[0][:pos1])) - 1
                         end = len(consistent_repr(pat[0][:pos1+1])) - 1
                         if start == end:
-                            # This handles the case where pos1 points to the end of
-                            # the string. Regex "|" with pos1 = 1.
+                            # This handles the case where pos1 points to the end
+                            # of the string. Regex "|" with pos1 = 1.
                             end += 1
                         assert end > start
                         text, start, end = shorten(repr(pat[0]), start, end)
