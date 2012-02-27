@@ -530,6 +530,79 @@ class CheckersTests(TestCase):
         print errs
         self.assertEquals(len(errs), 0)
 
+    def test_single_entry_charclass(self):
+        r = Regex.get_parse_tree(r'[0]')
+        errs = []
+        check_charclass_len(r, errs)
+        print errs
+        self.assertEquals(len(errs), 1)
+        self.assertEquals(logging.WARNING, errs[0][1])
+
+    def test_single_entry_charclass_ok(self):
+        r = Regex.get_parse_tree(r'[ ]')
+        errs = []
+        check_charclass_len(r, errs)
+        print errs
+        self.assertEquals(len(errs), 1)
+        self.assertEquals(logging.INFO, errs[0][1])
+
+    def test_single_entry_optional_charclass(self):
+        r = Regex.get_parse_tree(r'0[0]?')
+        errs = []
+        check_charclass_len(r, errs)
+        print errs
+        self.assertEquals(len(errs), 1)
+        self.assertEquals(logging.INFO, errs[0][1])
+
+    def test_single_entry_charclass_doesnt_fire_when_negated(self):
+        r = Regex.get_parse_tree(r'[^0]')
+        errs = []
+        check_charclass_len(r, errs)
+        print errs
+        self.assertEquals(len(errs), 0)
+
+    def test_single_entry_charclass_doesnt_fire_on_ranges(self):
+        r = Regex.get_parse_tree(r'[a-b]')
+        errs = []
+        check_charclass_len(r, errs)
+        print errs
+        self.assertEquals(len(errs), 0)
+
+    def test_negated_charclass_with_builtin_range(self):
+        r = Regex.get_parse_tree(r'[^\s]')
+        errs = []
+        check_charclass_negation(r, errs)
+        print errs
+        self.assertEquals(len(errs), 1)
+
+    def test_negated_charclass_with_multiple_builtin_range(self):
+        r = Regex.get_parse_tree(r'[^\s\D]')
+        errs = []
+        check_charclass_negation(r, errs)
+        print errs
+        self.assertEquals(len(errs), 1)
+
+    def test_negated_charclass_with_builtin_range(self):
+        r = Regex.get_parse_tree(r'[\s]')
+        errs = []
+        check_charclass_negation(r, errs)
+        print errs
+        self.assertEquals(len(errs), 0)
+
+    def test_caret_in_multiline(self):
+        r = Regex.get_parse_tree(r'^\s+', re.M)
+        errs = []
+        check_multiline_anchors(r, errs)
+        print errs
+        self.assertEquals(len(errs), 0)
+
+    def test_caret_without_multiline(self):
+        r = Regex.get_parse_tree(r'^\s+', 0)
+        errs = []
+        check_multiline_anchors(r, errs)
+        print errs
+        self.assertEquals(len(errs), 1)
+
     def test_manual_empty_string(self):
         r = Regex.get_parse_tree('')
         errs = []
