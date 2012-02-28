@@ -264,11 +264,15 @@ class BaseRegex(object):
             (r'[\x00-\x08\x0a\x0d]', Other.Suspicious),
         ],
         'charclass_start': [
-            (r'\]', Other.Literal.CloseCharClass),
+            (r'\^', Other.NegateCharclass, 'charclass_squarebracket_special'),
+            (r'', Other.Continue, 'charclass_squarebracket_special'),
+        ],
+        'charclass_squarebracket_special': [
+            (r'\]', Other.Literal.CloseCharClass, 'charclass_rest'),
             (r'', Other.Continue, 'charclass_rest'),
         ],
         'charclass_rest': [
-            (r'\]', Other.CloseCharClass, '#pop:2'),
+            (r'\]', Other.CloseCharClass, '#pop:3'),
             (r'\\-', Other.EscapedDash),
             (r'[\-^]', Other.Special),
             include('simpleliteral'),

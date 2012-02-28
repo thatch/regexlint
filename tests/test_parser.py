@@ -38,6 +38,8 @@ CHARCLASS_PATTERNS = [
     r'[a\-b]',
     r'[a-]',
     r'[][]',
+    r'[]]',
+    r'[^]]',
     r'[\[\]]',
     r'[\w]',
     r'[\w\s\d]',
@@ -207,7 +209,11 @@ def charclass_runner(pat):
     regexlint_version = r.children[0].matching_character_codes
     sre_parsed = sre_parse.parse(pat)
     print sre_parsed
-    golden = list(expand_sre_in(sre_parsed[0][1]))
+    if isinstance(sre_parsed[0][1], int):
+        sre_chars = sre_parsed
+    else:
+        sre_chars = sre_parsed[0][1]
+    golden = list(expand_sre_in(sre_chars))
     print golden
 
     print regexlint_version
