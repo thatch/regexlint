@@ -580,10 +580,17 @@ class CheckersTests(TestCase):
         errs = []
         check_charclass_negation(r, errs)
         print errs
-        self.assertEquals(len(errs), 1)
+        self.assertEquals(len(errs), 0)
 
     def test_negated_charclass_with_builtin_range(self):
         r = Regex.get_parse_tree(r'[\s]')
+        errs = []
+        check_charclass_negation(r, errs)
+        print errs
+        self.assertEquals(len(errs), 0)
+
+    def test_negated_charclass_only_bracket(self):
+        r = Regex.get_parse_tree(r'[^]]+')
         errs = []
         check_charclass_negation(r, errs)
         print errs

@@ -374,8 +374,8 @@ def check_charclass_negation(reg, errs):
     msg = 'Instead of negating character class, flip case of builtin class'
 
     for cc in find_all_by_type(reg, Other.CharClass):
-        if cc.negated and all(c.type in Other.BuiltinCharclass for c in
-                              cc.children[1:]):
+        if (cc.negated and len(cc.children) == 2 and
+            cc.children[1].type in Other.BuiltinCharclass):
             errs.append((num, level, cc.start, msg))
 
 
