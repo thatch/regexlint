@@ -87,7 +87,7 @@ def check_lexer(lexer_name, cls, mod_path, min_level):
             # Special problem: display an error if count of args to
             # bygroups(...) doesn't match the number of capture groups
             if callable(pat[1]) and pat[1].func_code is bygroups_callback:
-                by_groups = pat[1].__closure__[0].cell_contents
+                by_groups = pat[1].func_closure[0].cell_contents
             else:
                 by_groups = None
 
