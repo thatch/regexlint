@@ -530,6 +530,13 @@ class CheckersTests(TestCase):
         print errs
         self.assertEquals(len(errs), 0)
 
+    def test_charclass_overlap4(self):
+        r = Regex.get_parse_tree(r'[\Sx]')
+        errs = []
+        check_charclass_overlap(r, errs)
+        print errs
+        self.assertEquals(len(errs), 1)
+
     def test_single_entry_charclass(self):
         r = Regex.get_parse_tree(r'[0]')
         errs = []

@@ -181,11 +181,17 @@ class CharClass(Node):
             elif i.data == r'\d':
                 self.matching_character_codes.extend(map(ord, DIGITS))
             elif i.data == r'\S':
-                pass  # TODO
+                whitespace = set(map(ord, WHITESPACE))
+                self.matching_character_codes.extend(i for i in range(256) if i
+                                                     not in whitespace)
             elif i.data == r'\W':
-                pass  # TODO
+                word = set(map(ord, WORD))
+                self.matching_character_codes.extend(i for i in range(256) if i
+                                                     not in word)
             elif i.data == r'\D':
-                pass  # TODO
+                digits = set(map(ord, DIGITS))
+                self.matching_character_codes.extend(i for i in range(256) if i
+                                                     not in digits)
             else:
                 self.matching_character_codes.append(eval_char(i.data))
 
