@@ -17,6 +17,10 @@
 import sys
 import re
 import logging
+import itertools
+import multiprocessing
+
+from StringIO import StringIO  # can't pickle cStringIO
 
 from pygments.lexer import RegexLexer, bygroups
 from pygments.token import Token
@@ -37,18 +41,31 @@ def main(argv):
     o.add_option('--min_level',
                  help='Min level to print (logging constant names like ERROR)',
                  default='WARNING')
+    o.add_option('--output_file',
+                 help='Output filename for analysis',
+                 default=None)
+    o.add_option('--no_parallel',
+                 help='Run checks in a single thread',
+                 default=True,
+                 dest='parallel',
+                 action='store_false')
     opts, args = o.parse_args(argv)
 
     min_level = getattr(logging, opts.min_level)
+    if opts.output_file:
+        output_stream = file(opts.output_file, 'wb')
+    else:
+        output_stream = sys.stdout
 
     # currently just a list of module names.
+    lexers_to_check = []
     for module in args:
         if ':' in module:
             module, cls = module.split(':')
         else:
             cls = None
         mod = import_mod(module)
-        print "Module", module
+        lexers_to_check.append(StringIO("Module %s\n" % module))
         if cls:
             lexers = [cls]
         else:
@@ -57,20 +74,33 @@ def main(argv):
             else:
                 lexers = mod.__dict__.keys()
 
-        check_lexers(mod, lexers, min_level=min_level)
+        for k in lexers:
+            v = getattr(mod, k)
+            if hasattr(v, '__bases__') and issubclass(v, RegexLexer) and v.tokens:
+                lexers_to_check.append((k, v, mod.__file__, min_level,
+                                        StringIO()))
 
-def check_lexers(mod, lexer_names, min_level):
-    for k in lexer_names:
-        v = getattr(mod, k)
-        if hasattr(v, '__bases__') and issubclass(v, RegexLexer) and v.tokens:
-            check_lexer(k, v, mod.__file__, min_level)
+    if opts.parallel:
+        pool = multiprocessing.Pool()
+    else:
+        pool = itertools
+
+    for result in pool.imap(check_lexer_map, lexers_to_check):
+        result.seek(0, 0)
+        output_stream.write(result.read())
+
 
 def remove_error(errs, *nums):
     for i in range(len(errs)-1, -1, -1):
         if errs[i][0] in nums:
             del errs[i]
 
-def check_lexer(lexer_name, cls, mod_path, min_level):
+def check_lexer_map(args):
+    if isinstance(args, StringIO):
+        return args
+    return check_lexer(*args)
+
+def check_lexer(lexer_name, cls, mod_path, min_level, output_stream=sys.stdout):
     #print lexer_name
     #print cls().tokens
     has_errors = False
@@ -82,7 +112,7 @@ def check_lexer(lexer_name, cls, mod_path, min_level):
             try:
                 reg = Regex.get_parse_tree(pat[0], cls.flags)
             except:
-                print pat[0], cls
+                print >>output_stream, pat[0], cls
                 raise
             # Special problem: display an error if count of args to
             # bygroups(...) doesn't match the number of capture groups
@@ -111,11 +141,11 @@ def check_lexer(lexer_name, cls, mod_path, min_level):
                         line = 'L' + str(foo[0])
                     else:
                         line = 'pat#' + str(i+1)
-                    print '%s%s:%s:%s:%s: %s' % (
+                    print >>output_stream, '%s%s:%s:%s:%s: %s' % (
                         logging.getLevelName(severity)[0], num,
                         lexer_name, state, line, text)
                     if foo:
-                        mark(*foo)
+                        mark(*(foo + (output_stream,)))
                     else:
                         # Substract one for closing quote
                         start = len(consistent_repr(pat[0][:pos1])) - 1
@@ -126,9 +156,11 @@ def check_lexer(lexer_name, cls, mod_path, min_level):
                             end += 1
                         assert end > start
                         text, start, end = shorten(repr(pat[0]), start, end)
-                        mark(-1, start, end, text)
+                        mark(-1, start, end, text, output_stream)
     if not has_errors:
-        print lexer_name, "OK"
+        print >>output_stream, lexer_name, "OK"
+
+    return output_stream
 
 
 if __name__ == '__main__':

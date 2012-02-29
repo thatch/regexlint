@@ -15,6 +15,6 @@
 from regexlint.indicator_ast import find_offending_line, find_substr_pos
 
 
-def mark(lineno, d1, d2, text):
-    print "  " + text
-    print "  " + " " * d1 + '^' * (d2-d1) + ' ' + 'here'
+def mark(lineno, d1, d2, text, output_stream):
+    output_stream.write("  " + text + "\n")
+    output_stream.write("  " + " " * d1 + '^' * (d2-d1) + ' ' + 'here\n')
