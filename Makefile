@@ -28,6 +28,10 @@ test:
 demo:
 	$(PYTHON) cmdline.py $$($(PYTHON) -c 'from pygments.lexers._mapping import LEXERS; print "\n".join(set([i[0] for i in LEXERS.values()]))')
 
+.PHONY: selfdemo
+selfdemo:
+	$(PYTHON) cmdline.py regexlint.parser
+
 .PHONY: coverage
 coverage:
 	rm -rf .figleaf html
