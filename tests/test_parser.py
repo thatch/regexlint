@@ -45,7 +45,9 @@ CHARCLASS_PATTERNS = [
     r'[\w\s\d]',
     r'[^xx]',
     r'[^x\s]',
-    #r'[^x\S]'
+    r'[^x\D]',
+    r'[^x\S]',
+    r'[^x\W]',
 ]
 
 class BasicTests(TestCase):
@@ -187,6 +189,12 @@ def test_reconstruct():
 SRE_CATS = {'category_space': map(ord, WHITESPACE),
             'category_digit': map(ord, DIGITS),
             'category_word': map(ord, WORD),
+            'category_not_space': sorted(set(range(256)) -
+                                         set(map(ord, WHITESPACE))),
+            'category_not_digit': sorted(set(range(256)) -
+                                         set(map(ord, DIGITS))),
+            'category_not_word': sorted(set(range(256)) -
+                                        set(map(ord, WORD))),
            }
 
 def expand_sre_in(x):
