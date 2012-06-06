@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sys
+import nose.plugins.skip
+
 from regexlint.util import *
 from unittest import TestCase
 
@@ -27,17 +30,16 @@ class CmdlineTests(TestCase):
     def test_consistent_repr_unicode(self):
         golden = r"u'text\u1234text'"
         print repr(eval(golden))
+        self.assertEquals(len(golden), len(consistent_repr(eval(golden))))
         self.assertEquals(golden, consistent_repr(eval(golden)))
 
     def test_consistent_repr_wide_unicode(self):
-        try:
-            unichr(0x100001)
-        except:
+        if sys.maxunicode < 65536:
             # Python build doesn't handle 32-bit unicode
-            # TODO: say that the test was skipped
-            pass
+            raise nose.plugins.skip.SkipTest('narrow python build')
         else:
             # Python build handles 32-bit unicode
             golden = r"u'text\U00101234text'"
             print repr(eval(golden))
+            self.assertEquals(len(golden), len(consistent_repr(eval(golden))))
             self.assertEquals(golden, consistent_repr(eval(golden)))
