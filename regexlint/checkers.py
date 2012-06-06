@@ -392,6 +392,23 @@ def check_multiline_anchors(reg, errs):
         errs.append((num, level, anchor.start, msg))
 
 
+def check_wide_unicode(reg, errs):
+    num = '121'
+    level = logging.WARNING
+    msg = 'Wide unicode causes problems in narrow builds'
+
+    if isinstance(reg.raw, unicode):
+        for lit in find_all_by_type(reg, Other.Literal):
+            if len(lit.data) == 1 and ord(lit.data) > 65535:
+                # entire codepoint, we're in a wide build
+                errs.append((num, level, lit.start, msg))
+            elif len(lit.data) == 1 and 0xd800 <= ord(lit.data) <= 0xdbff:
+                # high surrogate byte, we're in a narrow build
+                errs.append((num, level, lit.start, msg))
+            # TODO figure out if there's a way to catch overly-verbose unicode
+            # (needs to happen before string parsing)
+
+
 def manual_check_for_empty_string_match(reg, errs, raw_pat):
     # Note, things like '#pop' and 'next-state' get a pass on this, as
     # do callback functions, since they are mostly used for advanced

@@ -617,6 +617,36 @@ class CheckersTests(TestCase):
         print errs
         self.assertEquals(len(errs), 1)
 
+    def test_wide_unicode_warning(self):
+        r = Regex.get_parse_tree(ur'\U00010000', 0)
+        errs = []
+        check_wide_unicode(r, errs)
+        print errs
+        self.assertEquals(len(errs), 1)
+
+    def test_wide_unicode_unnecessary(self):
+        r = Regex.get_parse_tree(ur'\U00000000', 0)
+        errs = []
+        check_wide_unicode(r, errs)
+        print errs
+        self.assertEquals(len(errs), 0)
+        # TODO this should give something like 'use narrow unicode'
+
+    def test_wide_unicode_range_unnecessary(self):
+        r = Regex.get_parse_tree(ur'[\U00000000-\U0000FFFF]', 0)
+        errs = []
+        check_wide_unicode(r, errs)
+        print errs
+        self.assertEquals(len(errs), 0)
+        # TODO this should give something like 'use narrow unicode'
+
+    def test_wide_unicode_range_bad(self):
+        r = Regex.get_parse_tree(ur'[\U00010000-\U0001FFFF]', 0)
+        errs = []
+        check_wide_unicode(r, errs)
+        print errs
+        self.assertEquals(len(errs), 2)
+
     def test_manual_empty_string(self):
         r = Regex.get_parse_tree('')
         errs = []
