@@ -24,6 +24,16 @@ import ast
 from regexlint.indicator_substr import find_substr_pos
 from regexlint.util import get_module_text
 
+try:
+    enumerate((), 1)
+except TypeError:
+    # Py25 compat
+    def enumerate(l, start=None):
+        i = start or 0
+        for x in l:
+            yield i, x
+            i += 1
+
 def find_offending_line(mod, clsname, state, idx, pos):
     """
     Returns a tuple of (lineno, charpos_start, charpos_end, line_content)
