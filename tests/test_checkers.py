@@ -622,6 +622,13 @@ class CheckersTests(TestCase):
         errs = []
         check_wide_unicode(r, errs)
         print errs
+        self.assertEquals(len(errs), 0)
+
+    def test_wide_unicode_warning(self):
+        r = Regex.get_parse_tree(ur'\U00010000+', 0)
+        errs = []
+        check_wide_unicode(r, errs)
+        print errs
         self.assertEquals(len(errs), 1)
 
     def test_wide_unicode_unnecessary(self):
