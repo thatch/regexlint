@@ -351,6 +351,33 @@ def check_charclass_overlap(reg, errs):
             dupes = [chr(k) for k, v in counts.iteritems() if v > 1]
             errs.append((num, level, cc.start, msg % (dupes,)))
 
+def check_charclass_case_insensitive_overlap(reg, errs):
+    num = '122'
+    level = logging.WARNING
+    msg = 'Overlap due to case insensitive mode'
+
+    directives = list(find_all_by_type(reg, Other.Directive))
+    flags = ''.join(d.data for d in directives)
+    if 'i' not in flags and not re.IGNORECASE & reg.flags:
+        return
+
+    def fold(i):
+        if i >= 97 and i <= 122:
+            return i - 32
+        return i
+
+    ranges = set()
+    # TODO: This only finds the most obvious ones, like
+    # (?i)[0-9a-fA-F], and doesn't do anything about non-ranges.
+    for cc in find_all_by_type(reg, Other.CharClass):
+        for c in cc.chars:
+            if isinstance(c, CharRange):
+                a = eval_char(c.a.data)
+                b = eval_char(c.b.data)
+                if (fold(a), fold(b)) in ranges:
+                    errs.append((num, level, c.a.start, msg))
+                ranges.add((fold(a), fold(b)))
+
 COMMON_SINGLE_CHAR_CODES = map(ord, '()*+. ')
 
 def check_charclass_len(reg, errs):

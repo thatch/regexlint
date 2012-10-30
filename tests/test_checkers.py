@@ -603,6 +603,37 @@ class CheckersTests(TestCase):
         print errs
         self.assertEquals(len(errs), 0)
 
+    def test_charclass_case_insensitive_overlap_ok(self):
+        r = Regex.get_parse_tree(r'(?i)[a-f]')
+        errs = []
+        check_charclass_case_insensitive_overlap(r, errs)
+        print errs
+        self.assertEquals(len(errs), 0)
+
+    def test_charclass_case_insensitive_overlap_ok2(self):
+        # TODO, catch this too, but suppress if not related to case-folding,
+        # e.g. a-fa-z should trigger some other error, not this one, but
+        # (?i)a-fA-Z should trigger this one.
+        r = Regex.get_parse_tree(r'(?i)[a-fA-Z]')
+        errs = []
+        check_charclass_case_insensitive_overlap(r, errs)
+        print errs
+        self.assertEquals(len(errs), 0)
+
+    def test_charclass_case_insensitive_overlap_flag(self):
+        r = Regex.get_parse_tree(r'[0-9a-fA-F]', flags=re.I)
+        errs = []
+        check_charclass_case_insensitive_overlap(r, errs)
+        print errs
+        self.assertEquals(len(errs), 1)
+
+    def test_charclass_case_insensitive_overlap_directive(self):
+        r = Regex.get_parse_tree(r'(?i)[0-9a-fA-F]')
+        errs = []
+        check_charclass_case_insensitive_overlap(r, errs)
+        print errs
+        self.assertEquals(len(errs), 1)
+
     def test_caret_in_multiline(self):
         r = Regex.get_parse_tree(r'^\s+', re.M)
         errs = []
