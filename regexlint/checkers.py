@@ -366,10 +366,10 @@ def check_charclass_case_insensitive_overlap(reg, errs):
             return i - 32
         return i
 
-    ranges = set()
     # TODO: This only finds the most obvious ones, like
     # (?i)[0-9a-fA-F], and doesn't do anything about non-ranges.
     for cc in find_all_by_type(reg, Other.CharClass):
+        ranges = set()
         for c in cc.chars:
             if isinstance(c, CharRange):
                 a = eval_char(c.a.data)

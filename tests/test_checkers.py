@@ -634,6 +634,13 @@ class CheckersTests(TestCase):
         print errs
         self.assertEquals(len(errs), 1)
 
+    def test_charclass_case_insensitive_resets_properly(self):
+        r = Regex.get_parse_tree(r'(?i)[a-f][a-f]')
+        errs = []
+        check_charclass_case_insensitive_overlap(r, errs)
+        print errs
+        self.assertEquals(len(errs), 0)
+
     def test_caret_in_multiline(self):
         r = Regex.get_parse_tree(r'^\s+', re.M)
         errs = []
