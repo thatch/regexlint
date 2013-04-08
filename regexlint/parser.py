@@ -252,7 +252,7 @@ class BaseRegex(object):
             (r'\(\?!', Other.Open.NegativeLookahead),
             (r'\(\?<!', Other.Open.NegativeLookbehind),
             (r'\(\?<', Other.Open.Lookbehind),
-            (r'(\(\?P=)(\w+)(\))', Other.Open.ExistsNamed),
+            (r'(\(\?P=)(\w+)(?=\))', Other.Open.ExistsNamed),
             (r'\(\?\(\d+\)', Other.Open.Exists),
             (r'\(\?#.*?\)', Other.Comment),
             (r'\(', Other.Open.Capturing),

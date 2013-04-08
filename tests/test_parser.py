@@ -28,6 +28,7 @@ SAMPLE_PATTERNS = [
     r'x*',
     r'x{1,}',
     r'x{,5}?',
+    r'(?P<first_char>.)(?P=first_char)*',
 ]
 
 CHARCLASS_PATTERNS = [
