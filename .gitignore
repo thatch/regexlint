@@ -5,3 +5,6 @@ html/
 *.sw[a-z]
 *.bak
 *.orig
+*.egg-info
+build
+dist

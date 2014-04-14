@@ -31,11 +31,12 @@ from regexlint.util import consistent_repr, shorten
 
 def import_mod(m):
     mod = __import__(m)
-    for part in m.split('.')[1:]:
-        mod = getattr(mod, part)
-    return mod
+    return sys.modules[m]
 
-def main(argv):
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv[1:]
+
     import optparse
     o = optparse.OptionParser()
     o.add_option('--min_level',
@@ -164,4 +165,4 @@ def check_lexer(lexer_name, cls, mod_path, min_level, output_stream=sys.stdout):
 
 
 if __name__ == '__main__':
-    main(sys.argv[1:])
+    main()
