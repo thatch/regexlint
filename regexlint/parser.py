@@ -437,7 +437,7 @@ class BaseRegex(object):
             open_stack.pop()
 
         open_stack[0].close(len(s), j+len(data), '')
-        assert len(open_stack) == 1
+        assert len(open_stack) == 1, s + repr(open_stack)
         return open_stack[0]
 
 
