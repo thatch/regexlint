@@ -575,6 +575,15 @@ class CheckersTests(TestCase):
         print errs
         self.assertEquals(len(errs), 0)
 
+    def test_single_entry_charclass_ok(self):
+        r = Regex.get_parse_tree(r'[#]', re.VERBOSE)
+        errs = []
+        check_charclass_len(r, errs)
+        print errs
+        self.assertEquals(len(errs), 1)
+        self.assertEquals(logging.WARNING, errs[0][1])
+        self.assertTrue('backslash' in errs[0][3])
+
     def test_negated_charclass_with_builtin_range(self):
         r = Regex.get_parse_tree(r'[^\s]')
         errs = []

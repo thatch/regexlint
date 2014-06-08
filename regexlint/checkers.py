@@ -391,6 +391,10 @@ def check_charclass_len(reg, errs):
             if (cc.matching_character_codes[0] in COMMON_SINGLE_CHAR_CODES
                 or cc.parent().type in Other.Repetition):
                 errs.append((num, logging.INFO, cc.start, msg))
+            elif (reg.flags & re.VERBOSE and
+                  cc.matching_character_codes[0] == ord('#')):
+                errs.append((num, logging.WARNING, cc.start,
+                             msg + ': use backslash'))
             else:
                 errs.append((num, level, cc.start, msg))
 
