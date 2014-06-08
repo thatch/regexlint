@@ -114,14 +114,18 @@ def check_lexer(lexer_name, cls, mod_path, min_level, output_stream=sys.stdout):
             return output_stream
 
         for i, pat in enumerate(pats):
-            #print repr(pat[0])
+            if hasattr(pat, 'state'):
+                # new 'default'
+                pat = (r'', state)
             try:
                 reg = Regex.get_parse_tree(pat[0], cls.flags)
             except TypeError:
                 # Doesn't support _inherit yet.
                 continue
-            except:
-                print >>output_stream, pat[0], cls
+            except Exception:
+                try:
+                    print >>output_stream, pat[0], cls
+                except: pass
                 raise
             # Special problem: display an error if count of args to
             # bygroups(...) doesn't match the number of capture groups
