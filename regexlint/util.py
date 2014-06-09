@@ -187,3 +187,46 @@ def rindex(a, x):
             return i
     raise ValueError("Not found")
 
+def charclass(c):
+    if isinstance(c, (int, long)):
+        c = chr(c)
+
+    if 'A' <= c <= 'Z':
+        return 'upper'
+    elif 'a' <= c <= 'z':
+        return 'lower'
+    elif '0' <= c <= '9':
+        return 'digit'
+    else:
+        return 'other'
+
+def build_ranges(ord_seq):
+    ranges = []
+
+    prev_start = None
+    prev_end = None
+    prev_type = None
+
+    for i in sorted(ord_seq):
+        t = charclass(i)
+        if (prev_type and prev_type != 'other' and t == prev_type and
+            prev_end == i - 1):
+            # extend
+            prev_end = i
+        else:
+            if prev_type:
+                if prev_start != prev_end:
+                    ranges.append((prev_start, prev_end))
+                else:
+                    ranges.append(prev_start)
+            prev_start = i
+            prev_end = i
+            prev_type = t
+
+    if prev_type:
+        if prev_start != prev_end:
+            ranges.append((prev_start, prev_end))
+        else:
+            ranges.append(prev_start)
+
+    return ranges

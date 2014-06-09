@@ -43,3 +43,9 @@ class CmdlineTests(TestCase):
             print repr(eval(golden))
             self.assertEquals(len(golden), len(consistent_repr(eval(golden))))
             self.assertEquals(golden, consistent_repr(eval(golden)))
+
+class RangesTest(TestCase):
+    def test_disjoint(self):
+        self.assertEquals([65, 67, 69], build_ranges([65, 67, 69]))
+    def test_joint(self):
+        self.assertEquals([(65, 66), 69], build_ranges([65, 66, 69]))

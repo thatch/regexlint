@@ -482,14 +482,6 @@ class VerboseRegex(BaseRegex, RegexLexer):
     ]
 
 
-def charclass(c):
-    if 'A' <= c <= 'Z':
-        return 'upper'
-    elif 'a' <= c <= 'z':
-        return 'lower'
-    else:
-        return 'other'
-
 def parser_main(args):
     if not args:
         regex = r'(foo|bar)|[ba]z'
