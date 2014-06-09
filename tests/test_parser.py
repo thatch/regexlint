@@ -223,10 +223,21 @@ def charclass_runner(pat):
     else:
         sre_chars = sre_parsed[0][1]
     golden = list(expand_sre_in(sre_chars))
-    print golden
+    order_matters = True
+    try:
+        if (sre_parsed[0][0] == 'not_literal' or
+            sre_parsed[0][1][0][0] == 'negate'):
+            golden = [i for i in range(256) if i not in golden]
+            order_matters = False
+    except TypeError:
+        pass
 
+    print golden
     print regexlint_version
-    assert golden == regexlint_version
+    if order_matters:
+        assert golden == regexlint_version
+    else:
+        assert sorted(golden) == sorted(regexlint_version)
 
 def test_charclass():
     for i in CHARCLASS_PATTERNS:

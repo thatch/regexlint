@@ -195,6 +195,10 @@ class CharClass(Node):
             else:
                 self.matching_character_codes.append(eval_char(i.data))
 
+        if self.negated:
+            # destroys order :(
+            self.matching_character_codes = \
+                    list(set(range(256)) - set(self.matching_character_codes))
         self.chars = n
 
     def reconstruct(self):
