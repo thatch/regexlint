@@ -18,23 +18,27 @@ def simplify_charclass(matching_codes):
     # see if it's legal; add in remaining ranges; score.
     # TODO negated too.
     possibilities = []
-    for i in range(2**len(keys)):
-        chosen_keys = [keys[b] for b in range(len(keys)) if i & 1<<b]
-        #print i, chosen_keys
-        # TODO for each charclass.
-        matching_set = set(matching_codes)
-        chosen_set = set()
-        for k in chosen_keys:
-            chosen_set |= set(CATS[k])
-        if (len(matching_set & chosen_set) == len(chosen_set)):
-            matching_set -= chosen_set
-            r = build_ranges(matching_set)
-            r[:0] = chosen_keys
-            possibilities.append((charclass_score(r), r))
+    for negated in (0, 1):
+        for i in range(2**len(keys)):
+            chosen_keys = [keys[b] for b in range(len(keys)) if i & 1<<b]
+            #print i, chosen_keys
+            # TODO for each charclass.
+            if negated:
+                matching_set = set(range(256)) - set(matching_codes)
+            else:
+                matching_set = set(matching_codes)
+            chosen_set = set()
+            for k in chosen_keys:
+                chosen_set |= set(CATS[k])
+            if (len(matching_set & chosen_set) == len(chosen_set)):
+                matching_set -= chosen_set
+                r = build_ranges(matching_set)
+                r[:0] = chosen_keys
+                possibilities.append((charclass_score(r, negated), r, negated))
 
     # There will always be one, since we include no-categories above.
     possibilities.sort()
-    return possibilities[0][1]
+    return (possibilities[0][1], possibilities[0][2])
 
 
 def charclass_score(items, negated=False):
@@ -45,10 +49,10 @@ def charclass_score(items, negated=False):
     """
 
     if isinstance(items, CharClass):
+        print items
         return items.end - items.start - 2
 
-    # TODO negated
-    return len(build_output(items))
+    return len(build_output(items)) + (negated and 1 or 0)
 
 def build_output(items):
     buf = []
@@ -56,11 +60,18 @@ def build_output(items):
         if isinstance(i, tuple):
             if i[0] != i[1] - 1:
                 # todo escape
-                buf.append('%s-%s' % (chr(i[0]), chr(i[1])))
+                buf.append('%s-%s' % (_esc(chr(i[0])), _esc(chr(i[1]))))
             else:
-                buf.append(chr(i[0]))
+                buf.append(_esc(chr(i[0])))
         elif isinstance(i, str):
             buf.append(i)
         else:
-            buf.append(chr(i))
+            buf.append(_esc(chr(i)))
     return ''.join(buf)
+
+def _esc(c):
+    if c == '\n':
+        return '\\n'
+    elif c in ('\\', '-'):
+        return '\\' + c
+    return c

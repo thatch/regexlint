@@ -22,6 +22,11 @@ EXAMPLES = [
     (r'[a-zA-Z0-9_]', r'[\w]'),
     (r'[0-9]', r'[\d]'),
     (r'[0-9a-f]', r'[\da-f]'),
+    (r'[\S]', r'[\S]'),
+    (r'[\S\n]', r'[\S\n]'),
+    (r'[^a-zA-Z0-9_]', '[\W]'),
+    (r'[^a-zA-Z0-9]', '[\W_]'),
+    (r'[^\S\n]', r'[^\S\n]'),
 ]
 
 def test_examples():
@@ -36,8 +41,8 @@ def runner(the_input, the_output):
     cc = first_charclass(the_input)
     codes = cc.matching_character_codes
 
-    new_codes = simplify_charclass(codes)
-    new_score = charclass_score(new_codes)
+    new_codes, negated = simplify_charclass(codes)
+    new_score = charclass_score(new_codes, negated)
 
     expected_score = charclass_score(first_charclass(the_output))
     print "new_codes", new_codes
