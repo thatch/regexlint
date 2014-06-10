@@ -15,7 +15,7 @@
 from unittest import TestCase
 
 from regexlint.parser import Regex
-from regexlint._charclass import simplify_charclass, charclass_score, build_output
+from regexlint.charclass import *
 
 EXAMPLES = [
     (r'[a-z]', r'[a-z]'),

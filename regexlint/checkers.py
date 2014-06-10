@@ -20,7 +20,7 @@ from pygments.token import Token
 
 from regexlint.parser import *
 from regexlint.util import *
-from regexlint._charclass import charclass_score, simplify_charclass, build_output
+from regexlint.charclass import *
 
 
 def check_no_nulls(reg, errs):
