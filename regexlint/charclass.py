@@ -65,7 +65,7 @@ def charclass_score(items, negated=False):
     """
 
     if isinstance(items, CharClass):
-        print items
+        #print items
         return items.end - items.start - 2
 
     return len(build_output(items)) + (negated and 1 or 0)
@@ -78,7 +78,7 @@ def build_output(items):
                 # todo escape
                 buf.append('%s-%s' % (_esc(chr(i[0])), _esc(chr(i[1]))))
             else:
-                buf.append(_esc(chr(i[0])))
+                buf.append(_esc(chr(i[0])) + _esc(chr(i[1])))
         elif isinstance(i, str):
             buf.append(i)
         else:
@@ -88,6 +88,8 @@ def build_output(items):
 def _esc(c):
     if c == '\n':
         return '\\n'
-    elif c in ('\\', '-'):
+    elif c == '\t':
+        return '\\t'
+    elif c in ('\\', '-', '[', ']'):
         return '\\' + c
     return c
