@@ -20,6 +20,8 @@ from pygments.token import Token
 
 from regexlint.parser import *
 from regexlint.util import *
+from regexlint._charclass import charclass_score, simplify_charclass, build_output
+
 
 def check_no_nulls(reg, errs):
     num = '101'
@@ -448,6 +450,23 @@ def check_wide_unicode(reg, errs):
             # TODO figure out if there's a way to catch overly-verbose unicode
             # (needs to happen before string parsing)
             # TODO expand to more use of suspicious unicode
+
+
+def check_charclass_simplify(reg, errs):
+    num = '123'
+    level = logging.WARNING
+    msg = 'Regex can be written more simply: %s -> %s'
+
+    for c in find_all_by_type(reg, Other.CharClass):
+        existing_score = charclass_score(c)
+        new_codes, negated = simplify_charclass(c.matching_character_codes)
+        new_score = charclass_score(new_codes, negated)
+        if new_score < existing_score:
+            new_class = '[%s%s]' % (negated and '^' or '',
+                                    build_output(new_codes))
+
+            errs.append((num, level, c.start,
+                         msg % (c.reconstruct(), new_class)))
 
 
 def manual_check_for_empty_string_match(reg, errs, raw_pat):
