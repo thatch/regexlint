@@ -457,6 +457,10 @@ def check_charclass_simplify(reg, errs):
     level = logging.WARNING
     msg = 'Regex can be written more simply: %s -> %s'
 
+    if isinstance(reg.raw, unicode):
+        # Many of the operations performed here assume 8-bit ascii.
+        return
+
     for c in find_all_by_type(reg, Other.CharClass):
         existing_score = charclass_score(c)
         new_codes, negated = simplify_charclass(c.matching_character_codes)
