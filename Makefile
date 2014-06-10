@@ -16,6 +16,7 @@ PYTHON?=python
 NOSETESTS?=nosetests
 FIGLEAF?=figleaf
 FIGLEAF2HTML?=figleaf2html
+DEMOOPTS?=
 
 .PHONY: all
 all:
@@ -26,7 +27,7 @@ test:
 
 .PHONY: demo
 demo:
-	$(PYTHON) regexlint/cmdline.py $$($(PYTHON) -c 'from pygments.lexers._mapping import LEXERS; print "\n".join(set([i[0] for i in LEXERS.values()]))')
+	$(PYTHON) regexlint/cmdline.py $(DEMOOPTS) $$($(PYTHON) -c 'from pygments.lexers._mapping import LEXERS; print "\n".join(set([i[0] for i in LEXERS.values()]))')
 
 .PHONY: selfdemo
 selfdemo:
