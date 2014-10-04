@@ -24,6 +24,10 @@ from StringIO import StringIO  # can't pickle cStringIO
 
 from pygments.lexer import RegexLexer, bygroups
 from pygments.token import Token
+try:
+    from pygments.util import Future
+except ImportError:
+    class Future: pass
 from regexlint import Regex, run_all_checkers
 from regexlint.checkers import manual_check_for_empty_string_match
 from regexlint.indicator import find_offending_line, mark, find_substr_pos
@@ -120,7 +124,10 @@ def check_lexer(lexer_name, cls, mod_path, min_level, output_stream=sys.stdout):
             if hasattr(pat, 'state'):
                 # new 'default'
                 pat = (r'', state)
+
             try:
+                if isinstance(pat[0], Future):
+                    pat = (pat[0].get(),) + pat[1:]
                 reg = Regex.get_parse_tree(pat[0], cls.flags)
             except TypeError:
                 # Doesn't support _inherit yet.
