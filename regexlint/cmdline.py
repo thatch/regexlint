@@ -38,7 +38,7 @@ def main(argv=None):
         argv = sys.argv[1:]
 
     import optparse
-    o = optparse.OptionParser()
+    o = optparse.OptionParser(usage='%prog [options] lexermodule[:class] ...')
     o.add_option('--min_level',
                  help='Min level to print (logging constant names like ERROR)',
                  default='WARNING')
@@ -51,6 +51,9 @@ def main(argv=None):
                  dest='parallel',
                  action='store_false')
     opts, args = o.parse_args(argv)
+
+    if not args:
+        o.error('need some arguments with modules/classes to check')
 
     min_level = getattr(logging, opts.min_level)
     if opts.output_file:
