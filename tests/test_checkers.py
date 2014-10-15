@@ -214,6 +214,20 @@ class CheckersTests(TestCase):
         errs = run_all_checkers(r)
         self.assertEquals(len(errs), 2)
 
+    def test_run_all_checkers_curly_ok(self):
+        r = Regex.get_parse_tree(r'\{')
+        print '\n'.join(fmttree(r))
+        errs = run_all_checkers(r)
+        print errs
+        self.assertEquals(len(errs), 0)
+
+    def test_run_all_checkers_curly(self):
+        r = Regex.get_parse_tree(r'{')
+        print '\n'.join(fmttree(r))
+        errs = run_all_checkers(r)
+        print errs
+        self.assertEquals(len(errs), 1)
+
     def test_bygroups_check_overlap_success(self):
         r = Regex.get_parse_tree(r'(a)?(b)')
         print '\n'.join(fmttree(r))
