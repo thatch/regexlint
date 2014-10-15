@@ -483,7 +483,8 @@ def main(args):
         regex = r'(foo|) [a-Mq-&]'
     else:
         regex = args[0]
-    print run_all_checkers(Regex.get_parse_tree(regex))
+    for num, severity, pos1, text in run_all_checkers(Regex.get_parse_tree(regex)):
+        print '%s%s:%s:%s' % (logging.getLevelName(severity)[0], num, pos1, text)
 
 if __name__ == '__main__':
     main(sys.argv[1:])
