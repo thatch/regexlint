@@ -724,6 +724,13 @@ class CheckersTests(TestCase):
         print errs
         self.assertEquals(len(errs), 1)
 
+    def test_redundant_repetition(self):
+        r = Regex.get_parse_tree(r'a{1}', 0)
+        errs = []
+        check_redundant_repetition(r, errs)
+        print errs
+        self.assertEquals(len(errs), 1)
+
     def test_manual_empty_string(self):
         r = Regex.get_parse_tree('')
         errs = []
