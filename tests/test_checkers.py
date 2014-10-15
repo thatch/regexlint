@@ -717,6 +717,13 @@ class CheckersTests(TestCase):
         print errs
         self.assertEquals(len(errs), 0)
 
+    def test_unescaped_curly_brace(self):
+        r = Regex.get_parse_tree(r'{', 0)
+        errs = []
+        check_unescaped_braces(r, errs)
+        print errs
+        self.assertEquals(len(errs), 1)
+
     def test_manual_empty_string(self):
         r = Regex.get_parse_tree('')
         errs = []

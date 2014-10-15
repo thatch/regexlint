@@ -266,6 +266,7 @@ class BaseRegex(object):
             include('only_in_verbose'),
             include('suspicious'),
             include('meta'),
+            (r'[{}]', Other.UnescapedCurly),  # legal in sre, illegal in regex
             include('simpleliteral'),
             (r'[^\\()|\[\]]+', Other.Literals), # TODO
         ],
@@ -303,7 +304,6 @@ class BaseRegex(object):
             (r'\?', Other.Repetition.Question),
             (r'\{\d+,(?:\d+)?\}\??', Other.Repetition.Curly),
             (r'\{,?\d+\}\??', Other.Repetition.Curly),
-
         ],
         'simpleliteral': [
             (r'[^\\^-]', Other.Literal),
