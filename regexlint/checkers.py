@@ -488,8 +488,19 @@ def check_redundant_repetition(reg, errs):
     msg = 'Redundant repetition spec: %s'
 
     for repeat in find_all_by_type(reg, Other.Repetition.Curly):
-        if repeat.end_data in ('{1}', '{1,1}'):
+        if repeat.min == 1 and repeat.max == 1:
+            errs.append((num, level, repeat.start, (msg % repeat.end_data) +
+                        ' can be omitted'))
+        elif repeat.min == repeat.max and ',' in repeat.end_data:
             errs.append((num, level, repeat.start, msg % repeat.end_data))
+        elif repeat.min == 0 and repeat.max is None and '*' not in repeat.end_data:
+            errs.append((num, level, repeat.start, 'should be *'))
+        elif repeat.min == 1 and repeat.max is None and '+' not in repeat.end_data:
+            errs.append((num, level, repeat.start, 'should be +'))
+        elif (repeat.min == 0 and repeat.max == 1 and not
+              repeat.end_data.startswith('?')):
+            errs.append((num, level, repeat.start, 'should be +'))
+
 
 
 def manual_check_for_empty_string_match(reg, errs, raw_pat):
