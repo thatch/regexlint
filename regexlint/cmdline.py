@@ -15,6 +15,8 @@
 # limitations under the License.
 
 import sys
+sys.maxunicode = 65535 # HACK: make Pygments think we're on a narrow build.
+
 import re
 import logging
 import itertools
