@@ -473,6 +473,25 @@ def check_charclass_simplify(reg, errs):
                          msg % (c.reconstruct(), new_class)))
 
 
+def check_unescaped_braces(reg, errs):
+    num = '124'
+    level = logging.ERROR
+    msg = 'Curly braces should be escaped if not repeat spec (regex compat)'
+
+    for brace in find_all_by_type(reg, Other.UnescapedCurly):
+        errs.append((num, level, brace.start, msg))
+
+
+def check_redundant_repetition(reg, errs):
+    num = '125'
+    level = logging.WARNING
+    msg = 'Redundant repetition spec: %s'
+
+    for repeat in find_all_by_type(reg, Other.Repetition.Curly):
+        if repeat.end_data in ('{1}', '{1,1}'):
+            errs.append((num, level, repeat.start, msg % repeat.end_data))
+
+
 def manual_check_for_empty_string_match(reg, errs, raw_pat):
     # Note, things like '#pop' and 'next-state' get a pass on this, as
     # do callback functions, since they are mostly used for advanced
