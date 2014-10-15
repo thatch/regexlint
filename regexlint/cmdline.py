@@ -123,7 +123,7 @@ def check_lexer(lexer_name, cls, mod_path, min_level, output_stream=sys.stdout):
         for i, pat in enumerate(pats):
             if hasattr(pat, 'state'):
                 # new 'default'
-                pat = (r'', state)
+                continue
 
             try:
                 if isinstance(pat[0], Future):

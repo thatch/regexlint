@@ -759,9 +759,10 @@ class CheckersTests(TestCase):
         print errs
         self.assertEquals(len(errs), 1)
 
-    def test_manual_empty_string_ok_when_pop(self):
+    def test_manual_empty_string_when_pop(self):
+        # default() is handled in cmdline.py
         r = Regex.get_parse_tree(r'$\b')
         errs = []
         manual_check_for_empty_string_match(r, errs, (r'$\b', Token, '#pop'))
         print errs
-        self.assertEquals(len(errs), 0)
+        self.assertEquals(len(errs), 1)

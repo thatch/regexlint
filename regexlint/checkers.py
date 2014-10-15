@@ -493,10 +493,11 @@ def check_redundant_repetition(reg, errs):
 
 
 def manual_check_for_empty_string_match(reg, errs, raw_pat):
-    # Note, things like '#pop' and 'next-state' get a pass on this, as
-    # do callback functions, since they are mostly used for advanced
-    # features in indent-dependent languages.
-    if len(raw_pat) < 3 and isinstance(raw_pat[1], Token.__class__):
+    # Note: callback functions get a pass here, since they're used for
+    # indentation tracking in SassLexer (and friends).
+    # Explicitly, '#pop' and 'next-state' ARE checked because if they
+    # intentionally match on empty string, they should be using default().
+    if isinstance(raw_pat[1], Token.__class__):
         regex = re.compile(raw_pat[0])
         # Either match on empty string, or empty string at the end of a word
         if regex.match('') or regex.match('a', 1):
