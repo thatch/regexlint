@@ -123,14 +123,15 @@ class CheckersTests(TestCase):
         print errs
         self.assertEquals(len(errs), 1)
 
-    def test_bad_charclass2(self):
-        r = Regex.get_parse_tree(r'[z-A]')
-        print '\n'.join(fmttree(r))
-        print r.children[0].chars
-        errs = []
-        check_charclass_homogeneous_ranges(r, errs)
-        print errs
-        self.assertEquals(len(errs), 2)
+    # Now that we run the regex through sre_parse, this is invalid.
+    #def test_bad_charclass2(self):
+    #    r = Regex.get_parse_tree(r'[z-A]')
+    #    print '\n'.join(fmttree(r))
+    #    print r.children[0].chars
+    #    errs = []
+    #    check_charclass_homogeneous_ranges(r, errs)
+    #    print errs
+    #    self.assertEquals(len(errs), 2)
 
     def test_bad_charclass3(self):
         r = Regex.get_parse_tree(r'[\010-\020]')

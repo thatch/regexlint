@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import re
+import sre_parse
 import sys
 import weakref
 
@@ -120,10 +121,12 @@ class Node(object):
 
 
 class RootNode(Node):
-    def __init__(self, t, start=None, parsed_start=None, data=None, raw=None, flags=None):
+    def __init__(self, t, start=None, parsed_start=None, data=None, raw=None,
+                 flags=None, effective_flags=None):
         super(RootNode, self).__init__(t, start, parsed_start, data)
         self.raw = raw
         self.flags = flags
+        self.effective_flags = effective_flags
 
 
 class CharRange(object):
@@ -332,21 +335,17 @@ class BaseRegex(object):
 
     @classmethod
     def get_parse_tree(cls, s, flags=0):
-        if flags & re.VERBOSE:
-            return VerboseRegex._get_parse_tree(s, flags)
-        else:
-            try:
-                tree = cls._get_parse_tree(s, flags)
-            except VerboseRegexTryAgain:
-                #print "Using verbose mode"
-                tree = VerboseRegex._get_parse_tree(s, flags | re.VERBOSE)
-            return tree
+        effective_flags = sre_parse.parse(s, flags).pattern.flags
+
+        if effective_flags & re.VERBOSE:
+            return VerboseRegex._get_parse_tree(s, flags, effective_flags)
+        return cls._get_parse_tree(s, flags, effective_flags)
 
     @classmethod
-    def _get_parse_tree(cls, s, flags):
+    def _get_parse_tree(cls, s, flags, effective_flags):
         n = RootNode(t=PROGRESSION, data='', start=0, parsed_start=0, raw=s,
-                     flags=flags)
-        verbose = flags & re.VERBOSE
+                     flags=flags, effective_flags=effective_flags)
+        verbose = effective_flags & re.VERBOSE
 
         open_stack = [n]
         verbose_offset = 0

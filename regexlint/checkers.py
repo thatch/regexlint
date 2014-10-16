@@ -46,7 +46,7 @@ def check_no_newlines(reg, errs):
 
     # Ignore re.VERBOSE modes for now.  I'm not sure how they fit in with
     # Java.
-    if reg.flags & re.VERBOSE:
+    if reg.effective_flags & re.VERBOSE:
         return
 
     pos = reg.raw.find('\n')
@@ -358,9 +358,7 @@ def check_charclass_case_insensitive_overlap(reg, errs):
     level = logging.WARNING
     msg = 'Overlap due to case insensitive mode'
 
-    directives = list(find_all_by_type(reg, Other.Directive))
-    flags = ''.join(d.data for d in directives)
-    if 'i' not in flags and not re.IGNORECASE & reg.flags:
+    if not reg.effective_flags & re.IGNORECASE:
         return
 
     def fold(i):
@@ -417,7 +415,7 @@ def check_multiline_anchors(reg, errs):
     level = logging.WARNING
     msg = 'Use of ^ or $ without multiline mode: use \\A or \\Z explicitly.'
 
-    if reg.flags & re.M:
+    if reg.effective_flags & re.M:
         return
 
     for anchor in find_all_by_type(reg, (Other.Anchor.Beginning,
