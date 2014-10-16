@@ -127,18 +127,26 @@ def eval_char(c):
 class Break(Exception):
     pass
 
-def consistent_repr(s):
+
+def consistent_repr(s, escape=(), include_quotes=True):
     """Returns a string that represents repr(s), but without the logic that
-    switches between single and double quotes."""
+    switches between single and double quotes.
+
+    Equivalent to _codecs.escape_encode for ASCII strings (and this works on
+    Unicode).
+    """
     special = {
+        '\r': '\\r',
         '\n': '\\n',
         '\t': '\\t',
         '\\': '\\\\',
         '\'': '\\\'',
     }
-    rep = ['\'']
-    if isinstance(s, unicode):
-        rep.insert(0, 'u')
+    rep = []
+    if include_quotes:
+        if isinstance(s, unicode):
+            rep.append('u')
+        rep.append('\'')
     for char in s:
         if char in special:
             rep.append(special[char])
@@ -148,10 +156,14 @@ def consistent_repr(s):
             rep.append('\\u%04x' % ord(char))
         elif ord(char) < 32 or ord(char) > 126:
             rep.append('\\x%02x' % ord(char))
+        elif char in escape:
+            rep.append('\\' + char)
         else:
             rep.append(char)
-    rep.append('\'')
+    if include_quotes:
+        rep.append('\'')
     return ''.join(rep)
+
 
 def shorten(text, start, end):
     """Returns a substring of text, so that its length is < 80 or so."""
@@ -171,6 +183,7 @@ def shorten(text, start, end):
         cut_text += '...'
     return (cut_text, start, end)
 
+
 def get_module_text(mod):
     if '\n' in mod:
         mod_text = mod
@@ -181,11 +194,13 @@ def get_module_text(mod):
             mod_text = f.read()
     return mod_text
 
+
 def rindex(a, x):
     for i in range(len(a)-1, -1, -1):
         if a[i] == x:
             return i
     raise ValueError("Not found")
+
 
 def charclass(c):
     if isinstance(c, (int, long)):
@@ -199,6 +214,7 @@ def charclass(c):
         return 'digit'
     else:
         return 'other'
+
 
 def build_ranges(ord_seq):
     ranges = []
