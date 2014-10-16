@@ -15,7 +15,8 @@
 from regexlint.parser import WHITESPACE, DIGITS, WORD, CharClass
 from regexlint.util import build_ranges, esc
 
-__all__ = ['simplify_charclass', 'charclass_score', 'build_output']
+__all__ = ['simplify_charclass', 'charclass_score', 'build_output',
+           'WontOptimize']
 
 CATS = {
     '\\s': map(ord, WHITESPACE),
@@ -26,7 +27,23 @@ CATS = {
     '\\W': [i for i in range(256) if chr(i) not in WORD],
 }
 
+HEX = set(map(ord, '0123456789abcdef'))
+
+class WontOptimize(Exception):
+    pass
+
 def simplify_charclass(matching_codes):
+    """Given a sequence of ordinals, return a (seq, negated) tuple.
+
+    If the class shouldn't be optimized, raises WontOptimize with a basic reason
+    string.
+    """
+    # HACK: Don't simplify something that looks fairly like a hex digit pattern.
+    # They look arguably prettier as '0-9a-f' than '\da-f'
+    if (len(HEX & set(matching_codes)) == len(HEX) and
+        ord('g') not in matching_codes):
+        raise WontOptimize('Hex digit')
+
     # Tries all possibilities of categories first.
     keys = CATS.keys()
     #print "keys", keys
@@ -52,7 +69,8 @@ def simplify_charclass(matching_codes):
                 r[:0] = chosen_keys
                 possibilities.append((charclass_score(r, negated), r, negated))
 
-    # There will always be one, since we include no-categories above.
+    # There will always be one, since we include no-categories above, and it's
+    # not on the WontOptimize list.
     possibilities.sort()
     return (possibilities[0][1], possibilities[0][2])
 
@@ -65,7 +83,8 @@ def charclass_score(items, negated=False):
     """
 
     if isinstance(items, CharClass):
-        #print items
+        # This is for testing -- given a parsed CharClass, returns the length of
+        # the string inside []
         return items.end - items.start - 2
 
     return len(build_output(items)) + (negated and 1 or 0)

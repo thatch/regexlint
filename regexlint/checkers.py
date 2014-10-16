@@ -461,7 +461,10 @@ def check_charclass_simplify(reg, errs):
 
     for c in find_all_by_type(reg, Other.CharClass):
         existing_score = charclass_score(c)
-        new_codes, negated = simplify_charclass(c.matching_character_codes)
+        try:
+            new_codes, negated = simplify_charclass(c.matching_character_codes)
+        except WontOptimize:
+            continue
         new_score = charclass_score(new_codes, negated)
         if new_score < existing_score:
             new_class = '[%s%s]' % (negated and '^' or '',

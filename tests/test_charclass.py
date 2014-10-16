@@ -21,7 +21,7 @@ EXAMPLES = [
     (r'[a-z]', r'[a-z]'),
     (r'[a-zA-Z0-9_]', r'[\w]'),
     (r'[0-9]', r'[\d]'),
-    (r'[0-9a-f]', r'[\da-f]'),
+    (r'[0-9a-f]', None),
     (r'[\S]', r'[\S]'),
     (r'[\S\n]', r'[\S\n]'),
     (r'[^a-zA-Z0-9_]', '[\W]'),
@@ -43,11 +43,16 @@ def runner(the_input, the_output):
     cc = first_charclass(the_input)
     codes = cc.matching_character_codes
 
-    new_codes, negated = simplify_charclass(codes)
+    try:
+        new_codes, negated = simplify_charclass(codes)
+    except WontOptimize:
+        assert the_output is None
+        return
+
     new_score = charclass_score(new_codes, negated)
 
     expected_score = charclass_score(first_charclass(the_output))
     print "new_codes", new_codes
     print "new_score", new_score, "expected_score", expected_score
-    print "built", build_output(new_codes)
+    print "built", repr(build_output(new_codes))
     assert new_score == expected_score
