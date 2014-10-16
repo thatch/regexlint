@@ -34,13 +34,19 @@ except TypeError:
             yield i, x
             i += 1
 
+parse_cache = {}
+
 def find_offending_line(mod, clsname, state, idx, pos):
     """
     Returns a tuple of (lineno, charpos_start, charpos_end, line_content)
     """
-    mod_text = get_module_text(mod)
+    try:
+        mod_text, tree = parse_cache[mod]
+    except KeyError:
+        mod_text = get_module_text(mod)
+        tree = ast.parse(mod_text)
+        parse_cache[mod] = mod_text, tree
 
-    tree = ast.parse(mod_text)
     klass = None
     for item in ast.walk(tree):
         if isinstance(item, ast.ClassDef):
