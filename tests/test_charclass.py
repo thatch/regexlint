@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import re
 from unittest import TestCase
 
 from regexlint.parser import Regex
@@ -29,6 +30,10 @@ EXAMPLES = [
     (r'[^\S\n]', r'[\t\x0b\x0c\r ]'),  # Double negative
     (r'[01]', r'[01]'),
     (r'[0-1]', r'[01]'),
+    (r'[a-zA-Z]', r'[a-zA-Z]'),
+    (r'(?i)[a-zA-Z]', r'[a-z]'),
+    (r'(?i)[a-z0-9_]', r'[\w]'),
+    (r'(?i)[A-Z0-9_]', r'[\w]'),
 ]
 
 def test_examples():
@@ -37,14 +42,18 @@ def test_examples():
 
 def first_charclass(reg_text):
     r = Regex().get_parse_tree(reg_text, 0)
-    return r.children[0]
+    return r.children[-1]
+
+def effective_flags(reg_text):
+    return Regex().get_parse_tree(reg_text, 0).effective_flags
 
 def runner(the_input, the_output):
     cc = first_charclass(the_input)
     codes = cc.matching_character_codes
+    ignorecase = bool(effective_flags(the_input) & re.IGNORECASE)
 
     try:
-        new_codes, negated = simplify_charclass(codes)
+        new_codes, negated = simplify_charclass(codes, ignorecase=ignorecase)
     except WontOptimize:
         assert the_output is None
         return

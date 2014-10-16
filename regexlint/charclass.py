@@ -32,8 +32,10 @@ HEX = set(map(ord, '0123456789abcdef'))
 class WontOptimize(Exception):
     pass
 
-def simplify_charclass(matching_codes):
+def simplify_charclass(matching_codes, ignorecase=False):
     """Given a sequence of ordinals, return a (seq, negated) tuple.
+
+    `ignorecase` is whether the regex flags include re.IGNORECASE.
 
     If the class shouldn't be optimized, raises WontOptimize with a basic reason
     string.
@@ -43,6 +45,12 @@ def simplify_charclass(matching_codes):
     if (len(HEX & set(matching_codes)) == len(HEX) and
         ord('g') not in matching_codes):
         raise WontOptimize('Hex digit')
+
+    if ignorecase:
+        matching_codes = [lowercase_code(i) for i in matching_codes]
+        base_set = set(map(lowercase_code, range(256)))
+    else:
+        base_set = set(range(256))
 
     # Tries all possibilities of categories first.
     keys = CATS.keys()
@@ -61,12 +69,15 @@ def simplify_charclass(matching_codes):
             if negated:
                 if any(k[1].isupper() for k in chosen_keys):
                     continue
-                matching_set = set(range(256)) - set(matching_codes)
+
+            if negated:
+                matching_set = base_set - set(matching_codes)
             else:
                 matching_set = set(matching_codes)
             chosen_set = set()
             for k in chosen_keys:
-                chosen_set |= set(CATS[k])
+                chosen_set |= set(CATS[k]) & base_set
+            # True iff. the chosen categories fit entirely in the target.
             if (len(matching_set & chosen_set) == len(chosen_set)):
                 matching_set -= chosen_set
                 r = build_ranges(matching_set)
@@ -114,3 +125,8 @@ def build_output(items):
             buf.append(_esc(chr(i)))
     return ''.join(buf)
 
+
+def lowercase_code(i):
+    if 65 <= i <= 90:
+        return i + 32
+    return i
