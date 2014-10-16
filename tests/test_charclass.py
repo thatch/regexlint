@@ -28,6 +28,7 @@ EXAMPLES = [
     (r'[^a-zA-Z0-9_]', '[\W]'),
     (r'[^a-zA-Z0-9]', '[\W_]'),
     (r'[^\S\n]', r'[\t\x0b\x0c\r ]'),  # Double negative
+    (r'[\r\n]', r'[\r\n]'),
     (r'[01]', r'[01]'),
     (r'[0-1]', r'[01]'),
     (r'[a-zA-Z]', r'[a-zA-Z]'),
