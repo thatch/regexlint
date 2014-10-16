@@ -82,7 +82,8 @@ def simplify_charclass(matching_codes, ignorecase=False):
                 matching_set -= chosen_set
                 r = build_ranges(matching_set)
                 r[:0] = chosen_keys
-                possibilities.append((charclass_score(r, negated), r, negated))
+                if r:
+                    possibilities.append((charclass_score(r, negated), r, negated))
 
     # There will always be one, since we include no-categories above, and it's
     # not on the WontOptimize list.

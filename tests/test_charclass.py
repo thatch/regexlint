@@ -34,6 +34,7 @@ EXAMPLES = [
     (r'(?i)[a-zA-Z]', r'[a-z]'),
     (r'(?i)[a-z0-9_]', r'[\w]'),
     (r'(?i)[A-Z0-9_]', r'[\w]'),
+    (r'[\x00-\xff]', r'[\w\W]'),
 ]
 
 def test_examples():
