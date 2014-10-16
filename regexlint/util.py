@@ -110,7 +110,7 @@ def eval_char(c):
         return ord(c)
     elif c[-1] == "'":
         return ord("'")
-    elif c[0] == '\\' and c[1] not in 'abtrnvfx01234567\\':
+    elif c[0] == '\\' and c[1] not in 'abtrnvfxuU01234567\\':
         c = c[1:] # unnecessary backslash?
 
     #print repr(c)
@@ -120,9 +120,9 @@ def eval_char(c):
     try:
         return ord(eval("'%s'" % c))
     except TypeError:
-        print "C is", repr(c), len(c)
-        raise
-    # TODO any other cases?
+        # Probably a unicode escape.
+        return ord(eval("u'%s'" % c))
+
 
 class Break(Exception):
     pass

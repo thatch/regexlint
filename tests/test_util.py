@@ -18,7 +18,19 @@ import nose.plugins.skip
 from regexlint.util import *
 from unittest import TestCase
 
-class CmdlineTests(TestCase):
+class UtilTests(TestCase):
+    def test_eval_char_canonical_ascii(self):
+        for i in range(256):
+            char = chr(i)
+            actual = eval_char(repr(char)[1:-1])
+            self.assertEquals(i, actual)
+
+    def test_eval_char_numeric(self):
+        for c in ('\x40', '\100', u'\u0040', '@', '\\@', '\\x40', '\\100',
+                  '\\u0040', '\\U00000040'):
+            actual = eval_char(c)
+            self.assertEquals(actual, 0x40)
+
     def test_consistent_repr_empty(self):
         golden = r"''"
         self.assertEquals(golden, consistent_repr(eval(golden)))
