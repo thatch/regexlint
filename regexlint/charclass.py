@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from regexlint.parser import WHITESPACE, DIGITS, WORD, CharClass
-from regexlint.util import build_ranges
+from regexlint.util import build_ranges, esc
 
 __all__ = ['simplify_charclass', 'charclass_score', 'build_output']
 
@@ -70,7 +70,13 @@ def charclass_score(items, negated=False):
 
     return len(build_output(items)) + (negated and 1 or 0)
 
+
 def build_output(items):
+    def _esc(c):
+        # Single quotes are two chars in reprs.  The others are metachars in
+        # character classes.
+        return esc(c, '\'-[]')
+
     buf = []
     for i in items:
         if isinstance(i, tuple):
@@ -85,11 +91,3 @@ def build_output(items):
             buf.append(_esc(chr(i)))
     return ''.join(buf)
 
-def _esc(c):
-    if c == '\n':
-        return '\\n'
-    elif c == '\t':
-        return '\\t'
-    elif c in ('\\', '-', '[', ']'):
-        return '\\' + c
-    return c

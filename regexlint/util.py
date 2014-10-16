@@ -128,6 +128,30 @@ class Break(Exception):
     pass
 
 
+ESC_SPECIAL = {
+    '\r': '\\r',
+    '\n': '\\n',
+    '\t': '\\t',
+    '\\': '\\\\',
+    '\'': '\\\'',
+}
+
+
+def esc(c, also_escape=(), esc_special=ESC_SPECIAL):
+    if c in esc_special:
+        return esc_special[c]
+    elif isinstance(c, unicode) and ord(c) > 0xFFFF:
+        return '\\U%08x' % ord(c)
+    elif isinstance(c, unicode) and ord(c) > 126:
+        return '\\u%04x' % ord(c)
+    elif ord(c) < 32 or ord(c) > 126:
+        return '\\x%02x' % ord(c)
+    elif c in also_escape:
+        return '\\' + c
+    else:
+        return c
+
+
 def consistent_repr(s, escape=(), include_quotes=True):
     """Returns a string that represents repr(s), but without the logic that
     switches between single and double quotes.
@@ -135,31 +159,13 @@ def consistent_repr(s, escape=(), include_quotes=True):
     Equivalent to _codecs.escape_encode for ASCII strings (and this works on
     Unicode).
     """
-    special = {
-        '\r': '\\r',
-        '\n': '\\n',
-        '\t': '\\t',
-        '\\': '\\\\',
-        '\'': '\\\'',
-    }
     rep = []
     if include_quotes:
         if isinstance(s, unicode):
             rep.append('u')
         rep.append('\'')
     for char in s:
-        if char in special:
-            rep.append(special[char])
-        elif isinstance(s, unicode) and ord(char) > 0xFFFF:
-            rep.append('\\U%08x' % ord(char))
-        elif isinstance(s, unicode) and ord(char) > 126:
-            rep.append('\\u%04x' % ord(char))
-        elif ord(char) < 32 or ord(char) > 126:
-            rep.append('\\x%02x' % ord(char))
-        elif char in escape:
-            rep.append('\\' + char)
-        else:
-            rep.append(char)
+        rep.append(esc(char, escape))
     if include_quotes:
         rep.append('\'')
     return ''.join(rep)
