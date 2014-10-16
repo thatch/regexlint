@@ -236,8 +236,8 @@ def check_no_consecutive_dots(reg, errs):
 def check_unicode_escapes(reg, errs):
     num = '112'
     level = logging.ERROR
-    msg = 'Regex parser does not handle unicode, use ur"" string.'
-    r_unicode = re.compile(r'\\[uU][0-9a-fA-F]|\\N{')
+    msg = 'Regex parser does not handle unicode, use u"" (not ur""!) string or escape backslash if intentional'
+    r_unicode = re.compile(r'(?<!\\)(\\[uU][0-9a-fA-F]|\\N{)')
     for m in r_unicode.finditer(reg.raw):
         errs.append((num, level, m.start(), msg))
 
