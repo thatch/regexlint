@@ -19,7 +19,7 @@ import weakref
 
 from regexlint.util import *
 
-from pygments.lexer import RegexLexer, include, using, bygroups
+from pygments.lexer import RegexLexer, include, using, bygroups, default
 from pygments.token import Other
 
 
@@ -279,11 +279,11 @@ class BaseRegex(object):
         ],
         'charclass_start': [
             (r'\^', Other.NegateCharclass, 'charclass_squarebracket_special'),
-            (r'', Other.Continue, 'charclass_squarebracket_special'),
+            default('charclass_squarebracket_special'),
         ],
         'charclass_squarebracket_special': [
             (r'\]', Other.Literal.CloseCharClass, 'charclass_rest'),
-            (r'', Other.Continue, 'charclass_rest'),
+            default('charclass_rest'),
         ],
         'charclass_rest': [
             (r'\]', Other.CloseCharClass, '#pop:3'),
