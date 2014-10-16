@@ -28,6 +28,7 @@ CATS = {
 }
 
 HEX = set(map(ord, '0123456789abcdef'))
+ALNUM = set(range(ord('a'), ord('z')+1)) | set(map(ord, '0123456789'))
 
 class WontOptimize(Exception):
     pass
@@ -45,6 +46,9 @@ def simplify_charclass(matching_codes, ignorecase=False):
     if (len(HEX & set(matching_codes)) == len(HEX) and
         ord('g') not in matching_codes):
         raise WontOptimize('Hex digit')
+    if (len(ALNUM & set(matching_codes)) == len(ALNUM) and ord('_') not in
+        matching_codes):
+        raise WontOptimize('Alphanumeric without _')
 
     if ignorecase:
         matching_codes = [lowercase_code(i) for i in matching_codes]
