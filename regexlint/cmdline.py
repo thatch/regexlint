@@ -30,10 +30,13 @@ try:
     from pygments.util import Future
 except ImportError:
     class Future: pass
+import regexlint.checkers
 from regexlint import Regex, run_all_checkers
 from regexlint.checkers import manual_check_for_empty_string_match
 from regexlint.indicator import find_offending_line, mark, find_substr_pos
 from regexlint.util import consistent_repr, shorten
+
+ONLY_FUNC = None
 
 def import_mod(m):
     mod = __import__(m)
@@ -56,6 +59,9 @@ def main(argv=None):
                  default=True,
                  dest='parallel',
                  action='store_false')
+    o.add_option('--only_func',
+                 help='Only run this checker func',
+                 default=None)
     opts, args = o.parse_args(argv)
 
     if not args:
@@ -66,6 +72,9 @@ def main(argv=None):
         output_stream = file(opts.output_file, 'wb')
     else:
         output_stream = sys.stdout
+    if opts.only_func:
+        global ONLY_FUNC
+        ONLY_FUNC = opts.only_func
 
     # currently just a list of module names.
     lexers_to_check = []
@@ -146,9 +155,13 @@ def check_lexer(lexer_name, cls, mod_path, min_level, output_stream=sys.stdout):
             else:
                 by_groups = None
 
-            errs = run_all_checkers(reg, by_groups)
-            # Special case for empty string, since it needs action.
-            manual_check_for_empty_string_match(reg, errs, pat)
+            if ONLY_FUNC:
+                errs = []
+                getattr(regexlint.checkers, ONLY_FUNC)(reg, errs)
+            else:
+                errs = run_all_checkers(reg, by_groups)
+                # Special case for empty string, since it needs action.
+                manual_check_for_empty_string_match(reg, errs, pat)
 
             errs.sort(key=lambda k: (k[1], k[0]))
             if errs:
