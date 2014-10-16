@@ -54,9 +54,13 @@ def simplify_charclass(matching_codes):
     for negated in (0, 1):
         for i in range(2**len(keys)):
             chosen_keys = [keys[b] for b in range(len(keys)) if i & 1<<b]
-            #print i, chosen_keys
-            # TODO for each charclass.
+            # Humans are terrible at double-negatives.  If this involves a
+            # negation of the charclass as well as the category, tough cookies.
+            # This will cause suggested _expansion_ of any such uses already in
+            # the codebase, which should be ignored by the caller.
             if negated:
+                if any(k[1].isupper() for k in chosen_keys):
+                    continue
                 matching_set = set(range(256)) - set(matching_codes)
             else:
                 matching_set = set(matching_codes)
