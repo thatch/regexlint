@@ -57,7 +57,7 @@ def simplify_charclass(matching_codes, ignorecase=False):
         base_set = set(range(256))
 
     # Tries all possibilities of categories first.
-    keys = CATS.keys()
+    keys = sorted(CATS.keys(), reverse=True)
     #print "keys", keys
     # Strategy: since we have a small number of categories, try each of them to
     # see if it's legal; add in remaining ranges; score.
@@ -86,8 +86,11 @@ def simplify_charclass(matching_codes, ignorecase=False):
                 matching_set -= chosen_set
                 r = build_ranges(matching_set)
                 r[:0] = chosen_keys
+                discount = 1 if chosen_keys == ['\w', '\W'] else 0
+
                 if r:
-                    possibilities.append((charclass_score(r, negated), r, negated))
+                    possibilities.append((charclass_score(r, negated) - discount,
+                                          r, negated))
 
     # There will always be one, since we include no-categories above, and it's
     # not on the WontOptimize list.
