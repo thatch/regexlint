@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from regexlint.parser import WHITESPACE, DIGITS, WORD, CharClass
-from regexlint.util import build_ranges, esc
+from regexlint.util import build_ranges, esc, lowercase_code
 
 __all__ = ['simplify_charclass', 'charclass_score', 'build_output',
            'WontOptimize']
@@ -141,9 +141,3 @@ def build_output(items):
     if buf and buf[0].startswith('^'):
         buf.insert(0, '\\')
     return ''.join(buf)
-
-
-def lowercase_code(i):
-    if 65 <= i <= 90:
-        return i + 32
-    return i

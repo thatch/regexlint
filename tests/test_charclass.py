@@ -70,7 +70,21 @@ def runner(the_input, the_output):
 
 def test_match_everything():
     new_codes, negated = simplify_charclass(range(256))
+    assert new_codes == ['\\w', '\\W']
+    assert not negated
+
+def test_caret_escaping1():
+    new_codes, negated = simplify_charclass([ord('^')])
+    print new_codes
+    assert len(new_codes) == 1
+    assert not negated
+    op = build_output(new_codes)
+    assert op == '\\^'
+
+def test_caret_escaping1():
+    new_codes, negated = simplify_charclass([ord('^'), ord(']')])
     print new_codes
     assert len(new_codes) == 2
     assert not negated
-    assert new_codes[0][-1].lower() == new_codes[1][-1].lower()
+    op = build_output(new_codes)
+    assert op == '\\]^'

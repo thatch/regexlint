@@ -252,3 +252,8 @@ def build_ranges(ord_seq):
             ranges.append(prev_start)
 
     return ranges
+
+def lowercase_code(i):
+    if 65 <= i <= 90:
+        return i + 32
+    return i
