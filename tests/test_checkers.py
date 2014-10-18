@@ -759,6 +759,14 @@ class CheckersTests(TestCase):
         self.assertEquals(len(errs), 1)
         self.assertTrue('\\w' in errs[0][3], errs[0][3])
 
+    def test_charclass_simplify_insensitive3(self):
+        r = Regex.get_parse_tree(r'[eE]', re.I)
+        errs = []
+        check_charclass_simplify(r, errs)
+        print errs
+        self.assertEquals(len(errs), 1)
+        self.assertTrue('-> e' in errs[0][3], errs[0][3])
+
     def test_charclass_simplify_noop(self):
         r = Regex.get_parse_tree(r'[\d_]', 0)
         errs = []

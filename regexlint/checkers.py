@@ -471,7 +471,9 @@ def check_charclass_simplify(reg, errs):
             continue
         new_score = charclass_score(new_codes, negated)
         if new_score < existing_score:
-            if len(new_codes) == 1 and isinstance(new_codes[0], str):
+            if len(new_codes) == 1 and not negated and isinstance(new_codes[0], int):
+                new_class = esc(chr(new_codes[0]))
+            elif len(new_codes) == 1 and not negated and isinstance(new_codes[0], str):
                 new_class = new_codes[0]
             else:
                 new_class = '[%s%s]' % (negated and '^' or '',
