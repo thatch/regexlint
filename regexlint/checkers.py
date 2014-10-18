@@ -434,6 +434,7 @@ def check_wide_unicode(reg, errs):
                 # entire codepoint, we're in a wide build
                 if isinstance(lit.parent(), CharClass) or lit.parent().type in Other.Repetition:
                     errs.append((num, level, lit.start, msg))
+                    break
             elif (len(lit.data) == 1 and 0xd800 <= ord(lit.data) <= 0xdbff and
                   isinstance(lit.parent(), CharClass)):
                 # high surrogate byte, we're in a narrow build, does the wrong thing
@@ -441,10 +442,12 @@ def check_wide_unicode(reg, errs):
                 if (n is not None and n.type is Other.Literal and len(n.data) == 1 and
                     0xdc00 <= ord(n.data) <= 0xdfff):
                     errs.append((num, level, lit.start, msg))
+                    break
             elif (len(lit.data) == 1 and 0xdc00 <= ord(lit.data) <= 0xdfff and
                   lit.parent().type in Other.Repetition):
                 # low surrogate byte, imagine HH LL +
                 errs.append((num, level, lit.start, msg))
+                break
             # TODO figure out if there's a way to catch overly-verbose unicode
             # (needs to happen before string parsing)
             # TODO expand to more use of suspicious unicode
