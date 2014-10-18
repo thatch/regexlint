@@ -722,7 +722,7 @@ class CheckersTests(TestCase):
         errs = []
         check_wide_unicode(r, errs)
         print errs
-        self.assertEquals(len(errs), 2)
+        self.assertEquals(len(errs), 1)
 
     def test_charclass_simplify(self):
         r = Regex.get_parse_tree(r'[0-9_]', 0)
