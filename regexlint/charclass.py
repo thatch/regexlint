@@ -14,21 +14,25 @@
 
 from regexlint.parser import WHITESPACE, DIGITS, WORD, CharClass
 from regexlint.util import build_ranges, esc, lowercase_code
+from regexlint.bitvector import bitvector, unpack_bitvector
 
 __all__ = ['simplify_charclass', 'charclass_score', 'build_output',
            'WontOptimize']
 
 CATS = {
-    '\\s': map(ord, WHITESPACE),
-    '\\d': map(ord, DIGITS),
-    '\\w': map(ord, WORD),
-    '\\S': [i for i in range(256) if chr(i) not in WHITESPACE],
-    '\\D': [i for i in range(256) if chr(i) not in DIGITS],
-    '\\W': [i for i in range(256) if chr(i) not in WORD],
+    '\\s': bitvector(map(ord, WHITESPACE)),
+    '\\d': bitvector(map(ord, DIGITS)),
+    '\\w': bitvector(map(ord, WORD)),
+    '\\S': bitvector([_ for _ in range(256) if chr(_) not in WHITESPACE]),
+    '\\D': bitvector([_ for _ in range(256) if chr(_) not in DIGITS]),
+    '\\W': bitvector([_ for _ in range(256) if chr(_) not in WORD]),
 }
 
-HEX = set(map(ord, '0123456789abcdef'))
-ALNUM = set(range(ord('a'), ord('z')+1)) | set(map(ord, '0123456789'))
+HEX = bitvector(map(ord, '0123456789abcdef'))
+ALNUM = (bitvector(range(ord('a'), ord('z')+1)) |
+         bitvector(map(ord, '0123456789')))
+ASCII = (1<<256) - 1
+INSENSITIVE_ASCII = bitvector(map(lowercase_code, range(256)))
 
 class WontOptimize(Exception):
     pass
@@ -41,27 +45,29 @@ def simplify_charclass(matching_codes, ignorecase=False):
     If the class shouldn't be optimized, raises WontOptimize with a basic reason
     string.
     """
+    if max(matching_codes) > 255:
+        raise WontOptimize('Unicode')
+
     # HACK: Don't simplify something that looks fairly like a hex digit pattern.
     # They look arguably prettier as '0-9a-f' than '\da-f'
-    if (len(HEX & set(matching_codes)) == len(HEX) and
-        ord('g') not in matching_codes):
+    bv = bitvector(matching_codes)
+    if (bv & HEX) == HEX and ord('g') not in matching_codes:
         raise WontOptimize('Hex digit')
-    if (len(ALNUM & set(matching_codes)) == len(ALNUM) and ord('_') not in
-        matching_codes):
+    if (bv & ALNUM) == ALNUM and ord('_') not in matching_codes:
         raise WontOptimize('Alphanumeric without _')
 
     if ignorecase:
-        matching_codes = [lowercase_code(i) for i in matching_codes]
-        base_set = set(map(lowercase_code, range(256)))
+        bv = bitvector(map(lowercase_code, matching_codes))
+        base = INSENSITIVE_ASCII
     else:
-        base_set = set(range(256))
+        base = ASCII
 
     # Tries all possibilities of categories first.
     keys = sorted(CATS.keys(), reverse=True)
-    #print "keys", keys
     # Strategy: since we have a small number of categories, try each of them to
     # see if it's legal; add in remaining ranges; score.
-    # TODO negated too.
+    # when negated=0, there are 64 (=2**6) combinations to check.
+    # when negated=1, there are only 8 (=2**3) combinations.
     possibilities = []
     for negated in (0, 1):
         for i in range(2**len(keys)):
@@ -75,23 +81,29 @@ def simplify_charclass(matching_codes, ignorecase=False):
                     continue
 
             if negated:
-                matching_set = base_set - set(matching_codes)
+                t = base ^ (base & bv)
             else:
-                matching_set = set(matching_codes)
-            chosen_set = set()
+                t = bv
+
+            chosen = 0
             for k in chosen_keys:
-                chosen_set |= set(CATS[k]) & base_set
+                chosen |= CATS[k]
+            chosen &= base
+
             # True iff. the chosen categories fit entirely in the target.
-            if (len(matching_set & chosen_set) == len(chosen_set)):
-                matching_set -= chosen_set
-                r = build_ranges(matching_set)
+            if chosen & t == chosen:
+                #print chosen_keys, "t", unpack_bitvector(t), unpack_bitvector(chosen)
+                t ^= chosen
+                #print "  ", unpack_bitvector(t)
+                r = build_ranges(unpack_bitvector(t))
                 r[:0] = chosen_keys
-                discount = 1 if chosen_keys == ['\w', '\W'] else 0
+                discount = 1 if chosen_keys == ['\\w', '\\W'] else 0
 
                 if r:
                     possibilities.append((charclass_score(r, negated) - discount,
                                           r, negated))
 
+    #print "possibilities", possibilities
     # There will always be one, since we include no-categories above, and it's
     # not on the WontOptimize list.
     possibilities.sort()

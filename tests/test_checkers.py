@@ -733,6 +733,14 @@ class CheckersTests(TestCase):
         self.assertTrue('[0-9_]' in errs[0][-1])
         self.assertTrue('[\\d_]' in errs[0][-1])
 
+    def test_charclass_simplify_suggest_range(self):
+        r = Regex.get_parse_tree(r'[01acb234]', 0)
+        errs = []
+        check_charclass_simplify(r, errs)
+        print errs
+        self.assertEquals(len(errs), 1)
+        self.assertTrue('0-4a-c' in errs[0][3], errs[0][3])
+
     def test_charclass_simplify_noop(self):
         r = Regex.get_parse_tree(r'[\d_]', 0)
         errs = []
