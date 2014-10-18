@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import re
+
 from unittest import TestCase
 
 from pygments.token import Text, Name, Punctuation
@@ -740,6 +742,22 @@ class CheckersTests(TestCase):
         print errs
         self.assertEquals(len(errs), 1)
         self.assertTrue('0-4a-c' in errs[0][3], errs[0][3])
+
+    def test_charclass_simplify_insensitive1(self):
+        r = Regex.get_parse_tree(r'[a-z0-9_]', re.I)
+        errs = []
+        check_charclass_simplify(r, errs)
+        print errs
+        self.assertEquals(len(errs), 1)
+        self.assertTrue('\\w' in errs[0][3], errs[0][3])
+
+    def test_charclass_simplify_insensitive2(self):
+        r = Regex.get_parse_tree(r'[A-Z0-9_]', re.I)
+        errs = []
+        check_charclass_simplify(r, errs)
+        print errs
+        self.assertEquals(len(errs), 1)
+        self.assertTrue('\\w' in errs[0][3], errs[0][3])
 
     def test_charclass_simplify_noop(self):
         r = Regex.get_parse_tree(r'[\d_]', 0)
