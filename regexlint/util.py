@@ -196,7 +196,7 @@ def get_module_text(mod):
     else:
         if mod.endswith('.pyc') or mod.endswith('.pyo'):
             mod = mod[:-1]
-        with file(mod, 'r') as f:
+        with open(mod, 'r') as f:
             mod_text = f.read()
     return mod_text
 

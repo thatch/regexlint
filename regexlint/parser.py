@@ -144,6 +144,8 @@ class CharClass(Node):
     def __init__(self, t, start=None, parsed_start=None):
         super(CharClass, self).__init__(t, start, parsed_start)
         self.negated = False
+        self.chars = None
+        self.matching_character_codes = None
 
     def close(self, pos, parsed_pos, data):
         super(CharClass, self).close(pos, parsed_pos, data)

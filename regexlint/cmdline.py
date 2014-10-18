@@ -69,7 +69,7 @@ def main(argv=None):
 
     min_level = getattr(logging, opts.min_level)
     if opts.output_file:
-        output_stream = file(opts.output_file, 'wb')
+        output_stream = open(opts.output_file, 'wb')
     else:
         output_stream = sys.stdout
     if opts.only_func:

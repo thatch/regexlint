@@ -114,9 +114,14 @@ def charclass_score(items, negated=False):
 
 
 def build_output(items):
+    """
+    Given sorted input (ranges as tuples, categories as strings, or individual
+    characters as ints), construct the output string.
+    """
     def _esc(c):
         # Single quotes are two chars in reprs.  The others are metachars in
-        # character classes.
+        # character classes (although '-' and '[' are not special in certain
+        # positions, we never use that feature).
         return esc(c, '\'-[]')
 
     buf = []
@@ -131,6 +136,10 @@ def build_output(items):
             buf.append(i)
         else:
             buf.append(_esc(chr(i)))
+
+    # keep caret in its otherwise-chosen position, but escape if necessary
+    if buf and buf[0].startswith('^'):
+        buf.insert(0, '\\')
     return ''.join(buf)
 
 
