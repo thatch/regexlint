@@ -466,7 +466,7 @@ def check_charclass_simplify(reg, errs):
         existing_score = charclass_score(c)
         try:
             new_codes, negated = simplify_charclass(c.matching_character_codes,
-                                                   reg.effective_flags)
+                                                    reg.effective_flags & re.I)
         except WontOptimize:
             continue
         new_score = charclass_score(new_codes, negated)
