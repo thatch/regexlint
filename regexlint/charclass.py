@@ -71,6 +71,19 @@ def simplify_charclass(matching_codes, ignorecase=False):
     # when negated=1, there are only 8 (=2**3) combinations.
     possibilities = []
     for negated in (0, 1):
+        #  target is the set of all characters we want to match, and none of the
+        #  ones we don't (note: for case-insensitive, we mask `chosen' before
+        #  comparing later).
+        if negated:
+            if ignorecase:
+                target = bitvector(map(
+                    lowercase_code,
+                    [i for i in range(256) if i not in unpack_bitvector(bv)]))
+            else:
+                target = base ^ (base & bv)
+        else:
+            target = bv
+
         for i in range(2**len(keys)):
             chosen_keys = [keys[b] for b in range(len(keys)) if i & 1<<b]
             # Humans are terrible at double-negatives.  If this involves a
@@ -81,14 +94,12 @@ def simplify_charclass(matching_codes, ignorecase=False):
                 if any(k[1].isupper() for k in chosen_keys):
                     continue
 
-            if negated:
-                t = base ^ (base & bv)
-            else:
-                t = bv
-
+            t = target
             chosen = 0
             for k in chosen_keys:
                 chosen |= CATS[k]
+            # N.b. don't need to conditionally lowercase_code here because all
+            # our categories contain lower if they contain upper.
             chosen &= base
 
             # True iff. the chosen categories fit entirely in the target.
