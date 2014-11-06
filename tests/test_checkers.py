@@ -726,14 +726,15 @@ class CheckersTests(TestCase):
         print errs
         self.assertEquals(len(errs), 1)
 
-    def test_charclass_simplify(self):
-        r = Regex.get_parse_tree(r'[0-9_]', 0)
-        errs = []
-        check_charclass_simplify(r, errs)
-        print errs
-        self.assertEquals(len(errs), 1)
-        self.assertTrue('[0-9_]' in errs[0][-1])
-        self.assertTrue('[\\d_]' in errs[0][-1])
+    # Disabled \d optimization right now.
+    #def test_charclass_simplify(self):
+    #    r = Regex.get_parse_tree(r'[0-9_]', 0)
+    #    errs = []
+    #    check_charclass_simplify(r, errs)
+    #    print errs
+    #    self.assertEquals(len(errs), 1)
+    #    self.assertTrue('[0-9_]' in errs[0][-1])
+    #    self.assertTrue('[\\d_]' in errs[0][-1])
 
     def test_charclass_simplify_suggest_range(self):
         r = Regex.get_parse_tree(r'[01acb234]', 0)
