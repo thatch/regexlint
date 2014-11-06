@@ -21,7 +21,8 @@ from regexlint.charclass import *
 EXAMPLES = [
     (r'[a-z]', r'[a-z]'),
     (r'[a-zA-Z0-9_]', r'[\w]'),
-    (r'[0-9]', r'[\d]'),
+    # disabled.
+    #(r'[0-9]', r'[\d]'),
     (r'[0-9a-f]', None),
     (r'[\S]', r'[\S]'),
     (r'[\S\n]', r'[\S\n]'),
