@@ -13,8 +13,21 @@
 # limitations under the License.
 
 from regexlint.indicator_ast import find_offending_line, find_substr_pos
+from regexlint.util import consistent_repr, shorten
 
 
 def mark(lineno, d1, d2, text, output_stream):
     output_stream.write("  " + text + "\n")
     output_stream.write("  " + " " * d1 + '^' * (d2-d1) + ' ' + 'here\n')
+
+def mark_str(d1, d2, text, output_stream):
+    # Substract one for closing quote
+    start = len(consistent_repr(text[:d1])) - 1
+    end = len(consistent_repr(text[:d2])) - 1
+    if start == end:
+        # This handles the case where pos1 points to the end
+        # of the string. Regex "|" with pos1 = 1.
+        end += 1
+    assert end > start
+    text, start, end = shorten(consistent_repr(text), start, end)
+    mark(-1, start, end, text, output_stream)

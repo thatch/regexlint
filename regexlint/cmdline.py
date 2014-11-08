@@ -33,8 +33,7 @@ except ImportError:
 import regexlint.checkers
 from regexlint import Regex, run_all_checkers
 from regexlint.checkers import manual_check_for_empty_string_match
-from regexlint.indicator import find_offending_line, mark, find_substr_pos
-from regexlint.util import consistent_repr, shorten
+from regexlint.indicator import find_offending_line, mark, mark_str, find_substr_pos
 
 ONLY_FUNC = None
 
@@ -185,16 +184,7 @@ def check_lexer(lexer_name, cls, mod_path, min_level, output_stream=sys.stdout):
                     if foo:
                         mark(*(foo + (output_stream,)))
                     else:
-                        # Substract one for closing quote
-                        start = len(consistent_repr(pat[0][:pos1])) - 1
-                        end = len(consistent_repr(pat[0][:pos1+1])) - 1
-                        if start == end:
-                            # This handles the case where pos1 points to the end
-                            # of the string. Regex "|" with pos1 = 1.
-                            end += 1
-                        assert end > start
-                        text, start, end = shorten(repr(pat[0]), start, end)
-                        mark(-1, start, end, text, output_stream)
+                        mark_str(pos1, pos1+1, pat[0], output_stream)
     if not has_errors:
         print >>output_stream, lexer_name, "OK"
 
