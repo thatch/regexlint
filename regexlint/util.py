@@ -13,8 +13,8 @@
 # limitations under the License.
 
 from __future__ import with_statement
-from pygments.token import Other
 
+from pygments.token import Other
 
 def find_all(first, second=None):
     """Finds all descendants (inorder) of first, including itself.  If second
@@ -140,9 +140,9 @@ ESC_SPECIAL = {
 def esc(c, also_escape=(), esc_special=ESC_SPECIAL):
     if c in esc_special:
         return esc_special[c]
-    elif isinstance(c, unicode) and ord(c) > 0xFFFF:
+    elif ord(c) > 0xFFFF:
         return '\\U%08x' % ord(c)
-    elif isinstance(c, unicode) and ord(c) > 126:
+    elif isinstance(c, type(u'')) and ord(c) > 126:
         return '\\u%04x' % ord(c)
     elif ord(c) < 32 or ord(c) > 126:
         return '\\x%02x' % ord(c)
@@ -161,7 +161,7 @@ def consistent_repr(s, escape=(), include_quotes=True):
     """
     rep = []
     if include_quotes:
-        if isinstance(s, unicode):
+        if isinstance(s, type(u'')):
             rep.append('u')
         rep.append('\'')
     for char in s:
@@ -209,7 +209,7 @@ def rindex(a, x):
 
 
 def charclass(c):
-    if isinstance(c, (int, long)):
+    if isinstance(c, int):
         c = chr(c)
 
     if 'A' <= c <= 'Z':

@@ -272,7 +272,7 @@ def check_bad_flags(reg, errs):
             # This part only checks ranges, because the single characters were
             # already checked directly above.
             import string
-            alpha = set(map(ord, string.letters))
+            alpha = set(map(ord, string.ascii_letters))
             for cc in find_all_by_type(reg, Other.CharClass):
                 for char in cc.chars:
                     if isinstance(char, CharRange):
@@ -340,7 +340,7 @@ def check_charclass_overlap(reg, errs):
             for i in cc.matching_character_codes:
                 counts.setdefault(i, 0)
                 counts[i] += 1
-            dupes = [chr(k) for k, v in counts.iteritems() if v > 1]
+            dupes = [chr(k) for k, v in counts.items() if v > 1]
             errs.append((num, level, cc.start, msg % (dupes,)))
 
 def check_charclass_case_insensitive_overlap(reg, errs):
@@ -418,7 +418,7 @@ def check_wide_unicode(reg, errs):
     level = logging.WARNING
     msg = 'Wide unicode causes problems in narrow builds'
 
-    if isinstance(reg.raw, unicode):
+    if isinstance(reg.raw, type(u'')):
         for lit in find_all_by_type(reg, Other.Literal):
             if len(lit.data) == 1 and ord(lit.data) > 65535:
                 # entire codepoint, we're in a wide build
@@ -448,7 +448,7 @@ def check_charclass_simplify(reg, errs):
     level = logging.WARNING
     msg = 'Regex can be written more simply: %s -> %s'
 
-    if isinstance(reg.raw, unicode):
+    if any(ord(c) > 255 for c in reg.raw):
         # Many of the operations performed here assume 8-bit ascii.
         return
 
@@ -518,17 +518,17 @@ def manual_check_for_empty_string_match(reg, errs, raw_pat):
 
 def run_all_checkers(regex, expected_groups=None):
     errs = []
-    for k, f in globals().iteritems():
+    for k, f in globals().items():
         if k.startswith('check_'):
             #print 'running', k
             try:
                 f(regex, errs)
-            except Exception, e:
+            except Exception as e:
                 errs.append(('999', logging.ERROR, 0, "Checker %s encountered error parsing: %s" % (f, repr(e))))
         elif k.startswith('bygroups_check_') and expected_groups:
             try:
                 f(regex, errs, expected_groups)
-            except Exception, e:
+            except Exception as e:
                 errs.append(('999', logging.ERROR, 0, "Checker %s encountered error parsing: %s" % (f, repr(e))))
     return errs
 
@@ -538,7 +538,8 @@ def main(args):
     else:
         regex = args[0]
     for num, severity, pos1, text in run_all_checkers(Regex.get_parse_tree(regex)):
-        print '%s%s:%s:%s' % (logging.getLevelName(severity)[0], num, pos1, text)
+        print('%s%s:%s:%s' %
+              (logging.getLevelName(severity)[0], num, pos1, text))
 
 if __name__ == '__main__':
     main(sys.argv[1:])

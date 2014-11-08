@@ -22,8 +22,6 @@ import logging
 import itertools
 import multiprocessing
 
-from StringIO import StringIO  # can't pickle cStringIO
-
 from pygments.lexer import RegexLexer, bygroups
 from pygments.token import Token
 try:
@@ -33,6 +31,7 @@ except ImportError:
 import regexlint.checkers
 from regexlint import Regex, run_all_checkers
 from regexlint.checkers import manual_check_for_empty_string_match
+from regexlint.compat import StringIO
 from regexlint.indicator import find_offending_line, mark, mark_str, find_substr_pos
 
 ONLY_FUNC = None

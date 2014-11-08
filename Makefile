@@ -27,7 +27,7 @@ test:
 
 .PHONY: demo
 demo:
-	$(PYTHON) regexlint/cmdline.py $(DEMOOPTS) $$($(PYTHON) -c 'from pygments.lexers._mapping import LEXERS; print "\n".join(set([i[0] for i in LEXERS.values()]))')
+	$(PYTHON) regexlint/cmdline.py $(DEMOOPTS) $$($(PYTHON) -c 'import sys; from pygments.lexers._mapping import LEXERS; sys.stdout.write("\n".join(set([i[0] for i in LEXERS.values()])))')
 
 .PHONY: selfdemo
 selfdemo:

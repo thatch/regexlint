@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import print_function
 
 import sre_parse
 
@@ -20,6 +21,7 @@ from pygments.token import Other
 from regexlint.parser import Regex, Node, width, fmttree, \
                              WHITESPACE, DIGITS, WORD
 from regexlint.checkers import find_all, find_all_by_type
+from regexlint.compat import ascii
 
 SAMPLE_PATTERNS = [
     r'a|b|',
@@ -55,7 +57,7 @@ class BasicTests(TestCase):
     def do_it(self, s):
         # for debugging
         for x in Regex().get_tokens_unprocessed(s):
-            print x
+            print(x)
         r = Regex.get_parse_tree(s)
         return r
 
@@ -70,7 +72,7 @@ class BasicTests(TestCase):
 
     def test_brackets(self):
         r = self.do_it(r'\[')
-        print r
+        print(r)
         r = self.do_it(r'\]')
 
     def test_find_by_type(self):
@@ -88,7 +90,7 @@ class BasicTests(TestCase):
 
     def test_char_range(self):
         r = Regex.get_parse_tree(r'[a-z]')
-        self.assertEquals(1, len(find_all_by_type(r, Other.CharClass).next().chars))
+        self.assertEquals(1, len(next(find_all_by_type(r, Other.CharClass)).chars))
 
     def test_end_set_correctly(self):
         r = Regex.get_parse_tree(r'\b(foo|bar)\b')
@@ -125,7 +127,7 @@ class BasicTests(TestCase):
 
     def test_repetition_curly1(self):
         r = Regex.get_parse_tree(r'x{5,5}?')
-        print '\n'.join(fmttree(r))
+        print('\n'.join(fmttree(r)))
         l = list(find_all(r))[1:] # skip root
         self.assertEquals(2, len(l))
         # l[0] is Repetition, l[1] is Literal(x)
@@ -148,7 +150,7 @@ class VerboseModeTests(TestCase):
                         c
                         d''')
         l = list(find_all(r))[1:] # skip root
-        print '\n'.join(fmttree(r))
+        print('\n'.join(fmttree(r)))
         self.assertEquals(5, len(l))
         self.assertEquals((4, 6), (l[1].parsed_start, l[1].start))
         self.assertEquals('d', l[-1].data)
@@ -157,7 +159,7 @@ class VerboseModeTests(TestCase):
     def test_escaped_space_parsing(self):
         r = Regex.get_parse_tree(r'\ a')
         l = list(find_all(r))[1:] # skip root
-        print '\n'.join(fmttree(r))
+        print('\n'.join(fmttree(r)))
         self.assertEquals(2, len(l))
         self.assertEquals(r'\ ', l[0].data)
         self.assertEquals(Other.Suspicious, l[0].type)
@@ -165,7 +167,7 @@ class VerboseModeTests(TestCase):
     def test_charclass_parsing(self):
         r = Regex.get_parse_tree(r'[ a]')
         l = list(find_all(r))[1:] # skip root
-        print '\n'.join(fmttree(r))
+        print('\n'.join(fmttree(r)))
         self.assertEquals(3, len(l))
         self.assertEquals(r' ', l[1].data)
         self.assertEquals(r'a', l[2].data)
@@ -173,7 +175,7 @@ class VerboseModeTests(TestCase):
     def test_complex_charclass(Self):
         r = Regex.get_parse_tree(r'[]\[:_@\".{}()|;,]')
         l = list(find_all(r))[1:] # skip root
-        print '\n'.join(fmttree(r))
+        print('\n'.join(fmttree(r)))
         #self.assertEquals(3, len(l))
 
 
@@ -216,12 +218,13 @@ def expand_sre_in(x):
 def charclass_runner(pat):
     r = Regex().get_parse_tree(pat)
     regexlint_version = r.children[0].matching_character_codes
-    sre_parsed = sre_parse.parse(pat)
-    print sre_parsed
+    sre_parsed = sre_parse.parse(ascii(pat))
+    print(sre_parsed)
     if isinstance(sre_parsed[0][1], int):
         sre_chars = sre_parsed
     else:
         sre_chars = sre_parsed[0][1]
+    print('inner', sre_chars)
     golden = list(expand_sre_in(sre_chars))
     order_matters = True
     try:
@@ -232,8 +235,8 @@ def charclass_runner(pat):
     except TypeError:
         pass
 
-    print golden
-    print regexlint_version
+    print('sre_parse', golden)
+    print('regexlint', regexlint_version)
     if order_matters:
         assert golden == regexlint_version
     else:

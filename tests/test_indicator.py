@@ -14,8 +14,8 @@
 
 import re
 import unittest
-import StringIO
 
+from regexlint.compat import StringIO
 from regexlint.indicator import *
 
 fakemod = \
@@ -91,7 +91,7 @@ class SubstrPosTests(unittest.TestCase):
     def test_find_pos_octal(self):
         s = r'"\000b"'
         r = find_substr_pos(s, 0)
-        print s[r[0]:r[1]]
+        print(s[r[0]:r[1]])
         self.assertEquals((0, 1, 5), r)
     def test_find_pos_end(self):
         r = find_substr_pos('"a"', 0)
@@ -128,7 +128,7 @@ class MarkStrTest(unittest.TestCase):
     def _test(self, input, substr_repr, substr=None):
         if substr is None:
             substr = substr_repr
-        buf = StringIO.StringIO()
+        buf = StringIO()
         pos1 = input.index(substr)
         pos2 = pos1 + len(substr)
         mark_str(pos1, pos2, input, buf)

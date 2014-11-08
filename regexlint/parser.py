@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import print_function
 
 import re
 import sre_parse
@@ -163,7 +164,7 @@ class CharClass(Node):
                 next_child = None
                 if n and not isinstance(n[-1], CharRange):
                     try:
-                        next_child = it.next()
+                        next_child = next(it)
                     except StopIteration:
                         next_child = None
                 if next_child:
@@ -494,7 +495,7 @@ def parser_main(args):
     #    print x
 
     tree = r.get_parse_tree(regex)
-    print '\n'.join(fmttree(tree))
+    print('\n'.join(fmttree(tree)))
 
 if __name__ == '__main__':
     parser_main(sys.argv[1:])

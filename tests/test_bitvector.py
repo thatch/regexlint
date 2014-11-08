@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import print_function
 
 from unittest import TestCase
 
@@ -38,5 +39,5 @@ class BitvectorTests(TestCase):
         for i in range(1<<10):
             intermediate=unpack_bitvector(i)
             x = bitvector(intermediate)
-            print i, intermediate
+            print(i, intermediate)
             self.assertEqual(i, x)

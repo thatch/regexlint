@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import print_function
+
 import re
 from unittest import TestCase
 
@@ -65,9 +67,9 @@ def runner(the_input, the_output):
     new_score = charclass_score(new_codes, negated)
 
     expected_score = charclass_score(first_charclass(the_output))
-    print "new_codes", new_codes
-    print "new_score", new_score, "expected_score", expected_score
-    print "built", repr(build_output(new_codes))
+    print("new_codes", new_codes)
+    print("new_score", new_score, "expected_score", expected_score)
+    print("built", repr(build_output(new_codes)))
     assert new_score == expected_score
 
 def test_match_everything():
@@ -77,7 +79,7 @@ def test_match_everything():
 
 def test_caret_escaping1():
     new_codes, negated = simplify_charclass([ord('^')])
-    print new_codes
+    print(new_codes)
     assert len(new_codes) == 1
     assert not negated
     op = build_output(new_codes)
@@ -85,7 +87,7 @@ def test_caret_escaping1():
 
 def test_caret_escaping1():
     new_codes, negated = simplify_charclass([ord('^'), ord(']')])
-    print new_codes
+    print(new_codes)
     assert len(new_codes) == 2
     assert not negated
     op = build_output(new_codes)

@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import print_function
 
 import sys
 import nose.plugins.skip
@@ -41,7 +42,7 @@ class UtilTests(TestCase):
 
     def test_consistent_repr_unicode(self):
         golden = r"u'text\u1234text'"
-        print repr(eval(golden))
+        print(repr(eval(golden)))
         self.assertEquals(len(golden), len(consistent_repr(eval(golden))))
         self.assertEquals(golden, consistent_repr(eval(golden)))
 
@@ -52,7 +53,7 @@ class UtilTests(TestCase):
         else:
             # Python build handles 32-bit unicode
             golden = r"u'text\U00101234text'"
-            print repr(eval(golden))
+            print(repr(eval(golden)))
             self.assertEquals(len(golden), len(consistent_repr(eval(golden))))
             self.assertEquals(golden, consistent_repr(eval(golden)))
 
