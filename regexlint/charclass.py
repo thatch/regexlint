@@ -118,7 +118,7 @@ def simplify_charclass(matching_codes, ignorecase=False):
     #print "possibilities", possibilities
     # There will always be one, since we include no-categories above, and it's
     # not on the WontOptimize list.
-    possibilities.sort()
+    possibilities.sort(key=lambda i: i[0])
     return (possibilities[0][1], possibilities[0][2])
 
 

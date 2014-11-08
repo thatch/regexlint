@@ -13,6 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import print_function
 
 import sys
 sys.maxunicode = 65535 # HACK: make Pygments think we're on a narrow build.
@@ -31,7 +32,7 @@ except ImportError:
 import regexlint.checkers
 from regexlint import Regex, run_all_checkers
 from regexlint.checkers import manual_check_for_empty_string_match
-from regexlint.compat import StringIO
+from regexlint.compat import StringIO, iteritems
 from regexlint.indicator import find_offending_line, mark, mark_str, find_substr_pos
 
 ONLY_FUNC = None
@@ -117,16 +118,28 @@ def check_lexer_map(args):
         return args
     return check_lexer(*args)
 
+def func_code(func):
+    try:
+        return func.func_code
+    except AttributeError:
+        return func.__code__
+
+def func_closure(func):
+    try:
+        return func.func_closure[0].cell_contents
+    except AttributeError:
+        return func.__closure__[0].cell_contents
+
 def check_lexer(lexer_name, cls, mod_path, min_level, output_stream=sys.stdout):
     #print lexer_name
     #print cls().tokens
     has_errors = False
 
-    bygroups_callback = bygroups(1).func_code
-    for state, pats in cls().tokens.iteritems():
+    bygroups_callback = func_code(bygroups(1))
+    for state, pats in iteritems(cls().tokens):
         if not isinstance(pats, list):
             # This is for Inform7Lexer
-            print >>output_stream, lexer_name, 'WEIRD'
+            print(lexer_name, 'WEIRD', file=output_stream)
             return output_stream
 
         for i, pat in enumerate(pats):
@@ -143,13 +156,13 @@ def check_lexer(lexer_name, cls, mod_path, min_level, output_stream=sys.stdout):
                 continue
             except Exception:
                 try:
-                    print >>output_stream, pat[0], cls
+                    print(pat[0], cls, file=output_stream)
                 except: pass
                 raise
             # Special problem: display an error if count of args to
             # bygroups(...) doesn't match the number of capture groups
-            if callable(pat[1]) and pat[1].func_code is bygroups_callback:
-                by_groups = pat[1].func_closure[0].cell_contents
+            if callable(pat[1]) and func_code(pat[1]) is bygroups_callback:
+                by_groups = func_closure(pat[1])
             else:
                 by_groups = None
 
@@ -177,15 +190,15 @@ def check_lexer(lexer_name, cls, mod_path, min_level, output_stream=sys.stdout):
                         line = 'L' + str(foo[0])
                     else:
                         line = 'pat#' + str(i+1)
-                    print >>output_stream, '%s%s:%s:%s:%s: %s' % (
+                    print('%s%s:%s:%s:%s: %s' % (
                         logging.getLevelName(severity)[0], num,
-                        lexer_name, state, line, text)
+                        lexer_name, state, line, text), file=output_stream)
                     if foo:
                         mark(*(foo + (output_stream,)))
                     else:
                         mark_str(pos1, pos1+1, pat[0], output_stream)
     if not has_errors:
-        print >>output_stream, lexer_name, "OK"
+        print(lexer_name, 'OK', file=output_stream)
 
     return output_stream
 
