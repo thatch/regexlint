@@ -329,16 +329,6 @@ def check_single_character_classes(reg, errs):
             errs.append((num, level, cc.start, msg))
 
 
-def check_unicode_strings_actually_contain_unicode(reg, errs):
-    num = '116'
-    level = logging.WARNING
-    msg = 'Unicode string, but contains only ascii'
-
-    if isinstance(reg.raw, unicode):
-        if max(ord(c) for c in reg.raw) < 128:
-            errs.append((num, level, 0, msg))
-
-
 def check_charclass_overlap(reg, errs):
     num = '117'
     level = logging.WARNING
