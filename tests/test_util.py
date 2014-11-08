@@ -33,10 +33,12 @@ class UtilTests(TestCase):
             actual = eval_char(c)
             self.assertEquals(actual, 0x40)
 
+    # TODO fix for Py3
     def test_consistent_repr_empty(self):
         golden = r"''"
         self.assertEquals(golden, consistent_repr(eval(golden)))
 
+    # TODO fix for Py3
     def test_consistent_repr(self):
         golden = r"""'azAZ09!#-$_\\/\'"\n\t\x02\xf3'"""
         self.assertEquals(golden, consistent_repr(eval(golden)))
