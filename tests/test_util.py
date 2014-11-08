@@ -15,9 +15,10 @@ from __future__ import print_function
 
 import sys
 import nose.plugins.skip
+from unittest import TestCase
 
 from regexlint.util import *
-from unittest import TestCase
+from regexlint.compat import tobytes
 
 class UtilTests(TestCase):
     def test_eval_char_canonical_ascii(self):

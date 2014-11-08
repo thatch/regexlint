@@ -21,7 +21,7 @@ from pygments.token import Other
 from regexlint.parser import Regex, Node, width, fmttree, \
                              WHITESPACE, DIGITS, WORD
 from regexlint.checkers import find_all, find_all_by_type
-from regexlint.compat import ascii
+from regexlint.compat import tobytes
 
 SAMPLE_PATTERNS = [
     r'a|b|',
@@ -189,9 +189,9 @@ def test_reconstruct():
     for p in SAMPLE_PATTERNS:
         yield reconstruct_runner, p
 
-SRE_CATS = {'category_space': map(ord, WHITESPACE),
-            'category_digit': map(ord, DIGITS),
-            'category_word': map(ord, WORD),
+SRE_CATS = {'category_space': list(map(ord, WHITESPACE)),
+            'category_digit': list(map(ord, DIGITS)),
+            'category_word': list(map(ord, WORD)),
             'category_not_space': sorted(set(range(256)) -
                                          set(map(ord, WHITESPACE))),
             'category_not_digit': sorted(set(range(256)) -
@@ -218,7 +218,7 @@ def expand_sre_in(x):
 def charclass_runner(pat):
     r = Regex().get_parse_tree(pat)
     regexlint_version = r.children[0].matching_character_codes
-    sre_parsed = sre_parse.parse(ascii(pat))
+    sre_parsed = sre_parse.parse(tobytes(pat))
     print(sre_parsed)
     if isinstance(sre_parsed[0][1], int):
         sre_chars = sre_parsed
@@ -240,6 +240,9 @@ def charclass_runner(pat):
     if order_matters:
         assert golden == regexlint_version
     else:
+        print('extra:', sorted(set(regexlint_version) - set(golden)))
+        print('missing:', sorted(set(golden) - set(regexlint_version)))
+
         assert sorted(golden) == sorted(regexlint_version)
 
 def test_charclass():
