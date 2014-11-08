@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import re
 import unittest
+import StringIO
 
 from regexlint.indicator import *
 
@@ -73,8 +75,6 @@ class IndicatorTests(unittest.TestCase):
         self.assertEquals((22, 18, 19, "        'baz': [('b', String)],"), ret)
 
 
-
-
 class SubstrPosTests(unittest.TestCase):
     def test_find_pos1(self):
         r = find_substr_pos('u"abc"', 0)
@@ -122,3 +122,55 @@ class SubstrPosTests(unittest.TestCase):
     def test_find_pos_raw_backslash(self):
         r = find_substr_pos(r'r"\\"', 1)
         self.assertEquals((0, 3, 4), r)
+
+
+class MarkStrTest(unittest.TestCase):
+    def _test(self, input, substr_repr, substr=None):
+        if substr is None:
+            substr = substr_repr
+        buf = StringIO.StringIO()
+        pos1 = input.index(substr)
+        pos2 = pos1 + len(substr)
+        mark_str(pos1, pos2, input, buf)
+        output = buf.getvalue()
+        self.assertEquals(substr_repr, underlined_part(output))
+
+    def test_mark_str_left(self):
+        # this doesn't need shortening
+        self._test('abcd', 'a')
+
+    def test_mark_str_middle(self):
+        self._test('a' * 1000 + 'b' + 'c' * 1000, 'b')
+
+    def test_mark_unicode(self):
+        self._test(u'a' * 1000 + u'\u1234', '\\u1234', u'\u1234')
+
+
+class UnderlineHelperTest(unittest.TestCase):
+    def test_underline_single(self):
+        s = '''\
+abcdef
+  ^\
+'''
+        self.assertEqual('c', underlined_part(s))
+
+    def test_underline_multi(self):
+        s = '''\
+abcdef
+ ^^^  \
+'''
+        self.assertEqual('bcd', underlined_part(s))
+
+
+def underlined_part(s, underline_char='^'):
+    """Return the part of `s` that is underlined.
+
+    Given a multiline string, return the part of the first line that has
+    underline_char on the second line.
+    """
+    lines = s.splitlines()
+    underline_re = re.compile(re.escape(underline_char) + '+')
+    m = underline_re.search(lines[1])
+    if not m:
+        raise ValueError("String %r has no underline" % (s,))
+    return lines[0][m.start():m.end()]
