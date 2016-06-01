@@ -82,6 +82,11 @@ def main(argv=None):
             module, cls = module.split(':')
         else:
             cls = None
+
+        # Support passing a filename instead, since shell completes it.
+        if '/' in module and module.endswith('.py'):
+            module = module[:-3].replace('/', '.')
+
         mod = import_mod(module)
         lexers_to_check.append(StringIO("Module %s\n" % module))
         if cls:
