@@ -4,7 +4,7 @@ import os.path
 here = os.path.abspath(os.path.dirname(__file__))
 README = open(os.path.join(here, 'README.rst')).read()
 
-version = '1.4'
+version = '1.5'
 
 setup(name='regexlint',
       version=version,
