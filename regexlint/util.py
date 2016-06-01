@@ -112,6 +112,9 @@ def eval_char(c):
         return ord("'")
     elif c[0] == '\\' and c[1] not in 'abtrnvfxuU01234567\\':
         c = c[1:] # unnecessary backslash?
+    elif c == '\\u':
+        # Hack for truncated unicode due to matching as Suspicious
+        return ord('u')
 
     #print repr(c)
     if len(c) == 1 and ord(c) >= 128:
