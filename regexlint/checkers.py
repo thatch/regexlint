@@ -368,7 +368,7 @@ def check_charclass_case_insensitive_overlap(reg, errs):
                     errs.append((num, level, c.a.start, msg))
                 ranges.add((fold(a), fold(b)))
 
-COMMON_SINGLE_CHAR_CODES = map(ord, '()*+. ')
+COMMON_SINGLE_CHAR_CODES = list(map(ord, '()*+. '))
 
 def check_charclass_len(reg, errs):
     num = '118'
