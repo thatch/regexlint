@@ -520,7 +520,7 @@ def run_all_checkers(regex, expected_groups=None):
     errs = []
     for k, f in globals().items():
         if k.startswith('check_'):
-            #print 'running', k
+            #print 'running', k, regex
             try:
                 f(regex, errs)
             except Exception as e:

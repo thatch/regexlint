@@ -61,6 +61,10 @@ def main(argv=None):
     o.add_option('--only_func',
                  help='Only run this checker func',
                  default=None)
+    o.add_option('--regex',
+                 help='Check args as regexes instead of Pygments lexers',
+                 default=None,
+                 action='store_true')
     opts, args = o.parse_args(argv)
 
     if not args:
@@ -74,6 +78,18 @@ def main(argv=None):
     if opts.only_func:
         global ONLY_FUNC
         ONLY_FUNC = opts.only_func
+
+    if opts.parallel:
+        pool = multiprocessing.Pool()
+    else:
+        pool = itertools
+
+    if opts.regex:
+        for result in pool.imap(check_regex_map,
+                                [(i, min_level, StringIO()) for i in args]):
+            result.seek(0, 0)
+            output_stream.write(result.read())
+        return
 
     # currently just a list of module names.
     lexers_to_check = []
@@ -103,11 +119,6 @@ def main(argv=None):
                 lexers_to_check.append((k, v, mod.__file__, min_level,
                                         StringIO()))
 
-    if opts.parallel:
-        pool = multiprocessing.Pool()
-    else:
-        pool = itertools
-
     for result in pool.imap(check_lexer_map, lexers_to_check):
         result.seek(0, 0)
         output_stream.write(result.read())
@@ -117,6 +128,40 @@ def remove_error(errs, *nums):
     for i in range(len(errs)-1, -1, -1):
         if errs[i][0] in nums:
             del errs[i]
+
+def check_regex_map(tup):
+    return check_regex(*tup)
+
+def check_regex(regex_text, min_level, output_stream=sys.stdout):
+    has_errors = False
+    reg = Regex.get_parse_tree(regex_text, 0)
+    if ONLY_FUNC:
+        errs = []
+        getattr(regexlint.checkers, ONLY_FUNC)(reg, errs)
+    else:
+        errs = run_all_checkers(reg, None)
+        # Special case for empty string, since it needs action.
+        manual_check_for_empty_string_match(reg, errs, (regex_text, Token))
+
+    errs.sort(key=lambda k: (k[1], k[0]))
+    if errs:
+        for num, severity, pos1, text in errs:
+            if severity < min_level: continue
+
+            # Only set this if we're going to output something --
+            # otherwise the [Lexer] OK won't print
+            has_errors = True
+            line = '#'
+
+            print('%s%s:%s:%s:%s: %s' % (
+                logging.getLevelName(severity)[0], num,
+                'argv', 'root', 0, text), file=output_stream)
+            mark_str(pos1, pos1+1, regex_text, output_stream)
+    if not has_errors:
+        print(repr(regex_text), 'OK', file=output_stream)
+
+    return output_stream
+
 
 def check_lexer_map(args):
     if isinstance(args, StringIO):
