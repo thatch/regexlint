@@ -1,6 +1,7 @@
 #!/usr/bin/env python2
 #
 # Copyright 2011-2014 Google Inc.
+# Copyright 2018 Tim Hatch
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,6 +23,7 @@ import re
 import logging
 import itertools
 import multiprocessing
+from six import StringIO
 
 from pygments.lexer import RegexLexer, bygroups
 from pygments.token import Token
@@ -32,7 +34,6 @@ except ImportError:
 import regexlint.checkers
 from regexlint import Regex, run_all_checkers
 from regexlint.checkers import manual_check_for_empty_string_match
-from regexlint.compat import StringIO, iteritems
 from regexlint.indicator import find_offending_line, mark, mark_str, find_substr_pos
 
 ONLY_FUNC = None
@@ -186,7 +187,7 @@ def check_lexer(lexer_name, cls, mod_path, min_level, output_stream=sys.stdout):
     has_errors = False
 
     bygroups_callback = func_code(bygroups(1))
-    for state, pats in iteritems(cls().tokens):
+    for state, pats in cls().tokens.items():
         if not isinstance(pats, list):
             # This is for Inform7Lexer
             print(lexer_name, 'WEIRD', file=output_stream)

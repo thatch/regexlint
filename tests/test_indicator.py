@@ -1,4 +1,5 @@
 # Copyright 2011-2014 Google Inc.
+# Copyright 2018 Tim Hatch
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,8 +15,8 @@
 
 import re
 import unittest
+from six import StringIO
 
-from regexlint.compat import StringIO
 from regexlint.indicator import *
 
 fakemod = \
