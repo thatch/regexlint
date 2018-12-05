@@ -121,7 +121,7 @@ def eval_char(c):
         return c
 
     try:
-        return ord(eval("'%s'" % c))
+        return ord(eval("b'%s'" % c))
     except TypeError:
         # Probably a unicode escape.
         return ord(eval("u'%s'" % c))
@@ -132,11 +132,16 @@ class Break(Exception):
 
 
 ESC_SPECIAL = {
-    '\r': '\\r',
-    '\n': '\\n',
-    '\t': '\\t',
-    '\\': '\\\\',
-    '\'': '\\\'',
+    u'\r': '\\r',
+    u'\n': '\\n',
+    u'\t': '\\t',
+    u'\\': '\\\\',
+    u'\'': '\\\'',
+    b'\r': '\\r',
+    b'\n': '\\n',
+    b'\t': '\\t',
+    b'\\': '\\\\',
+    b'\'': '\\\'',
 }
 
 
@@ -152,6 +157,8 @@ def esc(c, also_escape=(), esc_special=ESC_SPECIAL):
     elif c in also_escape:
         return '\\' + c
     else:
+        if isinstance(c, bytes):
+            return c.decode('latin-1')
         return c
 
 
@@ -164,11 +171,11 @@ def consistent_repr(s, escape=(), include_quotes=True):
     """
     rep = []
     if include_quotes:
-        if isinstance(s, type(u'')):
-            rep.append('u')
+        if isinstance(s, bytes):
+            rep.append('b')
         rep.append('\'')
-    for char in s:
-        rep.append(esc(char, escape))
+    for i in range(len(s)):
+        rep.append(esc(s[i:i+1], escape))
     if include_quotes:
         rep.append('\'')
     return ''.join(rep)
