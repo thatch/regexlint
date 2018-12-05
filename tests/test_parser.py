@@ -13,6 +13,7 @@
 # limitations under the License.
 from __future__ import print_function
 
+import sre_constants
 import sre_parse
 
 from unittest import TestCase
@@ -189,28 +190,28 @@ def test_reconstruct():
     for p in SAMPLE_PATTERNS:
         yield reconstruct_runner, p
 
-SRE_CATS = {'category_space': list(map(ord, WHITESPACE)),
-            'category_digit': list(map(ord, DIGITS)),
-            'category_word': list(map(ord, WORD)),
-            'category_not_space': sorted(set(range(256)) -
-                                         set(map(ord, WHITESPACE))),
-            'category_not_digit': sorted(set(range(256)) -
-                                         set(map(ord, DIGITS))),
-            'category_not_word': sorted(set(range(256)) -
-                                        set(map(ord, WORD))),
+SRE_CATS = {sre_constants.CATEGORY_SPACE: list(map(ord, WHITESPACE)),
+            sre_constants.CATEGORY_DIGIT: list(map(ord, DIGITS)),
+            sre_constants.CATEGORY_WORD: list(map(ord, WORD)),
+            sre_constants.CATEGORY_NOT_SPACE:
+                sorted(set(range(256)) - set(map(ord, WHITESPACE))),
+            sre_constants.CATEGORY_NOT_DIGIT:
+                sorted(set(range(256)) - set(map(ord, DIGITS))),
+            sre_constants.CATEGORY_NOT_WORD:
+                sorted(set(range(256)) - set(map(ord, WORD))),
            }
 
 def expand_sre_in(x):
     for (typ, value) in x:
-        if typ in ('literal', 'not_literal'):
+        if typ in (sre_constants.LITERAL, sre_constants.NOT_LITERAL):
             yield value
-        elif typ == 'range':
+        elif typ == sre_constants.RANGE:
             for i in range(value[0], value[1]+1):
                 yield i
-        elif typ == 'category':
+        elif typ == sre_constants.CATEGORY:
             for i in SRE_CATS[value]:
                 yield i
-        elif typ == 'negate':
+        elif typ == sre_constants.NEGATE:
             pass
         else:
             raise NotImplementedError("Unknown type %s" % typ)
