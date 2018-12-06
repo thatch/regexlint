@@ -1,10 +1,13 @@
 from setuptools import setup, find_packages
 import os.path
 
-here = os.path.abspath(os.path.dirname(__file__))
-README = open(os.path.join(here, 'README.rst')).read()
+with open('README.rst') as f:
+    README = f.read()
 
-version = '1.5'
+with open('requirements.txt') as f:
+    requires = f.read().strip().splitlines()
+
+version = '1.6'
 
 setup(name='regexlint',
       version=version,
@@ -23,7 +26,7 @@ setup(name='regexlint',
       url='https://github.com/thatch/regexlint',
       license='Apache',
       packages=find_packages('.'),
-      install_requires=['Pygments'],
+      install_requires=requires,
       entry_points={
         'console_scripts': [
             'regexlint=regexlint.cmdline:main',
