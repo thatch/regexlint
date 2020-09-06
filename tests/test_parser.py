@@ -12,7 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from __future__ import print_function
 
 import sre_constants
 import sre_parse
@@ -21,7 +20,7 @@ from unittest import TestCase
 from pygments.token import Other
 
 from regexlint.parser import Regex, Node, width, fmttree, \
-                             WHITESPACE, DIGITS, WORD
+    WHITESPACE, DIGITS, WORD
 from regexlint.checkers import find_all, find_all_by_type
 
 SAMPLE_PATTERNS = [

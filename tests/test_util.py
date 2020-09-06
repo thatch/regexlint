@@ -12,11 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from __future__ import print_function
-from __future__ import unicode_literals
 
-import sys
-import nose.plugins.skip
 from unittest import TestCase
 
 from regexlint.util import *
@@ -63,5 +59,6 @@ class UtilTests(TestCase):
 class RangesTest(TestCase):
     def test_disjoint(self):
         self.assertEqual([65, 67, 69], build_ranges([65, 67, 69]))
+
     def test_joint(self):
         self.assertEqual([(65, 66), 69], build_ranges([65, 66, 69]))
