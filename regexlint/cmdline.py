@@ -63,6 +63,10 @@ def main(argv=None):
                  help='Check args as regexes instead of Pygments lexers',
                  default=None,
                  action='store_true')
+    o.add_option('--verbose',
+                 help='Output names of lexers without problems',
+                 default=None,
+                 action='store_true')
     opts, args = o.parse_args(argv)
 
     if not args:
@@ -102,7 +106,8 @@ def main(argv=None):
             module = module[:-3].replace('/', '.')
 
         mod = import_mod(module)
-        lexers_to_check.append(StringIO("Module %s\n" % module))
+        if opts.verbose:
+            lexers_to_check.append(StringIO("Module %s\n" % module))
         if cls:
             lexers = [cls]
         else:
@@ -114,7 +119,7 @@ def main(argv=None):
         for k in lexers:
             v = getattr(mod, k)
             if hasattr(v, '__bases__') and issubclass(v, RegexLexer) and v.tokens:
-                lexers_to_check.append((k, v, mod.__file__, min_level,
+                lexers_to_check.append((k, v, mod.__file__, min_level, opts.verbose,
                                         StringIO()))
 
     for result in pool.imap(check_lexer_map, lexers_to_check):
@@ -178,7 +183,7 @@ def func_closure(func):
     except AttributeError:
         return func.__closure__[0].cell_contents
 
-def check_lexer(lexer_name, cls, mod_path, min_level, output_stream=sys.stdout):
+def check_lexer(lexer_name, cls, mod_path, min_level, verbose, output_stream=sys.stdout):
     #print lexer_name
     #print cls().tokens
     has_errors = False
@@ -187,7 +192,8 @@ def check_lexer(lexer_name, cls, mod_path, min_level, output_stream=sys.stdout):
     for state, pats in cls().tokens.items():
         if not isinstance(pats, list):
             # This is for Inform7Lexer
-            print(lexer_name, 'WEIRD', file=output_stream)
+            if verbose:
+                print(lexer_name, 'WEIRD', file=output_stream)
             return output_stream
 
         for i, pat in enumerate(pats):
@@ -245,7 +251,7 @@ def check_lexer(lexer_name, cls, mod_path, min_level, output_stream=sys.stdout):
                         mark(*(foo + (output_stream,)))
                     else:
                         mark_str(pos1, pos1+1, pat[0], output_stream)
-    if not has_errors:
+    if verbose and not has_errors:
         print(lexer_name, 'OK', file=output_stream)
 
     return output_stream
