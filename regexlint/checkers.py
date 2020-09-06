@@ -476,14 +476,18 @@ def check_redundant_repetition(reg, errs):
 def manual_check_for_empty_string_match(reg, errs, raw_pat):
     # Note: callback functions get a pass here, since they're used for
     # indentation tracking in SassLexer (and friends).
-    # Explicitly, '#pop' and 'next-state' ARE checked because if they
-    # intentionally match on empty string, they should be using default().
-    if isinstance(raw_pat[1], Token.__class__):
-        regex = re.compile(raw_pat[0])
-        # Either match on empty string, or empty string at the end of a word
-        if regex.match('') or regex.match('a', 1):
-            errs.append(('999', logging.ERROR, 0, 'Matches empty string'))
-        #remove_error(errs, '103')
+    # '#pop' and 'next-state' ARE checked if pattern is empty because they
+    # should be using default().
+    if not isinstance(raw_pat[1], Token.__class__):
+        return
+    if raw_pat[0] != '' and len(raw_pat) > 2:
+        return
+
+    regex = re.compile(raw_pat[0])
+    # Either match on empty string, or empty string at the end of a word
+    if regex.match('') or regex.match('a', 1):
+        errs.append(('999', logging.ERROR, 0, 'Matches empty string'))
+    #remove_error(errs, '103')
 
 
 def run_all_checkers(regex, expected_groups=None):

@@ -771,8 +771,16 @@ class CheckersTests(TestCase):
 
     def test_manual_empty_string_when_pop(self):
         # default() is handled in cmdline.py
+        r = Regex.get_parse_tree(r'')
+        errs = []
+        manual_check_for_empty_string_match(r, errs, (r'', Token, '#pop'))
+        print(errs)
+        self.assertEqual(len(errs), 1)
+
+    def test_manual_zerowidth_match(self):
+        # This one shouldn't produce an error.
         r = Regex.get_parse_tree(r'$\b')
         errs = []
         manual_check_for_empty_string_match(r, errs, (r'$\b', Token, '#pop'))
         print(errs)
-        self.assertEqual(len(errs), 1)
+        self.assertEqual(len(errs), 0)
