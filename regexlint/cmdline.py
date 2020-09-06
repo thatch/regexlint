@@ -20,7 +20,7 @@ import sys
 import logging
 import itertools
 import multiprocessing
-from six import StringIO
+from io import StringIO
 
 from pygments.lexer import RegexLexer, bygroups, words
 from pygments.token import Token
