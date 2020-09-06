@@ -339,7 +339,11 @@ class BaseRegex(object):
 
     @classmethod
     def get_parse_tree(cls, s, flags=0):
-        effective_flags = sre_parse.parse(s, flags).pattern.flags
+        pat = sre_parse.parse(s, flags)
+        try:
+            effective_flags = pat.pattern.flags
+        except AttributeError:  # Python 3.8+
+            effective_flags = pat.state.flags
 
         if effective_flags & re.VERBOSE:
             return VerboseRegex._get_parse_tree(s, flags, effective_flags)
