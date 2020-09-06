@@ -197,14 +197,14 @@ class CheckersTests(TestCase):
         r = Regex.get_parse_tree(r'(?P<name>x)')
         print('\n'.join(fmttree(r)))
         errs = []
-        check_no_python_named_capture_groups(r, errs)
+        bygroups_check_no_python_named_capture_groups(r, errs, (Text,))
         self.assertEqual(len(errs), 1)
 
     def test_no_python_named_capture_groups(self):
         r = Regex.get_parse_tree(r'(x)')
         print('\n'.join(fmttree(r)))
         errs = []
-        check_no_python_named_capture_groups(r, errs)
+        bygroups_check_no_python_named_capture_groups(r, errs, (Text,))
         self.assertEqual(len(errs), 0)
 
     def test_run_all_checkers_no_errors(self):
@@ -216,8 +216,8 @@ class CheckersTests(TestCase):
     def test_run_all_checkers_errors(self):
         r = Regex.get_parse_tree(r'(?P<name>x|)')
         print('\n'.join(fmttree(r)))
-        errs = run_all_checkers(r)
-        self.assertEqual(len(errs), 2)
+        errs = run_all_checkers(r, (Text,))
+        self.assertEqual(len(errs), 3)
 
     def test_run_all_checkers_curly_ok(self):
         r = Regex.get_parse_tree(r'\{')

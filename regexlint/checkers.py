@@ -130,10 +130,11 @@ def check_prefix_ordering(reg, errs):
                 break
             prev = t
 
-def check_no_python_named_capture_groups(reg, errs):
+def bygroups_check_no_python_named_capture_groups(reg, errs, desired_groups):
     num = '106'
     level = logging.ERROR
-    msg = 'Python named capture group'
+    msg = 'Python named capture group used with bygroups()'
+
     for n in find_all_by_type(reg, Other.Open.NamedCapturing):
         errs.append((num, level, n.start, msg))
         break
