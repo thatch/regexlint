@@ -204,7 +204,7 @@ def bygroups_check_overlap(reg, errs, desired_groups):
         # ignored (without having to change between()'s code)
         j = find_bad_between(prev, None, has_width)
         if j:
-            errs.append((num, level, j.start, msg))
+            errs.append((num, level, j.start, msg2))
 
 def bygroups_check_no_capture_group_in_repetition(reg, errs, desired_groups):
     num = '109'
