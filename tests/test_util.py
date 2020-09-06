@@ -50,15 +50,10 @@ class UtilTests(TestCase):
         self.assertEqual(golden, consistent_repr(eval(golden)))
 
     def test_consistent_repr_wide_unicode(self):
-        if sys.maxunicode < 65536:
-            # Python build doesn't handle 32-bit unicode
-            raise nose.plugins.skip.SkipTest('narrow python build')
-        else:
-            # Python build handles 32-bit unicode
-            golden = u"'text\\U00101234text'"
-            print(repr(eval(golden)))
-            self.assertEqual(len(golden), len(consistent_repr(eval(golden))))
-            self.assertEqual(golden, consistent_repr(eval(golden)))
+        golden = u"'text\\U00101234text'"
+        print(repr(eval(golden)))
+        self.assertEqual(len(golden), len(consistent_repr(eval(golden))))
+        self.assertEqual(golden, consistent_repr(eval(golden)))
 
     def test_consistent_repr_for_ranges(self):
         r = consistent_repr('a-b[]', escape='[]-', include_quotes=False)

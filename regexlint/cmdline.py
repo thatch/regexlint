@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 #
 # Copyright 2011-2014 Google Inc.
 # Copyright 2018 Tim Hatch
@@ -17,7 +17,6 @@
 from __future__ import print_function
 
 import sys
-sys.maxunicode = 65535 # HACK: make Pygments think we're on a narrow build.
 
 import re
 import logging

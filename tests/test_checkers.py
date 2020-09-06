@@ -678,43 +678,6 @@ class CheckersTests(TestCase):
         print(errs)
         self.assertEqual(len(errs), 1)
 
-    def test_wide_unicode_warning(self):
-        r = Regex.get_parse_tree(u'\U00010000', 0)
-        errs = []
-        check_wide_unicode(r, errs)
-        print(errs)
-        self.assertEqual(len(errs), 0)
-
-    def test_wide_unicode_warning(self):
-        r = Regex.get_parse_tree(u'\U00010000+', 0)
-        errs = []
-        check_wide_unicode(r, errs)
-        print(errs)
-        self.assertEqual(len(errs), 1)
-
-    def test_wide_unicode_unnecessary(self):
-        r = Regex.get_parse_tree(u'\U00000000', 0)
-        errs = []
-        check_wide_unicode(r, errs)
-        print(errs)
-        self.assertEqual(len(errs), 0)
-        # TODO this should give something like 'use narrow unicode'
-
-    def test_wide_unicode_range_unnecessary(self):
-        r = Regex.get_parse_tree(u'[\U00000000-\U0000FFFF]', 0)
-        errs = []
-        check_wide_unicode(r, errs)
-        print(errs)
-        self.assertEqual(len(errs), 0)
-        # TODO this should give something like 'use narrow unicode'
-
-    def test_wide_unicode_range_bad(self):
-        r = Regex.get_parse_tree(u'[\U00010000-\U0001FFFF]', 0)
-        errs = []
-        check_wide_unicode(r, errs)
-        print(errs)
-        self.assertEqual(len(errs), 1)
-
     # Disabled \d optimization right now.
     #def test_charclass_simplify(self):
     #    r = Regex.get_parse_tree(r'[0-9_]', 0)
