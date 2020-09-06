@@ -16,11 +16,11 @@
 # limitations under the License.
 
 import sys
-
 import logging
 import itertools
 import multiprocessing
 from io import StringIO
+from os import path
 
 from pygments.lexer import RegexLexer, bygroups, words
 from pygments.token import Token
@@ -121,6 +121,10 @@ def main(argv=None):
             if hasattr(v, '__bases__') and issubclass(v, RegexLexer) and v.tokens:
                 clsmod = v.__module__
                 clsmodfile = sys.modules[clsmod].__file__
+                if clsmodfile.endswith('.pyc'):
+                    # need to go out of __pycache__
+                    newdir = path.dirname(path.dirname(clsmodfile))
+                    clsmodfile = path.join(newdir, path.basename(clsmodfile)[:-1])
                 lexers_to_check.append((k, v, clsmodfile, min_level,
                                         opts.verbose, StringIO()))
 
@@ -156,16 +160,16 @@ def check_regex(regex_text, min_level, output_stream=sys.stdout):
     errs.sort(key=lambda k: (k[1], k[0]))
     if errs:
         for num, severity, pos1, text in errs:
-            if severity < min_level: continue
+            if severity < min_level:
+                continue
 
             # Only set this if we're going to output something --
             # otherwise the [Lexer] OK won't print
             has_errors = True
-            line = '#'
 
-            print('%s%s:%s:%s:%s: %s' % (
-                logging.getLevelName(severity)[0], num,
-                'argv', 'root', 0, text), file=output_stream)
+            print('%s:%s:%s: %s%s: %s' % (
+                'argv', 'root', 0,
+                logging.getLevelName(severity)[0], num, text), file=output_stream)
             mark_str(pos1, pos1+1, regex_text, output_stream)
     if not has_errors:
         print(repr(regex_text), 'OK', file=output_stream)
@@ -244,9 +248,9 @@ def check_lexer(lexer_name, cls, mod_path, min_level, verbose, output_stream=sys
                 remove_error(errs, '123')
 
             if errs:
-                #print "Errors in", lexer_name, state, "pattern", i
                 for num, severity, pos1, text in errs:
-                    if severity < min_level: continue
+                    if severity < min_level:
+                        continue
 
                     # Only set this if we're going to output something --
                     # otherwise the [Lexer] OK won't print
@@ -254,13 +258,13 @@ def check_lexer(lexer_name, cls, mod_path, min_level, verbose, output_stream=sys
 
                     foo = find_offending_line(mod_path, lexer_name, state, i,
                                               pos1)
-                    if foo:
-                        line = 'L' + str(foo[0])
-                    else:
-                        line = 'pat#' + str(i+1)
-                    print('%s%s:%s:%s:%s: %s' % (
+                    line = '%s:' % foo[0] if foo else ''
+                    patn = 'pat#' + str(i+1)
+                    print('%s:%s (%s:%s:%s) %s%s: %s' % (
+                        mod_path, line,
+                        lexer_name, state, patn,
                         logging.getLevelName(severity)[0], num,
-                        lexer_name, state, line, text), file=output_stream)
+                        text), file=output_stream)
                     if foo:
                         mark(*(foo + (output_stream,)))
                     else:
