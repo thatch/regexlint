@@ -22,12 +22,10 @@ import itertools
 import multiprocessing
 from six import StringIO
 
-from pygments.lexer import RegexLexer, bygroups
+from pygments.lexer import RegexLexer, bygroups, words
 from pygments.token import Token
-try:
-    from pygments.util import Future
-except ImportError:
-    class Future: pass
+from pygments.util import Future
+
 import regexlint.checkers
 from regexlint import Regex, run_all_checkers
 from regexlint.checkers import manual_check_for_empty_string_match
@@ -201,8 +199,11 @@ def check_lexer(lexer_name, cls, mod_path, min_level, verbose, output_stream=sys
                 # new 'default'
                 continue
 
+            ignore_w123 = False
             try:
                 if isinstance(pat[0], Future):
+                    if isinstance(pat[0], words):
+                        ignore_w123 = True
                     pat = (pat[0].get(),) + pat[1:]
                 reg = Regex.get_parse_tree(pat[0], cls.flags)
             except TypeError:
@@ -229,6 +230,10 @@ def check_lexer(lexer_name, cls, mod_path, min_level, verbose, output_stream=sys
                 manual_check_for_empty_string_match(reg, errs, pat)
 
             errs.sort(key=lambda k: (k[1], k[0]))
+
+            if ignore_w123:
+                remove_error(errs, '123')
+
             if errs:
                 #print "Errors in", lexer_name, state, "pattern", i
                 for num, severity, pos1, text in errs:
