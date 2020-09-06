@@ -377,31 +377,6 @@ class CheckersTests(TestCase):
         self.assertEqual(len(errs), 1)
         self.assertEqual(('107', logging.INFO, 0), errs[0][:3])
 
-    def test_unicode_escapes(self):
-        r = Regex.get_parse_tree(r'\u0000')
-        errs = []
-        check_unicode_escapes(r, errs)
-        print(errs)
-        self.assertEqual(len(errs), 1)
-        self.assertEqual(('112', logging.ERROR, 0), errs[0][:3])
-
-    # Not supported under Python 3
-    #def test_unicode_named_escapes(self):
-    #    r = Regex.get_parse_tree(r'\N{space}')
-    #    errs = []
-    #    check_unicode_escapes(r, errs)
-    #    print(errs)
-    #    self.assertEqual(len(errs), 1)
-    #    self.assertEqual(('112', logging.ERROR, 0), errs[0][:3])
-
-    def test_escaped_unicode_escapes(self):
-        errs = []
-        for rx in (r'\\N{space}', r'\\u0000', r'\\U0000'):
-            r = Regex.get_parse_tree(rx)
-            check_unicode_escapes(r, errs)
-        print(errs)
-        self.assertEqual(len(errs), 0)
-
     def test_unnecessary_i_flag(self):
         r = Regex.get_parse_tree(r'(?i).')
         errs = []
