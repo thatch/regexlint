@@ -117,8 +117,10 @@ def main(argv=None):
         for k in lexers:
             v = getattr(mod, k)
             if hasattr(v, '__bases__') and issubclass(v, RegexLexer) and v.tokens:
-                lexers_to_check.append((k, v, mod.__file__, min_level, opts.verbose,
-                                        StringIO()))
+                clsmod = v.__module__
+                clsmodfile = sys.modules[clsmod].__file__
+                lexers_to_check.append((k, v, clsmodfile, min_level,
+                                        opts.verbose, StringIO()))
 
     for result in pool.imap(check_lexer_map, lexers_to_check):
         result.seek(0, 0)
