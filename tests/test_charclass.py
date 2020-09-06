@@ -90,4 +90,4 @@ def test_caret_escaping1():
     assert len(new_codes) == 2
     assert not negated
     op = build_output(new_codes)
-    assert op == '\\]^'
+    assert op == '\\]\\^'
