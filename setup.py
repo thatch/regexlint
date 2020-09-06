@@ -35,6 +35,5 @@ setup(name='regexlint',
             'regexlint=regexlint.cmdline:main',
         ],
       },
-      test_suite='nose.collector',
-      tests_require=['nose'],
+      tests_require=['pytest'],
 )

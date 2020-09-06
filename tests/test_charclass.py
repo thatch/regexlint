@@ -14,6 +14,8 @@
 
 import re
 
+import pytest
+
 from regexlint.parser import Regex
 from regexlint.charclass import *
 
@@ -25,8 +27,8 @@ EXAMPLES = [
     (r'[0-9a-f]', None),
     (r'[\S]', r'[\S]'),
     (r'[\S\n]', r'[\S\n]'),
-    (r'[^a-zA-Z0-9_]', '[\W]'),
-    (r'[^a-zA-Z0-9]', '[\W_]'),
+    (r'[^a-zA-Z0-9_]', r'[\W]'),
+    (r'[^a-zA-Z0-9]', r'[\W_]'),
     (r'[^\S\n]', r'[\t\x0b\x0c\r ]'),  # Double negative
     (r'[\r\n]', r'[\r\n]'),
     (r'[01]', r'[01]'),
@@ -39,18 +41,18 @@ EXAMPLES = [
     (r'[\x00-\xff]', r'[\w\W]'),
 ]
 
-def test_examples():
-    for a, b in EXAMPLES:
-        yield runner, a, b
 
 def first_charclass(reg_text):
     r = Regex().get_parse_tree(reg_text, 0)
     return r.children[-1]
 
+
 def effective_flags(reg_text):
     return Regex().get_parse_tree(reg_text, 0).effective_flags
 
-def runner(the_input, the_output):
+
+@pytest.mark.parametrize('the_input, the_output', EXAMPLES)
+def test_examples(the_input, the_output):
     cc = first_charclass(the_input)
     codes = cc.matching_character_codes
     ignorecase = bool(effective_flags(the_input) & re.IGNORECASE)
