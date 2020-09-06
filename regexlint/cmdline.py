@@ -29,13 +29,15 @@ from pygments.util import Future
 import regexlint.checkers
 from regexlint import Regex, run_all_checkers
 from regexlint.checkers import manual_check_for_empty_string_match
-from regexlint.indicator import find_offending_line, mark, mark_str, find_substr_pos
+from regexlint.indicator import find_offending_line, mark, mark_str
 
 ONLY_FUNC = None
 
+
 def import_mod(m):
-    mod = __import__(m)
+    __import__(m)
     return sys.modules[m]
+
 
 def main(argv=None):
     if argv is None:
@@ -122,9 +124,14 @@ def main(argv=None):
                 lexers_to_check.append((k, v, clsmodfile, min_level,
                                         opts.verbose, StringIO()))
 
-    for result in pool.imap(check_lexer_map, lexers_to_check):
-        result.seek(0, 0)
-        output_stream.write(result.read())
+    has_any_errors = False
+    for (stream, has_errors) in pool.imap(check_lexer_map, lexers_to_check):
+        stream.seek(0, 0)
+        output_stream.write(stream.read())
+        has_any_errors |= has_errors
+
+    if has_any_errors:
+        sys.exit(1)
 
 
 def remove_error(errs, *nums):
@@ -168,7 +175,7 @@ def check_regex(regex_text, min_level, output_stream=sys.stdout):
 
 def check_lexer_map(args):
     if isinstance(args, StringIO):
-        return args
+        return (args, False)
     return check_lexer(*args)
 
 def func_code(func):
@@ -194,7 +201,7 @@ def check_lexer(lexer_name, cls, mod_path, min_level, verbose, output_stream=sys
             # This is for Inform7Lexer
             if verbose:
                 print(lexer_name, 'WEIRD', file=output_stream)
-            return output_stream
+            return (output_stream, False)
 
         for i, pat in enumerate(pats):
             if hasattr(pat, 'state'):
@@ -261,7 +268,7 @@ def check_lexer(lexer_name, cls, mod_path, min_level, verbose, output_stream=sys
     if verbose and not has_errors:
         print(lexer_name, 'OK', file=output_stream)
 
-    return output_stream
+    return (output_stream, has_errors)
 
 
 if __name__ == '__main__':
