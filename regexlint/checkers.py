@@ -130,10 +130,11 @@ def check_prefix_ordering(reg, errs):
                 break
             prev = t
 
-def check_no_python_named_capture_groups(reg, errs):
+def bygroups_check_no_python_named_capture_groups(reg, errs, desired_groups):
     num = '106'
     level = logging.ERROR
-    msg = 'Python named capture group'
+    msg = 'Python named capture group used with bygroups()'
+
     for n in find_all_by_type(reg, Other.Open.NamedCapturing):
         errs.append((num, level, n.start, msg))
         break
@@ -203,7 +204,7 @@ def bygroups_check_overlap(reg, errs, desired_groups):
         # ignored (without having to change between()'s code)
         j = find_bad_between(prev, None, has_width)
         if j:
-            errs.append((num, level, j.start, msg))
+            errs.append((num, level, j.start, msg2))
 
 def bygroups_check_no_capture_group_in_repetition(reg, errs, desired_groups):
     num = '109'
@@ -232,14 +233,6 @@ def check_no_consecutive_dots(reg, errs):
         if n and n.type is Other.Dot:
             errs.append((num, level, x.start, msg))
             break
-
-def check_unicode_escapes(reg, errs):
-    num = '112'
-    level = logging.ERROR
-    msg = 'Regex parser does not handle unicode, use u"" (not ur""!) string or escape backslash if intentional'
-    r_unicode = re.compile(r'(?<!\\)(\\[uU][0-9a-fA-F]|\\N{)')
-    for m in r_unicode.finditer(reg.raw):
-        errs.append((num, level, m.start(), msg))
 
 def check_bad_flags(reg, errs):
     num = '113'
@@ -413,42 +406,12 @@ def check_multiline_anchors(reg, errs):
         errs.append((num, level, anchor.start, msg))
 
 
-def check_wide_unicode(reg, errs):
-    num = '121'
-    level = logging.WARNING
-    msg = 'Wide unicode causes problems in narrow builds'
-
-    if isinstance(reg.raw, type(u'')):
-        for lit in find_all_by_type(reg, Other.Literal):
-            if len(lit.data) == 1 and ord(lit.data) > 65535:
-                # entire codepoint, we're in a wide build
-                if isinstance(lit.parent(), CharClass) or lit.parent().type in Other.Repetition:
-                    errs.append((num, level, lit.start, msg))
-                    break
-            elif (len(lit.data) == 1 and 0xd800 <= ord(lit.data) <= 0xdbff and
-                  isinstance(lit.parent(), CharClass)):
-                # high surrogate byte, we're in a narrow build, does the wrong thing
-                n = lit.next_no_children()
-                if (n is not None and n.type is Other.Literal and len(n.data) == 1 and
-                    0xdc00 <= ord(n.data) <= 0xdfff):
-                    errs.append((num, level, lit.start, msg))
-                    break
-            elif (len(lit.data) == 1 and 0xdc00 <= ord(lit.data) <= 0xdfff and
-                  lit.parent().type in Other.Repetition):
-                # low surrogate byte, imagine HH LL +
-                errs.append((num, level, lit.start, msg))
-                break
-            # TODO figure out if there's a way to catch overly-verbose unicode
-            # (needs to happen before string parsing)
-            # TODO expand to more use of suspicious unicode
-
-
 def check_charclass_simplify(reg, errs):
     num = '123'
     level = logging.WARNING
     msg = 'Regex can be written more simply: %s -> %s'
 
-    if any(ord(c) > 255 for c in reg.raw):
+    if any(ord(c) > 255 for c in reg.raw) or reg.effective_flags & re.UNICODE:
         # Many of the operations performed here assume 8-bit ascii.
         return
 
@@ -502,18 +465,22 @@ def check_redundant_repetition(reg, errs):
             errs.append((num, level, repeat.start, 'should be +'))
 
 
-
 def manual_check_for_empty_string_match(reg, errs, raw_pat):
-    # Note: callback functions get a pass here, since they're used for
-    # indentation tracking in SassLexer (and friends).
-    # Explicitly, '#pop' and 'next-state' ARE checked because if they
-    # intentionally match on empty string, they should be using default().
-    if isinstance(raw_pat[1], Token.__class__):
-        regex = re.compile(raw_pat[0])
-        # Either match on empty string, or empty string at the end of a word
-        if regex.match('') or regex.match('a', 1):
-            errs.append(('999', logging.ERROR, 0, 'Matches empty string'))
-        #remove_error(errs, '103')
+    # Skip the check in the following conditions:
+    # * Rules that use a callback, since they're used for indentation
+    #   tracking in SassLexer (and friends).
+    if not isinstance(raw_pat[1], Token.__class__):
+        return
+    # * Rules with a state transition.  However, the empty pattern is
+    #   disallowed, because that should be using default().
+    if raw_pat[0] != '' and len(raw_pat) > 2:
+        return
+
+    regex = re.compile(raw_pat[0])
+    # Either match on empty string, or empty string at the end of a word
+    if regex.match('') or regex.match('a', 1):
+        errs.append(('999', logging.ERROR, 0, 'Matches empty string'))
+    #remove_error(errs, '103')
 
 
 def run_all_checkers(regex, expected_groups=None):

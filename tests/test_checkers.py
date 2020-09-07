@@ -12,7 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from __future__ import print_function
 
 import re
 
@@ -22,6 +21,7 @@ from pygments.token import Text, Name, Punctuation
 
 from regexlint.checkers import *
 from regexlint.parser import fmttree
+
 
 class CheckersTests(TestCase):
     def test_null(self):
@@ -197,14 +197,14 @@ class CheckersTests(TestCase):
         r = Regex.get_parse_tree(r'(?P<name>x)')
         print('\n'.join(fmttree(r)))
         errs = []
-        check_no_python_named_capture_groups(r, errs)
+        bygroups_check_no_python_named_capture_groups(r, errs, (Text,))
         self.assertEqual(len(errs), 1)
 
     def test_no_python_named_capture_groups(self):
         r = Regex.get_parse_tree(r'(x)')
         print('\n'.join(fmttree(r)))
         errs = []
-        check_no_python_named_capture_groups(r, errs)
+        bygroups_check_no_python_named_capture_groups(r, errs, (Text,))
         self.assertEqual(len(errs), 0)
 
     def test_run_all_checkers_no_errors(self):
@@ -216,8 +216,8 @@ class CheckersTests(TestCase):
     def test_run_all_checkers_errors(self):
         r = Regex.get_parse_tree(r'(?P<name>x|)')
         print('\n'.join(fmttree(r)))
-        errs = run_all_checkers(r)
-        self.assertEqual(len(errs), 2)
+        errs = run_all_checkers(r, (Text,))
+        self.assertEqual(len(errs), 3)
 
     def test_run_all_checkers_curly_ok(self):
         r = Regex.get_parse_tree(r'\{')
@@ -376,31 +376,6 @@ class CheckersTests(TestCase):
         print(errs)
         self.assertEqual(len(errs), 1)
         self.assertEqual(('107', logging.INFO, 0), errs[0][:3])
-
-    def test_unicode_escapes(self):
-        r = Regex.get_parse_tree(r'\u0000')
-        errs = []
-        check_unicode_escapes(r, errs)
-        print(errs)
-        self.assertEqual(len(errs), 1)
-        self.assertEqual(('112', logging.ERROR, 0), errs[0][:3])
-
-    # Not supported under Python 3
-    #def test_unicode_named_escapes(self):
-    #    r = Regex.get_parse_tree(r'\N{space}')
-    #    errs = []
-    #    check_unicode_escapes(r, errs)
-    #    print(errs)
-    #    self.assertEqual(len(errs), 1)
-    #    self.assertEqual(('112', logging.ERROR, 0), errs[0][:3])
-
-    def test_escaped_unicode_escapes(self):
-        errs = []
-        for rx in (r'\\N{space}', r'\\u0000', r'\\U0000'):
-            r = Regex.get_parse_tree(rx)
-            check_unicode_escapes(r, errs)
-        print(errs)
-        self.assertEqual(len(errs), 0)
 
     def test_unnecessary_i_flag(self):
         r = Regex.get_parse_tree(r'(?i).')
@@ -678,43 +653,6 @@ class CheckersTests(TestCase):
         print(errs)
         self.assertEqual(len(errs), 1)
 
-    def test_wide_unicode_warning(self):
-        r = Regex.get_parse_tree(u'\U00010000', 0)
-        errs = []
-        check_wide_unicode(r, errs)
-        print(errs)
-        self.assertEqual(len(errs), 0)
-
-    def test_wide_unicode_warning(self):
-        r = Regex.get_parse_tree(u'\U00010000+', 0)
-        errs = []
-        check_wide_unicode(r, errs)
-        print(errs)
-        self.assertEqual(len(errs), 1)
-
-    def test_wide_unicode_unnecessary(self):
-        r = Regex.get_parse_tree(u'\U00000000', 0)
-        errs = []
-        check_wide_unicode(r, errs)
-        print(errs)
-        self.assertEqual(len(errs), 0)
-        # TODO this should give something like 'use narrow unicode'
-
-    def test_wide_unicode_range_unnecessary(self):
-        r = Regex.get_parse_tree(u'[\U00000000-\U0000FFFF]', 0)
-        errs = []
-        check_wide_unicode(r, errs)
-        print(errs)
-        self.assertEqual(len(errs), 0)
-        # TODO this should give something like 'use narrow unicode'
-
-    def test_wide_unicode_range_bad(self):
-        r = Regex.get_parse_tree(u'[\U00010000-\U0001FFFF]', 0)
-        errs = []
-        check_wide_unicode(r, errs)
-        print(errs)
-        self.assertEqual(len(errs), 1)
-
     # Disabled \d optimization right now.
     #def test_charclass_simplify(self):
     #    r = Regex.get_parse_tree(r'[0-9_]', 0)
@@ -726,7 +664,8 @@ class CheckersTests(TestCase):
     #    self.assertTrue('[\\d_]' in errs[0][-1])
 
     def test_charclass_simplify_suggest_range(self):
-        r = Regex.get_parse_tree(r'[01acb234]', 0)
+        # Need to use ASCII mode to enable this checker.
+        r = Regex.get_parse_tree(r'[01acb234]', re.A)
         errs = []
         check_charclass_simplify(r, errs)
         print(errs)
@@ -734,7 +673,7 @@ class CheckersTests(TestCase):
         self.assertTrue('0-4a-c' in errs[0][3], errs[0][3])
 
     def test_charclass_simplify_insensitive1(self):
-        r = Regex.get_parse_tree(r'[a-z0-9_]', re.I)
+        r = Regex.get_parse_tree(r'[a-z0-9_]', re.I | re.A)
         errs = []
         check_charclass_simplify(r, errs)
         print(errs)
@@ -742,7 +681,7 @@ class CheckersTests(TestCase):
         self.assertTrue('\\w' in errs[0][3], errs[0][3])
 
     def test_charclass_simplify_insensitive2(self):
-        r = Regex.get_parse_tree(r'[A-Z0-9_]', re.I)
+        r = Regex.get_parse_tree(r'[A-Z0-9_]', re.I | re.A)
         errs = []
         check_charclass_simplify(r, errs)
         print(errs)
@@ -750,7 +689,7 @@ class CheckersTests(TestCase):
         self.assertTrue('\\w' in errs[0][3], errs[0][3])
 
     def test_charclass_simplify_insensitive3(self):
-        r = Regex.get_parse_tree(r'[eE]', re.I)
+        r = Regex.get_parse_tree(r'[eE]', re.I | re.A)
         errs = []
         check_charclass_simplify(r, errs)
         print(errs)
@@ -808,8 +747,16 @@ class CheckersTests(TestCase):
 
     def test_manual_empty_string_when_pop(self):
         # default() is handled in cmdline.py
+        r = Regex.get_parse_tree(r'')
+        errs = []
+        manual_check_for_empty_string_match(r, errs, (r'', Token, '#pop'))
+        print(errs)
+        self.assertEqual(len(errs), 1)
+
+    def test_manual_zerowidth_match(self):
+        # This one shouldn't produce an error.
         r = Regex.get_parse_tree(r'$\b')
         errs = []
         manual_check_for_empty_string_match(r, errs, (r'$\b', Token, '#pop'))
         print(errs)
-        self.assertEqual(len(errs), 1)
+        self.assertEqual(len(errs), 0)

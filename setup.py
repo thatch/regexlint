@@ -19,9 +19,9 @@ setup(name='regexlint',
         'Development Status :: 5 - Production/Stable',
         'Operating System :: OS Independent', # I hope
         'Topic :: Software Development :: Quality Assurance', # Closest to linting I see
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
       ],
       keywords='',
       author='Tim Hatch',
@@ -35,6 +35,5 @@ setup(name='regexlint',
             'regexlint=regexlint.cmdline:main',
         ],
       },
-      test_suite='nose.collector',
-      tests_require=['nose'],
+      tests_require=['pytest'],
 )

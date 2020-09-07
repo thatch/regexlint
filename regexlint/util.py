@@ -13,9 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import with_statement
+from os import path
 
 from pygments.token import Other
+
 
 def find_all(first, second=None):
     """Finds all descendants (inorder) of first, including itself.  If second
@@ -121,11 +122,8 @@ def eval_char(c):
     if len(c) == 1 and ord(c) >= 128:
         return c
 
-    try:
-        return ord(eval("b'%s'" % c))
-    except TypeError:
-        # Probably a unicode escape.
-        return ord(eval("u'%s'" % c))
+    # Probably a unicode escape.
+    return ord(eval("'%s'" % c))
 
 
 class Break(Exception):
@@ -205,8 +203,10 @@ def get_module_text(mod):
     if '\n' in mod:
         mod_text = mod
     else:
-        if mod.endswith('.pyc') or mod.endswith('.pyo'):
-            mod = mod[:-1]
+        if mod.endswith('.pyc'):
+            # need to go out of __pycache__
+            newdir = path.dirname(path.dirname(mod))
+            mod = path.join(newdir, path.basename(mod)[:-1])
         with open(mod, 'r') as f:
             mod_text = f.read()
     return mod_text

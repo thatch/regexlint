@@ -12,16 +12,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from __future__ import print_function
 
 import sre_constants
 import sre_parse
 
 from unittest import TestCase
 from pygments.token import Other
+import pytest
 
 from regexlint.parser import Regex, Node, width, fmttree, \
-                             WHITESPACE, DIGITS, WORD
+    WHITESPACE, DIGITS, WORD
 from regexlint.checkers import find_all, find_all_by_type
 
 SAMPLE_PATTERNS = [
@@ -181,15 +181,12 @@ class VerboseModeTests(TestCase):
         #self.assertEqual(3, len(l))
 
 
-
-def reconstruct_runner(pat):
+@pytest.mark.parametrize('pat', SAMPLE_PATTERNS)
+def test_reconstruct(pat):
     r = Regex.get_parse_tree(pat)
     rec = r.reconstruct()
     assert pat == rec
 
-def test_reconstruct():
-    for p in SAMPLE_PATTERNS:
-        yield reconstruct_runner, p
 
 SRE_CATS = {sre_constants.CATEGORY_SPACE: list(map(ord, WHITESPACE)),
             sre_constants.CATEGORY_DIGIT: list(map(ord, DIGITS)),
@@ -217,7 +214,9 @@ def expand_sre_in(x):
         else:
             raise NotImplementedError("Unknown type %s" % typ)
 
-def charclass_runner(pat):
+
+@pytest.mark.parametrize('pat', CHARCLASS_PATTERNS)
+def test_charclass(pat):
     r = Regex().get_parse_tree(pat)
     regexlint_version = r.children[0].matching_character_codes
     sre_parsed = sre_parse.parse(pat)
@@ -247,7 +246,3 @@ def charclass_runner(pat):
         print('missing:', sorted(set(golden) - set(regexlint_version)))
 
         assert sorted(golden) == sorted(regexlint_version)
-
-def test_charclass():
-    for i in CHARCLASS_PATTERNS:
-        yield charclass_runner, i

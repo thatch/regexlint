@@ -12,11 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from __future__ import print_function
-from __future__ import unicode_literals
 
-import sys
-import nose.plugins.skip
 from unittest import TestCase
 
 from regexlint.util import *
@@ -50,15 +46,10 @@ class UtilTests(TestCase):
         self.assertEqual(golden, consistent_repr(eval(golden)))
 
     def test_consistent_repr_wide_unicode(self):
-        if sys.maxunicode < 65536:
-            # Python build doesn't handle 32-bit unicode
-            raise nose.plugins.skip.SkipTest('narrow python build')
-        else:
-            # Python build handles 32-bit unicode
-            golden = u"'text\\U00101234text'"
-            print(repr(eval(golden)))
-            self.assertEqual(len(golden), len(consistent_repr(eval(golden))))
-            self.assertEqual(golden, consistent_repr(eval(golden)))
+        golden = u"'text\\U00101234text'"
+        print(repr(eval(golden)))
+        self.assertEqual(len(golden), len(consistent_repr(eval(golden))))
+        self.assertEqual(golden, consistent_repr(eval(golden)))
 
     def test_consistent_repr_for_ranges(self):
         r = consistent_repr('a-b[]', escape='[]-', include_quotes=False)
@@ -68,5 +59,6 @@ class UtilTests(TestCase):
 class RangesTest(TestCase):
     def test_disjoint(self):
         self.assertEqual([65, 67, 69], build_ranges([65, 67, 69]))
+
     def test_joint(self):
         self.assertEqual([(65, 66), 69], build_ranges([65, 66, 69]))

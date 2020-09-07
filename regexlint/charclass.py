@@ -146,7 +146,7 @@ def build_output(items):
         # Single quotes are two chars in reprs.  The others are metachars in
         # character classes (although '-' and '[' are not special in certain
         # positions, we never use that feature).
-        return esc(c, '\'-[]')
+        return esc(c, '\'-[]^')
 
     buf = []
     for i in items:

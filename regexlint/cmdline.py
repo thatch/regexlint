@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 #
 # Copyright 2011-2014 Google Inc.
 # Copyright 2018 Tim Hatch
@@ -14,33 +14,30 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from __future__ import print_function
 
 import sys
-sys.maxunicode = 65535 # HACK: make Pygments think we're on a narrow build.
-
-import re
 import logging
 import itertools
 import multiprocessing
-from six import StringIO
+from io import StringIO
+from os import path
 
-from pygments.lexer import RegexLexer, bygroups
+from pygments.lexer import RegexLexer, bygroups, words
 from pygments.token import Token
-try:
-    from pygments.util import Future
-except ImportError:
-    class Future: pass
+from pygments.util import Future
+
 import regexlint.checkers
 from regexlint import Regex, run_all_checkers
 from regexlint.checkers import manual_check_for_empty_string_match
-from regexlint.indicator import find_offending_line, mark, mark_str, find_substr_pos
+from regexlint.indicator import find_offending_line, mark, mark_str
 
 ONLY_FUNC = None
 
+
 def import_mod(m):
-    mod = __import__(m)
+    __import__(m)
     return sys.modules[m]
+
 
 def main(argv=None):
     if argv is None:
@@ -64,6 +61,10 @@ def main(argv=None):
                  default=None)
     o.add_option('--regex',
                  help='Check args as regexes instead of Pygments lexers',
+                 default=None,
+                 action='store_true')
+    o.add_option('--verbose',
+                 help='Output names of lexers without problems',
                  default=None,
                  action='store_true')
     opts, args = o.parse_args(argv)
@@ -105,7 +106,8 @@ def main(argv=None):
             module = module[:-3].replace('/', '.')
 
         mod = import_mod(module)
-        lexers_to_check.append(StringIO("Module %s\n" % module))
+        if opts.verbose:
+            lexers_to_check.append(StringIO("Module %s\n" % module))
         if cls:
             lexers = [cls]
         else:
@@ -117,12 +119,23 @@ def main(argv=None):
         for k in lexers:
             v = getattr(mod, k)
             if hasattr(v, '__bases__') and issubclass(v, RegexLexer) and v.tokens:
-                lexers_to_check.append((k, v, mod.__file__, min_level,
-                                        StringIO()))
+                clsmod = v.__module__
+                clsmodfile = sys.modules[clsmod].__file__
+                if clsmodfile.endswith('.pyc'):
+                    # need to go out of __pycache__
+                    newdir = path.dirname(path.dirname(clsmodfile))
+                    clsmodfile = path.join(newdir, path.basename(clsmodfile)[:-1])
+                lexers_to_check.append((k, v, clsmodfile, min_level,
+                                        opts.verbose, StringIO()))
 
-    for result in pool.imap(check_lexer_map, lexers_to_check):
-        result.seek(0, 0)
-        output_stream.write(result.read())
+    has_any_errors = False
+    for (stream, has_errors) in pool.imap(check_lexer_map, lexers_to_check):
+        stream.seek(0, 0)
+        output_stream.write(stream.read())
+        has_any_errors |= has_errors
+
+    if has_any_errors:
+        sys.exit(1)
 
 
 def remove_error(errs, *nums):
@@ -147,16 +160,16 @@ def check_regex(regex_text, min_level, output_stream=sys.stdout):
     errs.sort(key=lambda k: (k[1], k[0]))
     if errs:
         for num, severity, pos1, text in errs:
-            if severity < min_level: continue
+            if severity < min_level:
+                continue
 
             # Only set this if we're going to output something --
             # otherwise the [Lexer] OK won't print
             has_errors = True
-            line = '#'
 
-            print('%s%s:%s:%s:%s: %s' % (
-                logging.getLevelName(severity)[0], num,
-                'argv', 'root', 0, text), file=output_stream)
+            print('%s:%s:%s: %s%s: %s' % (
+                'argv', 'root', 0,
+                logging.getLevelName(severity)[0], num, text), file=output_stream)
             mark_str(pos1, pos1+1, regex_text, output_stream)
     if not has_errors:
         print(repr(regex_text), 'OK', file=output_stream)
@@ -166,7 +179,7 @@ def check_regex(regex_text, min_level, output_stream=sys.stdout):
 
 def check_lexer_map(args):
     if isinstance(args, StringIO):
-        return args
+        return (args, False)
     return check_lexer(*args)
 
 def func_code(func):
@@ -181,7 +194,7 @@ def func_closure(func):
     except AttributeError:
         return func.__closure__[0].cell_contents
 
-def check_lexer(lexer_name, cls, mod_path, min_level, output_stream=sys.stdout):
+def check_lexer(lexer_name, cls, mod_path, min_level, verbose, output_stream=sys.stdout):
     #print lexer_name
     #print cls().tokens
     has_errors = False
@@ -190,16 +203,20 @@ def check_lexer(lexer_name, cls, mod_path, min_level, output_stream=sys.stdout):
     for state, pats in cls().tokens.items():
         if not isinstance(pats, list):
             # This is for Inform7Lexer
-            print(lexer_name, 'WEIRD', file=output_stream)
-            return output_stream
+            if verbose:
+                print(lexer_name, 'WEIRD', file=output_stream)
+            return (output_stream, False)
 
         for i, pat in enumerate(pats):
             if hasattr(pat, 'state'):
                 # new 'default'
                 continue
 
+            ignore_w123 = False
             try:
                 if isinstance(pat[0], Future):
+                    if isinstance(pat[0], words):
+                        ignore_w123 = True
                     pat = (pat[0].get(),) + pat[1:]
                 reg = Regex.get_parse_tree(pat[0], cls.flags)
             except TypeError:
@@ -226,10 +243,14 @@ def check_lexer(lexer_name, cls, mod_path, min_level, output_stream=sys.stdout):
                 manual_check_for_empty_string_match(reg, errs, pat)
 
             errs.sort(key=lambda k: (k[1], k[0]))
+
+            if ignore_w123:
+                remove_error(errs, '123')
+
             if errs:
-                #print "Errors in", lexer_name, state, "pattern", i
                 for num, severity, pos1, text in errs:
-                    if severity < min_level: continue
+                    if severity < min_level:
+                        continue
 
                     # Only set this if we're going to output something --
                     # otherwise the [Lexer] OK won't print
@@ -237,21 +258,21 @@ def check_lexer(lexer_name, cls, mod_path, min_level, output_stream=sys.stdout):
 
                     foo = find_offending_line(mod_path, lexer_name, state, i,
                                               pos1)
-                    if foo:
-                        line = 'L' + str(foo[0])
-                    else:
-                        line = 'pat#' + str(i+1)
-                    print('%s%s:%s:%s:%s: %s' % (
+                    line = '%s:' % foo[0] if foo else ''
+                    patn = 'pat#' + str(i+1)
+                    print('%s:%s (%s:%s:%s) %s%s: %s' % (
+                        mod_path, line,
+                        lexer_name, state, patn,
                         logging.getLevelName(severity)[0], num,
-                        lexer_name, state, line, text), file=output_stream)
+                        text), file=output_stream)
                     if foo:
                         mark(*(foo + (output_stream,)))
                     else:
                         mark_str(pos1, pos1+1, pat[0], output_stream)
-    if not has_errors:
+    if verbose and not has_errors:
         print(lexer_name, 'OK', file=output_stream)
 
-    return output_stream
+    return (output_stream, has_errors)
 
 
 if __name__ == '__main__':

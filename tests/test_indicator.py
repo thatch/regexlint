@@ -15,7 +15,7 @@
 
 import re
 import unittest
-from six import StringIO
+from io import StringIO
 
 from regexlint.indicator import *
 

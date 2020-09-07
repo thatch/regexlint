@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from __future__ import print_function
 
 import re
 import sre_parse
@@ -20,7 +19,7 @@ import weakref
 
 from regexlint.util import *
 
-from pygments.lexer import RegexLexer, include, using, bygroups, default
+from pygments.lexer import RegexLexer, include, default
 from pygments.token import Other
 
 
@@ -313,8 +312,10 @@ class BaseRegex(object):
         ],
         'simpleliteral': [
             (r'[^\\^-]', Other.Literal),
-            (r'\\0[0-7]{0,3}', Other.Literal.Oct), # \0 is legal
+            (r'\\0[0-7]{0,3}', Other.Literal.Oct),  # \0 is legal
             (r'\\x[0-9a-fA-F]{2}', Other.Literal.Hex),
+            (r'\\u[0-9a-fA-F]{4}', Other.Literal.Unicode),
+            (r'\\U[0-9a-fA-F]{8}', Other.Literal.LongUnicode),
             (r'\\[\[\]]', Other.Literal.Bracket),
             (r'\\[()]', Other.Literal.Paren),
             (r'\\t', Other.Tab),
@@ -338,7 +339,11 @@ class BaseRegex(object):
 
     @classmethod
     def get_parse_tree(cls, s, flags=0):
-        effective_flags = sre_parse.parse(s, flags).pattern.flags
+        pat = sre_parse.parse(s, flags)
+        try:
+            effective_flags = pat.pattern.flags
+        except AttributeError:  # Python 3.8+
+            effective_flags = pat.state.flags
 
         if effective_flags & re.VERBOSE:
             return VerboseRegex._get_parse_tree(s, flags, effective_flags)

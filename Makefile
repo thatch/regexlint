@@ -13,7 +13,7 @@
 # limitations under the License.
 
 PYTHON?=python
-NOSETESTS?=nosetests
+PYTEST?=$(PYTHON) -m pytest
 FIGLEAF?=figleaf
 FIGLEAF2HTML?=figleaf2html
 DEMOOPTS?=
@@ -23,7 +23,7 @@ all:
 
 .PHONY: test
 test:
-	$(NOSETESTS)
+	$(PYTEST)
 
 .PHONY: demo
 demo:
@@ -36,7 +36,7 @@ selfdemo:
 .PHONY: coverage
 coverage:
 	rm -rf .figleaf html
-	$(FIGLEAF) `which $(NOSETESTS)`
+	$(FIGLEAF) `which $(PYTEST)`
 	$(FIGLEAF2HTML) -x figleaf_exclude
 
 .PHONY: updatecopyright
