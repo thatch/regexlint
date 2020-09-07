@@ -664,7 +664,8 @@ class CheckersTests(TestCase):
     #    self.assertTrue('[\\d_]' in errs[0][-1])
 
     def test_charclass_simplify_suggest_range(self):
-        r = Regex.get_parse_tree(r'[01acb234]', 0)
+        # Need to use ASCII mode to enable this checker.
+        r = Regex.get_parse_tree(r'[01acb234]', re.A)
         errs = []
         check_charclass_simplify(r, errs)
         print(errs)
@@ -672,7 +673,7 @@ class CheckersTests(TestCase):
         self.assertTrue('0-4a-c' in errs[0][3], errs[0][3])
 
     def test_charclass_simplify_insensitive1(self):
-        r = Regex.get_parse_tree(r'[a-z0-9_]', re.I)
+        r = Regex.get_parse_tree(r'[a-z0-9_]', re.I | re.A)
         errs = []
         check_charclass_simplify(r, errs)
         print(errs)
@@ -680,7 +681,7 @@ class CheckersTests(TestCase):
         self.assertTrue('\\w' in errs[0][3], errs[0][3])
 
     def test_charclass_simplify_insensitive2(self):
-        r = Regex.get_parse_tree(r'[A-Z0-9_]', re.I)
+        r = Regex.get_parse_tree(r'[A-Z0-9_]', re.I | re.A)
         errs = []
         check_charclass_simplify(r, errs)
         print(errs)
@@ -688,7 +689,7 @@ class CheckersTests(TestCase):
         self.assertTrue('\\w' in errs[0][3], errs[0][3])
 
     def test_charclass_simplify_insensitive3(self):
-        r = Regex.get_parse_tree(r'[eE]', re.I)
+        r = Regex.get_parse_tree(r'[eE]', re.I | re.A)
         errs = []
         check_charclass_simplify(r, errs)
         print(errs)

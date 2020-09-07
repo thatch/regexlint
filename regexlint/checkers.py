@@ -411,7 +411,7 @@ def check_charclass_simplify(reg, errs):
     level = logging.WARNING
     msg = 'Regex can be written more simply: %s -> %s'
 
-    if any(ord(c) > 255 for c in reg.raw):
+    if any(ord(c) > 255 for c in reg.raw) or reg.effective_flags & re.UNICODE:
         # Many of the operations performed here assume 8-bit ascii.
         return
 
