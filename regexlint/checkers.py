@@ -465,14 +465,14 @@ def check_redundant_repetition(reg, errs):
             errs.append((num, level, repeat.start, 'should be +'))
 
 
-
 def manual_check_for_empty_string_match(reg, errs, raw_pat):
-    # Note: callback functions get a pass here, since they're used for
-    # indentation tracking in SassLexer (and friends).
-    # '#pop' and 'next-state' ARE checked if pattern is empty because they
-    # should be using default().
+    # Skip the check in the following conditions:
+    # * Rules that use a callback, since they're used for indentation
+    #   tracking in SassLexer (and friends).
     if not isinstance(raw_pat[1], Token.__class__):
         return
+    # * Rules with a state transition.  However, the empty pattern is
+    #   disallowed, because that should be using default().
     if raw_pat[0] != '' and len(raw_pat) > 2:
         return
 
