@@ -241,7 +241,7 @@ def check_lexer(
             except Exception:
                 try:
                     print(pat[0], cls, file=output_stream)
-                except:
+                except Exception:
                     pass
                 raise
             # Special problem: display an error if count of args to

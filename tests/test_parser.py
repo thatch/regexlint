@@ -20,8 +20,8 @@ from unittest import TestCase
 import pytest
 from pygments.token import Other
 
-from regexlint.checkers import find_all, find_all_by_type
-from regexlint.parser import DIGITS, WHITESPACE, WORD, Node, Regex, fmttree, width
+from regexlint.parser import DIGITS, WHITESPACE, WORD, Node, Regex, fmttree
+from regexlint.util import find_all, find_all_by_type, width
 
 SAMPLE_PATTERNS = [
     r"a|b|",
@@ -176,11 +176,11 @@ class VerboseModeTests(TestCase):
         self.assertEqual(r" ", l[1].data)
         self.assertEqual(r"a", l[2].data)
 
-    def test_complex_charclass(Self):
+    def test_complex_charclass(self):
         r = Regex.get_parse_tree(r"[]\[:_@\".{}()|;,]")
         l = list(find_all(r))[1:]  # skip root
         print("\n".join(fmttree(r)))
-        # self.assertEqual(3, len(l))
+        self.assertEqual(15, len(l))
 
 
 @pytest.mark.parametrize("pat", SAMPLE_PATTERNS)

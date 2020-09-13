@@ -47,3 +47,14 @@ updatecopyright: COPYING Makefile *.py */*.py
 		-e "s/Copyright \(....-\)\(....\) Google/Copyright \\1$$THIS_YEAR Google/" \
 		-e "s/Copyright $${THIS_YEAR}-$${THIS_YEAR} Google/Copyright $$THIS_YEAR Google/" \
 		$^
+
+.PHONY: format
+format:
+	python -m isort --recursive -y $(SOURCES)
+	python -m black $(SOURCES)
+
+.PHONY: lint
+lint:
+	python -m isort --recursive --diff $(SOURCES)
+	python -m black --check $(SOURCES)
+	python -m flake8 $(SOURCES)

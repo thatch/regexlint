@@ -21,7 +21,7 @@ __all__ = ["simplify_charclass", "charclass_score", "build_output", "WontOptimiz
 CATS = {
     "\\s": bitvector(map(ord, WHITESPACE)),
     # disabled as it's not more easily readable.
-    #'\\d': bitvector(map(ord, DIGITS)),
+    # '\\d': bitvector(map(ord, DIGITS)),
     "\\w": bitvector(map(ord, WORD)),
     "\\S": bitvector([_ for _ in range(256) if chr(_) not in WHITESPACE]),
     "\\D": bitvector([_ for _ in range(256) if chr(_) not in DIGITS]),

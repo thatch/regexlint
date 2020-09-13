@@ -16,7 +16,12 @@ import re
 
 import pytest
 
-from regexlint.charclass import *
+from regexlint.charclass import (
+    WontOptimize,
+    build_output,
+    charclass_score,
+    simplify_charclass,
+)
 from regexlint.parser import Regex
 
 EXAMPLES = [
@@ -87,7 +92,7 @@ def test_caret_escaping1():
     assert op == "\\^"
 
 
-def test_caret_escaping1():
+def test_caret_escaping2():
     new_codes, negated = simplify_charclass([ord("^"), ord("]")])
     print(new_codes)
     assert len(new_codes) == 2

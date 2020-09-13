@@ -20,7 +20,7 @@ import weakref
 from pygments.lexer import RegexLexer, default, include
 from pygments.token import Other
 
-from regexlint.util import *
+from regexlint.util import eval_char, fmttree
 
 WHITESPACE = " \t\n\r\f\v"
 DIGITS = "0123456789"

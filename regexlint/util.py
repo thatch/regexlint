@@ -65,9 +65,9 @@ def find_bad_between(first, second, fn):
             pass
         else:
             v = fn(j)
-            if v == True:
+            if v is True:
                 return j
-            elif v == False:
+            elif v is False:
                 good_obj = j
             # else keep going
 

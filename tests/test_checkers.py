@@ -13,13 +13,39 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 import re
 from unittest import TestCase
 
-from pygments.token import Name, Punctuation, Text
+from pygments.token import Name, Punctuation, Text, Token
 
-from regexlint.checkers import *
-from regexlint.parser import fmttree
+from regexlint.checkers import (
+    bygroups_check_no_capture_group_in_repetition,
+    bygroups_check_no_python_named_capture_groups,
+    bygroups_check_overlap,
+    bygroups_check_toknum,
+    check_bad_flags,
+    check_charclass_case_insensitive_overlap,
+    check_charclass_homogeneous_ranges,
+    check_charclass_len,
+    check_charclass_negation,
+    check_charclass_overlap,
+    check_charclass_simplify,
+    check_multiline_anchors,
+    check_no_bels,
+    check_no_consecutive_dots,
+    check_no_empty_alternations,
+    check_no_newlines,
+    check_no_nulls,
+    check_prefix_ordering,
+    check_redundant_repetition,
+    check_single_character_classes,
+    check_suspicious_anchors,
+    check_unescaped_braces,
+    manual_check_for_empty_string_match,
+    run_all_checkers,
+)
+from regexlint.parser import Regex, fmttree
 
 
 class CheckersTests(TestCase):
@@ -288,7 +314,7 @@ class CheckersTests(TestCase):
         print(errs)
         self.assertEqual(len(errs), 0)
 
-    def test_bygroups_check_overlap_descending(self):
+    def test_bygroups_check_overlap_descending2(self):
         r = Regex.get_parse_tree(r"(?:^|xx)(foo)")
         print("\n".join(fmttree(r)))
         errs = []
@@ -422,7 +448,7 @@ class CheckersTests(TestCase):
         self.assertEqual(len(errs), 1)
         self.assertEqual(("113", logging.WARNING, 0), errs[0][:3])
 
-    def test_necessary_i_flag(self):
+    def test_necessary_i_flag2(self):
         r = Regex.get_parse_tree(r"(?m).$")
         errs = []
         check_bad_flags(r, errs)
@@ -565,7 +591,7 @@ class CheckersTests(TestCase):
         print(errs)
         self.assertEqual(len(errs), 0)
 
-    def test_single_entry_charclass_ok(self):
+    def test_single_entry_charclass_ok2(self):
         r = Regex.get_parse_tree(r"[#]", re.VERBOSE)
         errs = []
         check_charclass_len(r, errs)
@@ -588,7 +614,7 @@ class CheckersTests(TestCase):
         print(errs)
         self.assertEqual(len(errs), 0)
 
-    def test_negated_charclass_with_builtin_range(self):
+    def test_negated_charclass_with_builtin_range2(self):
         r = Regex.get_parse_tree(r"[\s]")
         errs = []
         check_charclass_negation(r, errs)

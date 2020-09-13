@@ -53,7 +53,7 @@ def find_offending_line(mod, clsname, state, idx, pos):
         for i, key in enumerate(item.keys):
             if isinstance(key, ast.Str) and key.s == state:
                 stateValue = item.values[i]
-        if stateValue == None:
+        if stateValue is None:
             continue
         if not isinstance(stateValue, ast.List):
             continue

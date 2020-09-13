@@ -17,7 +17,7 @@ import re
 import unittest
 from io import StringIO
 
-from regexlint.indicator import *
+from regexlint.indicator import find_offending_line, find_substr_pos, mark_str
 
 fakemod = r'''# line 1
 class foo(object):

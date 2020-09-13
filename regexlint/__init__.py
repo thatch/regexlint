@@ -14,3 +14,5 @@
 
 from regexlint.checkers import run_all_checkers
 from regexlint.parser import Regex
+
+__all__ = ["run_all_checkers", "Regex"]

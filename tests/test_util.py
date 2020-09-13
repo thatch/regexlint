@@ -15,7 +15,7 @@
 
 from unittest import TestCase
 
-from regexlint.util import *
+from regexlint.util import build_ranges, consistent_repr, eval_char
 
 
 class UtilTests(TestCase):

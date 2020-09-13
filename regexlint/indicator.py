@@ -15,6 +15,15 @@
 from regexlint.indicator_ast import find_offending_line, find_substr_pos
 from regexlint.util import consistent_repr, shorten
 
+__all__ = [
+    "mark",
+    "mark_str",
+    "find_offending_line",
+    "find_substr_pos",
+    "consistent_repr",
+    "shorten",
+]
+
 
 def mark(lineno, d1, d2, text, output_stream):
     output_stream.write("  " + text + "\n")

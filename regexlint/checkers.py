@@ -16,11 +16,26 @@ import logging
 import re
 import sys
 
-from pygments.token import Token
+from pygments.token import Other, Token
 
-from regexlint.charclass import *
-from regexlint.parser import *
-from regexlint.util import *
+from regexlint.charclass import (
+    WontOptimize,
+    build_output,
+    charclass_score,
+    simplify_charclass,
+)
+from regexlint.parser import CharRange, Regex
+from regexlint.util import (
+    Break,
+    between,
+    charclass,
+    esc,
+    eval_char,
+    find_all_by_type,
+    find_bad_between,
+    has_width,
+    width,
+)
 
 
 def check_no_nulls(reg, errs):

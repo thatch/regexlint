@@ -20,7 +20,7 @@ as an example of well-written Python.
 import re
 
 from pygments.lexers.agile import PythonLexer
-from pygments.token import Name, Punctuation, String, Text
+from pygments.token import Name, Punctuation, String
 
 from regexlint.indicator_substr import find_substr_pos
 from regexlint.util import get_module_text
