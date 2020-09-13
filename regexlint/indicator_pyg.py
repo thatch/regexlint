@@ -20,15 +20,15 @@ as an example of well-written Python.
 import re
 
 from pygments.lexers.agile import PythonLexer
-from pygments.token import Punctuation, Name, Text, String
+from pygments.token import Name, Punctuation, String, Text
 
 from regexlint.indicator_substr import find_substr_pos
 from regexlint.util import get_module_text
 
-R_CLASSEXTRACT = re.compile(r'class (\w+).*:\n([\w\W]*?)(?=^class|\Z)', re.MULTILINE)
+R_CLASSEXTRACT = re.compile(r"class (\w+).*:\n([\w\W]*?)(?=^class|\Z)", re.MULTILINE)
 
-open_braces = '[{('
-close_braces = ']})'
+open_braces = "[{("
+close_braces = "]})"
 
 
 def find_offending_line(mod, clsname, state, idx, pos):
@@ -39,33 +39,34 @@ def find_offending_line(mod, clsname, state, idx, pos):
 
     # skip as far as possible using regular expressions, then start lexing.
     for m in R_CLASSEXTRACT.finditer(mod_text):
-        #print "Got class", m.group(1), '...' + repr(m.group(0)[-40:])
-        if m.group(1) == clsname: break
+        # print "Got class", m.group(1), '...' + repr(m.group(0)[-40:])
+        if m.group(1) == clsname:
+            break
     else:
         return None
-        #raise ValueError("Can't find class %r" % (clsname,))
+        # raise ValueError("Can't find class %r" % (clsname,))
 
     def match_brace(brace):
         target = close_braces[open_braces.index(brace)]
-        #print "matching brace", brace, target, it
+        # print "matching brace", brace, target, it
         for x in it:
-            #print x
+            # print x
             if x[-2] in Punctuation and x[-1] == target:
-                #print "  found"
+                # print "  found"
                 return True
             elif x[-2] in Punctuation and x[-1] in open_braces:
                 # begin again!
                 if not match_brace(x[-1]):
-                    #print "  fail2"
+                    # print "  fail2"
                     return False
-        #print "  inner fail"
+        # print "  inner fail"
         return False
 
     def until(t, match_braces=False):
-        #print "until", t
+        # print "until", t
         for x in it:
             if t == x[-1]:
-                #print "  found", repr(x[-1])
+                # print "  found", repr(x[-1])
                 return
             elif match_braces and x[-1] in open_braces:
                 match_brace(x[-1])
@@ -79,7 +80,8 @@ def find_offending_line(mod, clsname, state, idx, pos):
         pt = None
         pd = None
         for idx, tok, data in i:
-            if tok in String: tok = String
+            if tok in String:
+                tok = String
             if tok == pt == String:
                 pd += data
             else:
@@ -92,34 +94,34 @@ def find_offending_line(mod, clsname, state, idx, pos):
             yield si, pt, pd
 
     def filt(i):
-        line = 1 + mod_text[:m.start()].count('\n')
+        line = 1 + mod_text[: m.start()].count("\n")
         col = 0
         for _, b, c in i:
-            #print "got", b, repr(c)
+            # print "got", b, repr(c)
             yield line, col, b, c
-            line += c.count('\n')
-            if '\n' in c:
-                col = len(c) - c.rindex('\n') - 1
+            line += c.count("\n")
+            if "\n" in c:
+                col = len(c) - c.rindex("\n") - 1
             else:
                 col += len(c)
 
     it = filt(amal(PythonLexer().get_tokens_unprocessed(m.group(0))))
 
     for x, y, ttyp, text in it:
-        #print "Loop", level, ttyp, repr(text)
+        # print "Loop", level, ttyp, repr(text)
         if level == 0 and ttyp is Name:
-            if text == 'tokens':
-                until('=')
-                until('{')
+            if text == "tokens":
+                until("=")
+                until("{")
                 level = 1
         elif level == 1 and ttyp in String:
-            #print "key", text
+            # print "key", text
             key = eval(text, {}, {})
 
             # next is expected to be the colon.
             it.next()
             # next is either a left brace, or maybe a function call
-            t = ''
+            t = ""
             try:
                 while not t.strip():
                     _, _, _, t = it.next()
@@ -128,43 +130,42 @@ def find_offending_line(mod, clsname, state, idx, pos):
             # t is now the first token of the value, either '[' or 'SomeFunc'
 
             if key != state:
-                if t == '[':
-                    match_brace('[')
+                if t == "[":
+                    match_brace("[")
                 else:
-                    until(',', match_braces=True)
+                    until(",", match_braces=True)
             else:
                 level = 2
-                if t != '[':
+                if t != "[":
                     return None
         elif level == 2:
-            if text == '(':
+            if text == "(":
                 # open a tuple
                 level = 3
-            elif text == ')':
-                level = 1 # honestly this should be able to just return
-                #print "too late", idx, tuple_idx
+            elif text == ")":
+                level = 1  # honestly this should be able to just return
+                # print "too late", idx, tuple_idx
                 return
         elif level == 3:
-            #print "  idx", tuple_idx
-            if text == ')':
+            # print "  idx", tuple_idx
+            if text == ")":
                 level = 2
                 tuple_idx += 1
-            elif text == '(':
-                match_brace('(')
+            elif text == "(":
+                match_brace("(")
             elif tuple_idx == idx and ttyp in String:
                 # this might be it!
                 s = eval(text, {}, {})
-                #print "maybe", string_pos, pos, (string_pos+len(s))
-                if string_pos <= pos < (string_pos+len(s)):
+                # print "maybe", string_pos, pos, (string_pos+len(s))
+                if string_pos <= pos < (string_pos + len(s)):
                     # need to point in here
                     (dx, d1, d2) = find_substr_pos(text, pos - string_pos)
                     if dx == 0:
                         d1 += y
                         d2 += y
-                    return (x+dx, d1, d2, mod_text.splitlines()[x+dx-1])
+                    return (x + dx, d1, d2, mod_text.splitlines()[x + dx - 1])
                 else:
                     string_pos += len(s)
             elif tuple_idx == idx and ttyp in Name:
                 # If they're concatenating strings with vars, ignore.
                 break
-

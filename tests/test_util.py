@@ -17,6 +17,7 @@ from unittest import TestCase
 
 from regexlint.util import *
 
+
 class UtilTests(TestCase):
     def test_eval_char_canonical_ascii(self):
         for i in range(256):
@@ -25,8 +26,17 @@ class UtilTests(TestCase):
             self.assertEqual(i, actual)
 
     def test_eval_char_numeric(self):
-        for c in (b'\x40', b'\100', '\u0040', '@', '\\@', '\\x40', '\\100',
-                  '\\u0040', '\\U00000040'):
+        for c in (
+            b"\x40",
+            b"\100",
+            "\u0040",
+            "@",
+            "\\@",
+            "\\x40",
+            "\\100",
+            "\\u0040",
+            "\\U00000040",
+        ):
             print(c)
             actual = eval_char(c)
             self.assertEqual(actual, 0x40)
@@ -52,8 +62,8 @@ class UtilTests(TestCase):
         self.assertEqual(golden, consistent_repr(eval(golden)))
 
     def test_consistent_repr_for_ranges(self):
-        r = consistent_repr('a-b[]', escape='[]-', include_quotes=False)
-        self.assertEqual(r, r'a\-b\[\]')
+        r = consistent_repr("a-b[]", escape="[]-", include_quotes=False)
+        self.assertEqual(r, r"a\-b\[\]")
 
 
 class RangesTest(TestCase):

@@ -14,7 +14,7 @@
 
 from unittest import TestCase
 
-from regexlint.bitvector import bitvector, unpack_bitvector, population
+from regexlint.bitvector import bitvector, population, unpack_bitvector
 
 
 class BitvectorTests(TestCase):
@@ -26,18 +26,18 @@ class BitvectorTests(TestCase):
         self.assertEqual(population(4), 1)
         self.assertEqual(population(254), 7)
         self.assertEqual(population(255), 8)
-        self.assertEqual(population(1<<1234), 1)
+        self.assertEqual(population(1 << 1234), 1)
 
     def test_unpack_bitvector(self):
         for i in range(32):
-            n = 1<<i
+            n = 1 << i
             lst = unpack_bitvector(n)
             self.assertEqual(len(lst), 1)
             self.assertEqual(lst[0], i)
 
     def test_pack_bitvector(self):
-        for i in range(1<<10):
-            intermediate=unpack_bitvector(i)
+        for i in range(1 << 10):
+            intermediate = unpack_bitvector(i)
             x = bitvector(intermediate)
             print(i, intermediate)
             self.assertEqual(i, x)

@@ -12,5 +12,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from regexlint.parser import Regex
 from regexlint.checkers import run_all_checkers
+from regexlint.parser import Regex

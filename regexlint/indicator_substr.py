@@ -13,16 +13,19 @@
 # limitations under the License.
 
 import re
+
 from regexlint.util import rindex
 
 strp = {
-    '': re.compile(r'\\(?:[\\abfnrtv"\']|\n|x[a-fA-F0-9]{2}|[0-7]{1,3})|'
-                   r'[\w\W]'),
-    'u': re.compile(r'\\(?:[\\abfnrtv"\']|\n|N{.*?}|u[a-fA-F0-9]{4}|'
-                    r'U[a-fA-F0-9]{8}|x[a-fA-F0-9]{2}|[0-7]{1,3})|[\w\W]'),
-    'r': re.compile(r'[\w\W]'),
-    'ur': re.compile(r'\\(?:\\|u[a-fA-F0-9]{4}|U[a-fA-F0-9]{8})|[\w\W]'),
+    "": re.compile(r'\\(?:[\\abfnrtv"\']|\n|x[a-fA-F0-9]{2}|[0-7]{1,3})|' r"[\w\W]"),
+    "u": re.compile(
+        r'\\(?:[\\abfnrtv"\']|\n|N{.*?}|u[a-fA-F0-9]{4}|'
+        r"U[a-fA-F0-9]{8}|x[a-fA-F0-9]{2}|[0-7]{1,3})|[\w\W]"
+    ),
+    "r": re.compile(r"[\w\W]"),
+    "ur": re.compile(r"\\(?:\\|u[a-fA-F0-9]{4}|U[a-fA-F0-9]{8})|[\w\W]"),
 }
+
 
 def find_substr_pos(s, target):
     if s[-3:] in ('"""', "'''"):
@@ -31,31 +34,31 @@ def find_substr_pos(s, target):
         end_quote = s[-1]
     p = s.find(end_quote)
     mods = s[:p]
-    body = s[p+len(end_quote):-len(end_quote)]
+    body = s[p + len(end_quote) : -len(end_quote)]
 
     chars = strp[mods].findall(body)
-    if 'r' not in mods:
+    if "r" not in mods:
         # hack to support a zero-width escape sequence -- escaped newline
         for i in range(len(chars)):
-            if chars[i] == '\\\n':
+            if chars[i] == "\\\n":
                 target += 1
-            if i >= target: break
+            if i >= target:
+                break
 
     if target >= len(chars) or target < 0:
         raise ValueError("Impossible, out of bounds")
 
     l = 0
-    q = p+len(end_quote)+sum(map(len, chars[:target]))
+    q = p + len(end_quote) + sum(map(len, chars[:target]))
 
     # only for triplequoted strings
-    if '\n' in chars[:target]:
-        #print "GOT", target, chars[:target]
-        l = chars[:target].count('\n')
-        _ = rindex(chars[:target], '\n') + 1
-        #print "_", _
+    if "\n" in chars[:target]:
+        # print "GOT", target, chars[:target]
+        l = chars[:target].count("\n")
+        _ = rindex(chars[:target], "\n") + 1
+        # print "_", _
         q = sum(map(len, chars[_:target]))
-        #print "q", l, q, q+len(chars[target])
+        # print "q", l, q, q+len(chars[target])
 
-    #print q
-    return (l, q, q+len(chars[target]))
-
+    # print q
+    return (l, q, q + len(chars[target]))

@@ -16,29 +16,29 @@ import re
 
 import pytest
 
-from regexlint.parser import Regex
 from regexlint.charclass import *
+from regexlint.parser import Regex
 
 EXAMPLES = [
-    (r'[a-z]', r'[a-z]'),
-    (r'[a-zA-Z0-9_]', r'[\w]'),
+    (r"[a-z]", r"[a-z]"),
+    (r"[a-zA-Z0-9_]", r"[\w]"),
     # disabled.
-    #(r'[0-9]', r'[\d]'),
-    (r'[0-9a-f]', None),
-    (r'[\S]', r'[\S]'),
-    (r'[\S\n]', r'[\S\n]'),
-    (r'[^a-zA-Z0-9_]', r'[\W]'),
-    (r'[^a-zA-Z0-9]', r'[\W_]'),
-    (r'[^\S\n]', r'[\t\x0b\x0c\r ]'),  # Double negative
-    (r'[\r\n]', r'[\r\n]'),
-    (r'[01]', r'[01]'),
-    (r'[0-1]', r'[01]'),
-    (r'[a-zA-Z]', r'[a-zA-Z]'),
-    (r'(?i)[a-zA-Z]', r'[a-z]'),
-    (r'(?i)[a-z0-9_]', r'[\w]'),
-    (r'(?i)[A-Z0-9_]', r'[\w]'),
+    # (r'[0-9]', r'[\d]'),
+    (r"[0-9a-f]", None),
+    (r"[\S]", r"[\S]"),
+    (r"[\S\n]", r"[\S\n]"),
+    (r"[^a-zA-Z0-9_]", r"[\W]"),
+    (r"[^a-zA-Z0-9]", r"[\W_]"),
+    (r"[^\S\n]", r"[\t\x0b\x0c\r ]"),  # Double negative
+    (r"[\r\n]", r"[\r\n]"),
+    (r"[01]", r"[01]"),
+    (r"[0-1]", r"[01]"),
+    (r"[a-zA-Z]", r"[a-zA-Z]"),
+    (r"(?i)[a-zA-Z]", r"[a-z]"),
+    (r"(?i)[a-z0-9_]", r"[\w]"),
+    (r"(?i)[A-Z0-9_]", r"[\w]"),
     (r'(?i)[^a-z"/]', r'[^a-z"/]'),
-    (r'[\x00-\xff]', r'[\w\W]'),
+    (r"[\x00-\xff]", r"[\w\W]"),
 ]
 
 
@@ -51,7 +51,7 @@ def effective_flags(reg_text):
     return Regex().get_parse_tree(reg_text, 0).effective_flags
 
 
-@pytest.mark.parametrize('the_input, the_output', EXAMPLES)
+@pytest.mark.parametrize("the_input, the_output", EXAMPLES)
 def test_examples(the_input, the_output):
     cc = first_charclass(the_input)
     codes = cc.matching_character_codes
@@ -71,23 +71,26 @@ def test_examples(the_input, the_output):
     print("built", repr(build_output(new_codes)))
     assert new_score == expected_score
 
+
 def test_match_everything():
     new_codes, negated = simplify_charclass(range(256))
-    assert new_codes == ['\\w', '\\W']
+    assert new_codes == ["\\w", "\\W"]
     assert not negated
 
+
 def test_caret_escaping1():
-    new_codes, negated = simplify_charclass([ord('^')])
+    new_codes, negated = simplify_charclass([ord("^")])
     print(new_codes)
     assert len(new_codes) == 1
     assert not negated
     op = build_output(new_codes)
-    assert op == '\\^'
+    assert op == "\\^"
+
 
 def test_caret_escaping1():
-    new_codes, negated = simplify_charclass([ord('^'), ord(']')])
+    new_codes, negated = simplify_charclass([ord("^"), ord("]")])
     print(new_codes)
     assert len(new_codes) == 2
     assert not negated
     op = build_output(new_codes)
-    assert op == '\\]\\^'
+    assert op == "\\]\\^"

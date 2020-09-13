@@ -18,8 +18,8 @@ file.  Due to what appear to be bugs in the ast module when a string spans
 lines, this is not the default.
 """
 
-import re
 import ast
+import re
 
 from regexlint.indicator_substr import find_substr_pos
 from regexlint.util import get_module_text
@@ -70,10 +70,10 @@ def find_offending_line(mod, clsname, state, idx, pos):
         stopline = idxTuple.elts[1].lineno
         stopchar = idxTuple.elts[1].col_offset
 
-        #print "Block"
-        #print idxTuple.col_offset, idxTuple.elts[0].col_offset, idxTuple.elts[1].col_offset
-        #print idxTuple.lineno, idxTuple.elts[0].lineno, idxTuple.elts[1].lineno
-        #print mod_text.splitlines()[idxTuple.lineno-1]
+        # print "Block"
+        # print idxTuple.col_offset, idxTuple.elts[0].col_offset, idxTuple.elts[1].col_offset
+        # print idxTuple.lineno, idxTuple.elts[0].lineno, idxTuple.elts[1].lineno
+        # print mod_text.splitlines()[idxTuple.lineno-1]
 
         # HACK HACK HACK
         if idxTuple.elts[0].col_offset == -1:
@@ -86,14 +86,14 @@ def find_offending_line(mod, clsname, state, idx, pos):
             elif "'''" in _lines[startline]:
                 target = "'''"
             else:
-                #print "Cannot locate beginning string"
+                # print "Cannot locate beginning string"
                 return None
 
-            for i in range(startline-1, -1, -1):
+            for i in range(startline - 1, -1, -1):
                 if target in _lines[i]:
-                    #print "Adjusted start line from", startline, "to", i
+                    # print "Adjusted start line from", startline, "to", i
                     startline = i
-                    startchar = _lines[i].rindex(target) - 2 # for 'ur'
+                    startchar = _lines[i].rindex(target) - 2  # for 'ur'
                     break
 
         # END HACK
@@ -108,22 +108,25 @@ def find_offending_line(mod, clsname, state, idx, pos):
                 break
         rawstr = "\n".join(lines)
 
-        strRe = re.compile("[uU]?[rR]?(?:"
+        strRe = re.compile(
+            "[uU]?[rR]?(?:"
             "'''(?:[^\\\\]|\\\\.)*?'''|"
             '"""(?:[^\\\\]|\\\\.)*?"""|'
             "'(?:[^\\\\]|\\\\.)*?'|"
             '"(?:[^\\\\]|\\\\.)*?"'
-            ")", re.DOTALL)
-        #print "rawstr:", repr(rawstr)
+            ")",
+            re.DOTALL,
+        )
+        # print "rawstr:", repr(rawstr)
         for match in strRe.finditer(rawstr):
-            #print "match:", repr(match.group(0))
+            # print "match:", repr(match.group(0))
             strInst = match.group(0)
             try:
                 (dx, d1, d2) = find_substr_pos(strInst, pos)
             except ValueError:
                 pos -= len(eval(strInst))
                 continue
-            before_match = rawstr[:match.start(0)]
+            before_match = rawstr[: match.start(0)]
             match_lineno_in_rawstr = before_match.count("\n")
             lineno = startline + 1 + match_lineno_in_rawstr
             col_offset = match.start(0) - (before_match.rfind("\n") + 1)
@@ -132,5 +135,4 @@ def find_offending_line(mod, clsname, state, idx, pos):
             if dx == 0:
                 d1 += col_offset
                 d2 += col_offset
-            return (lineno+dx, d1, d2,
-                    mod_text.splitlines()[lineno+dx-1])
+            return (lineno + dx, d1, d2, mod_text.splitlines()[lineno + dx - 1])

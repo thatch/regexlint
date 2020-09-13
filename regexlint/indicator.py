@@ -18,7 +18,8 @@ from regexlint.util import consistent_repr, shorten
 
 def mark(lineno, d1, d2, text, output_stream):
     output_stream.write("  " + text + "\n")
-    output_stream.write("  " + " " * d1 + '^' * (d2-d1) + ' ' + 'here\n')
+    output_stream.write("  " + " " * d1 + "^" * (d2 - d1) + " " + "here\n")
+
 
 def mark_str(d1, d2, text, output_stream):
     # Substract one for closing quote

@@ -12,31 +12,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from regexlint.parser import WHITESPACE, DIGITS, WORD, CharClass
-from regexlint.util import build_ranges, esc, lowercase_code
 from regexlint.bitvector import bitvector, unpack_bitvector
+from regexlint.parser import DIGITS, WHITESPACE, WORD, CharClass
+from regexlint.util import build_ranges, esc, lowercase_code
 
-__all__ = ['simplify_charclass', 'charclass_score', 'build_output',
-           'WontOptimize']
+__all__ = ["simplify_charclass", "charclass_score", "build_output", "WontOptimize"]
 
 CATS = {
-    '\\s': bitvector(map(ord, WHITESPACE)),
+    "\\s": bitvector(map(ord, WHITESPACE)),
     # disabled as it's not more easily readable.
     #'\\d': bitvector(map(ord, DIGITS)),
-    '\\w': bitvector(map(ord, WORD)),
-    '\\S': bitvector([_ for _ in range(256) if chr(_) not in WHITESPACE]),
-    '\\D': bitvector([_ for _ in range(256) if chr(_) not in DIGITS]),
-    '\\W': bitvector([_ for _ in range(256) if chr(_) not in WORD]),
+    "\\w": bitvector(map(ord, WORD)),
+    "\\S": bitvector([_ for _ in range(256) if chr(_) not in WHITESPACE]),
+    "\\D": bitvector([_ for _ in range(256) if chr(_) not in DIGITS]),
+    "\\W": bitvector([_ for _ in range(256) if chr(_) not in WORD]),
 }
 
-HEX = bitvector(map(ord, '0123456789abcdef'))
-ALNUM = (bitvector(range(ord('a'), ord('z')+1)) |
-         bitvector(map(ord, '0123456789')))
-ASCII = (1<<256) - 1
+HEX = bitvector(map(ord, "0123456789abcdef"))
+ALNUM = bitvector(range(ord("a"), ord("z") + 1)) | bitvector(map(ord, "0123456789"))
+ASCII = (1 << 256) - 1
 INSENSITIVE_ASCII = bitvector(map(lowercase_code, range(256)))
+
 
 class WontOptimize(Exception):
     pass
+
 
 def simplify_charclass(matching_codes, ignorecase=False):
     """Given a sequence of ordinals, return a (seq, negated) tuple.
@@ -47,15 +47,15 @@ def simplify_charclass(matching_codes, ignorecase=False):
     string.
     """
     if max(matching_codes) > 255:
-        raise WontOptimize('Unicode')
+        raise WontOptimize("Unicode")
 
     # HACK: Don't simplify something that looks fairly like a hex digit pattern.
     # They look arguably prettier as '0-9a-f' than '\da-f'
     bv = bitvector(matching_codes)
-    if (bv & HEX) == HEX and ord('g') not in matching_codes:
-        raise WontOptimize('Hex digit')
-    if (bv & ALNUM) == ALNUM and ord('_') not in matching_codes:
-        raise WontOptimize('Alphanumeric without _')
+    if (bv & HEX) == HEX and ord("g") not in matching_codes:
+        raise WontOptimize("Hex digit")
+    if (bv & ALNUM) == ALNUM and ord("_") not in matching_codes:
+        raise WontOptimize("Alphanumeric without _")
 
     if ignorecase:
         bv = bitvector(map(lowercase_code, matching_codes))
@@ -76,16 +76,19 @@ def simplify_charclass(matching_codes, ignorecase=False):
         #  comparing later).
         if negated:
             if ignorecase:
-                target = bitvector(map(
-                    lowercase_code,
-                    [i for i in range(256) if i not in unpack_bitvector(bv)]))
+                target = bitvector(
+                    map(
+                        lowercase_code,
+                        [i for i in range(256) if i not in unpack_bitvector(bv)],
+                    )
+                )
             else:
                 target = base ^ (base & bv)
         else:
             target = bv
 
-        for i in range(2**len(keys)):
-            chosen_keys = [keys[b] for b in range(len(keys)) if i & 1<<b]
+        for i in range(2 ** len(keys)):
+            chosen_keys = [keys[b] for b in range(len(keys)) if i & 1 << b]
             # Humans are terrible at double-negatives.  If this involves a
             # negation of the charclass as well as the category, tough cookies.
             # This will cause suggested _expansion_ of any such uses already in
@@ -104,18 +107,19 @@ def simplify_charclass(matching_codes, ignorecase=False):
 
             # True iff. the chosen categories fit entirely in the target.
             if chosen & t == chosen:
-                #print chosen_keys, "t", unpack_bitvector(t), unpack_bitvector(chosen)
+                # print chosen_keys, "t", unpack_bitvector(t), unpack_bitvector(chosen)
                 t ^= chosen
-                #print "  ", unpack_bitvector(t)
+                # print "  ", unpack_bitvector(t)
                 r = build_ranges(unpack_bitvector(t))
                 r[:0] = chosen_keys
-                discount = 1 if chosen_keys == ['\\w', '\\W'] else 0
+                discount = 1 if chosen_keys == ["\\w", "\\W"] else 0
 
                 if r:
-                    possibilities.append((charclass_score(r, negated) - discount,
-                                          r, negated))
+                    possibilities.append(
+                        (charclass_score(r, negated) - discount, r, negated)
+                    )
 
-    #print "possibilities", possibilities
+    # print "possibilities", possibilities
     # There will always be one, since we include no-categories above, and it's
     # not on the WontOptimize list.
     possibilities.sort(key=lambda i: i[0])
@@ -142,18 +146,19 @@ def build_output(items):
     Given sorted input (ranges as tuples, categories as strings, or individual
     characters as ints), construct the output string.
     """
+
     def _esc(c):
         # Single quotes are two chars in reprs.  The others are metachars in
         # character classes (although '-' and '[' are not special in certain
         # positions, we never use that feature).
-        return esc(c, '\'-[]^')
+        return esc(c, "'-[]^")
 
     buf = []
     for i in items:
         if isinstance(i, tuple):
             if i[0] != i[1] - 1:
                 # todo escape
-                buf.append('%s-%s' % (_esc(chr(i[0])), _esc(chr(i[1]))))
+                buf.append("%s-%s" % (_esc(chr(i[0])), _esc(chr(i[1]))))
             else:
                 buf.append(_esc(chr(i[0])) + _esc(chr(i[1])))
         elif isinstance(i, str):
@@ -162,6 +167,6 @@ def build_output(items):
             buf.append(_esc(chr(i)))
 
     # keep caret in its otherwise-chosen position, but escape if necessary
-    if buf and buf[0].startswith('^'):
-        buf.insert(0, '\\')
-    return ''.join(buf)
+    if buf and buf[0].startswith("^"):
+        buf.insert(0, "\\")
+    return "".join(buf)

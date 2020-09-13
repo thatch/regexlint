@@ -15,10 +15,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
-import logging
 import itertools
+import logging
 import multiprocessing
+import sys
 from io import StringIO
 from os import path
 
@@ -44,37 +44,42 @@ def main(argv=None):
         argv = sys.argv[1:]
 
     import optparse
-    o = optparse.OptionParser(usage='%prog [options] lexermodule[:class] ...')
-    o.add_option('--min_level',
-                 help='Min level to print (logging constant names like ERROR)',
-                 default='WARNING')
-    o.add_option('--output_file',
-                 help='Output filename for analysis',
-                 default=None)
-    o.add_option('--no_parallel',
-                 help='Run checks in a single thread',
-                 default=True,
-                 dest='parallel',
-                 action='store_false')
-    o.add_option('--only_func',
-                 help='Only run this checker func',
-                 default=None)
-    o.add_option('--regex',
-                 help='Check args as regexes instead of Pygments lexers',
-                 default=None,
-                 action='store_true')
-    o.add_option('--verbose',
-                 help='Output names of lexers without problems',
-                 default=None,
-                 action='store_true')
+
+    o = optparse.OptionParser(usage="%prog [options] lexermodule[:class] ...")
+    o.add_option(
+        "--min_level",
+        help="Min level to print (logging constant names like ERROR)",
+        default="WARNING",
+    )
+    o.add_option("--output_file", help="Output filename for analysis", default=None)
+    o.add_option(
+        "--no_parallel",
+        help="Run checks in a single thread",
+        default=True,
+        dest="parallel",
+        action="store_false",
+    )
+    o.add_option("--only_func", help="Only run this checker func", default=None)
+    o.add_option(
+        "--regex",
+        help="Check args as regexes instead of Pygments lexers",
+        default=None,
+        action="store_true",
+    )
+    o.add_option(
+        "--verbose",
+        help="Output names of lexers without problems",
+        default=None,
+        action="store_true",
+    )
     opts, args = o.parse_args(argv)
 
     if not args:
-        o.error('need some arguments with modules/classes to check')
+        o.error("need some arguments with modules/classes to check")
 
     min_level = getattr(logging, opts.min_level)
     if opts.output_file:
-        output_stream = open(opts.output_file, 'wb')
+        output_stream = open(opts.output_file, "wb")
     else:
         output_stream = sys.stdout
     if opts.only_func:
@@ -87,8 +92,9 @@ def main(argv=None):
         pool = itertools
 
     if opts.regex:
-        for result in pool.imap(check_regex_map,
-                                [(i, min_level, StringIO()) for i in args]):
+        for result in pool.imap(
+            check_regex_map, [(i, min_level, StringIO()) for i in args]
+        ):
             result.seek(0, 0)
             output_stream.write(result.read())
         return
@@ -96,14 +102,14 @@ def main(argv=None):
     # currently just a list of module names.
     lexers_to_check = []
     for module in args:
-        if ':' in module:
-            module, cls = module.split(':')
+        if ":" in module:
+            module, cls = module.split(":")
         else:
             cls = None
 
         # Support passing a filename instead, since shell completes it.
-        if '/' in module and module.endswith('.py'):
-            module = module[:-3].replace('/', '.')
+        if "/" in module and module.endswith(".py"):
+            module = module[:-3].replace("/", ".")
 
         mod = import_mod(module)
         if opts.verbose:
@@ -111,22 +117,23 @@ def main(argv=None):
         if cls:
             lexers = [cls]
         else:
-            if hasattr(mod, '__all__'):
+            if hasattr(mod, "__all__"):
                 lexers = mod.__all__
             else:
                 lexers = mod.__dict__.keys()
 
         for k in lexers:
             v = getattr(mod, k)
-            if hasattr(v, '__bases__') and issubclass(v, RegexLexer) and v.tokens:
+            if hasattr(v, "__bases__") and issubclass(v, RegexLexer) and v.tokens:
                 clsmod = v.__module__
                 clsmodfile = sys.modules[clsmod].__file__
-                if clsmodfile.endswith('.pyc'):
+                if clsmodfile.endswith(".pyc"):
                     # need to go out of __pycache__
                     newdir = path.dirname(path.dirname(clsmodfile))
                     clsmodfile = path.join(newdir, path.basename(clsmodfile)[:-1])
-                lexers_to_check.append((k, v, clsmodfile, min_level,
-                                        opts.verbose, StringIO()))
+                lexers_to_check.append(
+                    (k, v, clsmodfile, min_level, opts.verbose, StringIO())
+                )
 
     has_any_errors = False
     for (stream, has_errors) in pool.imap(check_lexer_map, lexers_to_check):
@@ -139,12 +146,14 @@ def main(argv=None):
 
 
 def remove_error(errs, *nums):
-    for i in range(len(errs)-1, -1, -1):
+    for i in range(len(errs) - 1, -1, -1):
         if errs[i][0] in nums:
             del errs[i]
 
+
 def check_regex_map(tup):
     return check_regex(*tup)
+
 
 def check_regex(regex_text, min_level, output_stream=sys.stdout):
     has_errors = False
@@ -167,12 +176,14 @@ def check_regex(regex_text, min_level, output_stream=sys.stdout):
             # otherwise the [Lexer] OK won't print
             has_errors = True
 
-            print('%s:%s:%s: %s%s: %s' % (
-                'argv', 'root', 0,
-                logging.getLevelName(severity)[0], num, text), file=output_stream)
-            mark_str(pos1, pos1+1, regex_text, output_stream)
+            print(
+                "%s:%s:%s: %s%s: %s"
+                % ("argv", "root", 0, logging.getLevelName(severity)[0], num, text),
+                file=output_stream,
+            )
+            mark_str(pos1, pos1 + 1, regex_text, output_stream)
     if not has_errors:
-        print(repr(regex_text), 'OK', file=output_stream)
+        print(repr(regex_text), "OK", file=output_stream)
 
     return output_stream
 
@@ -182,11 +193,13 @@ def check_lexer_map(args):
         return (args, False)
     return check_lexer(*args)
 
+
 def func_code(func):
     try:
         return func.func_code
     except AttributeError:
         return func.__code__
+
 
 def func_closure(func):
     try:
@@ -194,9 +207,12 @@ def func_closure(func):
     except AttributeError:
         return func.__closure__[0].cell_contents
 
-def check_lexer(lexer_name, cls, mod_path, min_level, verbose, output_stream=sys.stdout):
-    #print lexer_name
-    #print cls().tokens
+
+def check_lexer(
+    lexer_name, cls, mod_path, min_level, verbose, output_stream=sys.stdout
+):
+    # print lexer_name
+    # print cls().tokens
     has_errors = False
 
     bygroups_callback = func_code(bygroups(1))
@@ -204,11 +220,11 @@ def check_lexer(lexer_name, cls, mod_path, min_level, verbose, output_stream=sys
         if not isinstance(pats, list):
             # This is for Inform7Lexer
             if verbose:
-                print(lexer_name, 'WEIRD', file=output_stream)
+                print(lexer_name, "WEIRD", file=output_stream)
             return (output_stream, False)
 
         for i, pat in enumerate(pats):
-            if hasattr(pat, 'state'):
+            if hasattr(pat, "state"):
                 # new 'default'
                 continue
 
@@ -225,7 +241,8 @@ def check_lexer(lexer_name, cls, mod_path, min_level, verbose, output_stream=sys
             except Exception:
                 try:
                     print(pat[0], cls, file=output_stream)
-                except: pass
+                except:
+                    pass
                 raise
             # Special problem: display an error if count of args to
             # bygroups(...) doesn't match the number of capture groups
@@ -245,7 +262,7 @@ def check_lexer(lexer_name, cls, mod_path, min_level, verbose, output_stream=sys
             errs.sort(key=lambda k: (k[1], k[0]))
 
             if ignore_w123:
-                remove_error(errs, '123')
+                remove_error(errs, "123")
 
             if errs:
                 for num, severity, pos1, text in errs:
@@ -256,24 +273,32 @@ def check_lexer(lexer_name, cls, mod_path, min_level, verbose, output_stream=sys
                     # otherwise the [Lexer] OK won't print
                     has_errors = True
 
-                    foo = find_offending_line(mod_path, lexer_name, state, i,
-                                              pos1)
-                    line = '%s:' % foo[0] if foo else ''
-                    patn = 'pat#' + str(i+1)
-                    print('%s:%s (%s:%s:%s) %s%s: %s' % (
-                        mod_path, line,
-                        lexer_name, state, patn,
-                        logging.getLevelName(severity)[0], num,
-                        text), file=output_stream)
+                    foo = find_offending_line(mod_path, lexer_name, state, i, pos1)
+                    line = "%s:" % foo[0] if foo else ""
+                    patn = "pat#" + str(i + 1)
+                    print(
+                        "%s:%s (%s:%s:%s) %s%s: %s"
+                        % (
+                            mod_path,
+                            line,
+                            lexer_name,
+                            state,
+                            patn,
+                            logging.getLevelName(severity)[0],
+                            num,
+                            text,
+                        ),
+                        file=output_stream,
+                    )
                     if foo:
                         mark(*(foo + (output_stream,)))
                     else:
-                        mark_str(pos1, pos1+1, pat[0], output_stream)
+                        mark_str(pos1, pos1 + 1, pat[0], output_stream)
     if verbose and not has_errors:
-        print(lexer_name, 'OK', file=output_stream)
+        print(lexer_name, "OK", file=output_stream)
 
     return (output_stream, has_errors)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

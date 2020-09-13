@@ -60,7 +60,7 @@ def find_bad_between(first, second, fn):
     # ignores the ones that already have a whitelisted parent.
     good_obj = None
     for j in between(first, second):
-        #print "Intermediate", j, j.type
+        # print "Intermediate", j, j.type
         if good_obj and j.is_descentant_of(good_obj):
             pass
         else:
@@ -82,28 +82,37 @@ def fmttree(t):
     """Returns a list of lines containing a pretty-printed tree.
     The tree is any regex node, passed in as t.  Indent is two spaces.
     """
-    if not hasattr(t, 'children'):
+    if not hasattr(t, "children"):
         return [repr(t)]
 
     r = []
-    r.append('<%s type=%r data=%r>' % (t.__class__.__name__, t.type, t.data))
+    r.append("<%s type=%r data=%r>" % (t.__class__.__name__, t.type, t.data))
     for c in t.children:
-        r.extend('  ' + f for f in fmttree(c))
+        r.extend("  " + f for f in fmttree(c))
     return r
 
 
 def width(tok):
     """Returns whether the given token type might consume characters."""
-    if (tok in (Other.Directive,
-                Other.Open.Lookahead, Other.Open.NegativeLookahead,
-                Other.Open.NegativeLookbehind, Other.Open.Lookbehind,
-                Other.Comment) or (tok in Other.Anchor)):
+    if tok in (
+        Other.Directive,
+        Other.Open.Lookahead,
+        Other.Open.NegativeLookahead,
+        Other.Open.NegativeLookbehind,
+        Other.Open.Lookbehind,
+        Other.Comment,
+    ) or (tok in Other.Anchor):
         return False
-    elif (tok in Other.Open or tok in Other.Alternation or tok in
-          Other.Progression or tok in Other.Repetition):
-        return None # unsure if it has width, must descend
+    elif (
+        tok in Other.Open
+        or tok in Other.Alternation
+        or tok in Other.Progression
+        or tok in Other.Repetition
+    ):
+        return None  # unsure if it has width, must descend
     else:
         return True
+
 
 def eval_char(c):
     """Returns the character code of the string s, which may contain
@@ -112,13 +121,13 @@ def eval_char(c):
         return ord(c)
     elif c[-1] == "'":
         return ord("'")
-    elif c[0] == '\\' and c[1] not in 'abtrnvfxuU01234567\\':
-        c = c[1:] # unnecessary backslash?
-    elif c == '\\u':
+    elif c[0] == "\\" and c[1] not in "abtrnvfxuU01234567\\":
+        c = c[1:]  # unnecessary backslash?
+    elif c == "\\u":
         # Hack for truncated unicode due to matching as Suspicious
-        return ord('u')
+        return ord("u")
 
-    #print repr(c)
+    # print repr(c)
     if len(c) == 1 and ord(c) >= 128:
         return c
 
@@ -131,16 +140,16 @@ class Break(Exception):
 
 
 ESC_SPECIAL = {
-    u'\r': '\\r',
-    u'\n': '\\n',
-    u'\t': '\\t',
-    u'\\': '\\\\',
-    u'\'': '\\\'',
-    b'\r': '\\r',
-    b'\n': '\\n',
-    b'\t': '\\t',
-    b'\\': '\\\\',
-    b'\'': '\\\'',
+    u"\r": "\\r",
+    u"\n": "\\n",
+    u"\t": "\\t",
+    u"\\": "\\\\",
+    u"'": "\\'",
+    b"\r": "\\r",
+    b"\n": "\\n",
+    b"\t": "\\t",
+    b"\\": "\\\\",
+    b"'": "\\'",
 }
 
 
@@ -148,16 +157,16 @@ def esc(c, also_escape=(), esc_special=ESC_SPECIAL):
     if c in esc_special:
         return esc_special[c]
     elif ord(c) > 0xFFFF:
-        return '\\U%08x' % ord(c)
-    elif isinstance(c, type(u'')) and ord(c) > 126:
-        return '\\u%04x' % ord(c)
+        return "\\U%08x" % ord(c)
+    elif isinstance(c, type(u"")) and ord(c) > 126:
+        return "\\u%04x" % ord(c)
     elif ord(c) < 32 or ord(c) > 126:
-        return '\\x%02x' % ord(c)
+        return "\\x%02x" % ord(c)
     elif c in also_escape:
-        return '\\' + c
+        return "\\" + c
     else:
         if isinstance(c, bytes):
-            return c.decode('latin-1')
+            return c.decode("latin-1")
         return c
 
 
@@ -171,13 +180,13 @@ def consistent_repr(s, escape=(), include_quotes=True):
     rep = []
     if include_quotes:
         if isinstance(s, bytes):
-            rep.append('b')
-        rep.append('\'')
+            rep.append("b")
+        rep.append("'")
     for i in range(len(s)):
-        rep.append(esc(s[i:i+1], escape))
+        rep.append(esc(s[i : i + 1], escape))
     if include_quotes:
-        rep.append('\'')
-    return ''.join(rep)
+        rep.append("'")
+    return "".join(rep)
 
 
 def shorten(text, start, end):
@@ -191,29 +200,29 @@ def shorten(text, start, end):
     start -= start_cut
     end -= start_cut
     if start_cut != 0:
-        cut_text = '...' + cut_text
+        cut_text = "..." + cut_text
         start += 3
         end += 3
     if end_cut != len(text):
-        cut_text += '...'
+        cut_text += "..."
     return (cut_text, start, end)
 
 
 def get_module_text(mod):
-    if '\n' in mod:
+    if "\n" in mod:
         mod_text = mod
     else:
-        if mod.endswith('.pyc'):
+        if mod.endswith(".pyc"):
             # need to go out of __pycache__
             newdir = path.dirname(path.dirname(mod))
             mod = path.join(newdir, path.basename(mod)[:-1])
-        with open(mod, 'r') as f:
+        with open(mod, "r") as f:
             mod_text = f.read()
     return mod_text
 
 
 def rindex(a, x):
-    for i in range(len(a)-1, -1, -1):
+    for i in range(len(a) - 1, -1, -1):
         if a[i] == x:
             return i
     raise ValueError("Not found")
@@ -223,14 +232,14 @@ def charclass(c):
     if isinstance(c, int):
         c = chr(c)
 
-    if 'A' <= c <= 'Z':
-        return 'upper'
-    elif 'a' <= c <= 'z':
-        return 'lower'
-    elif '0' <= c <= '9':
-        return 'digit'
+    if "A" <= c <= "Z":
+        return "upper"
+    elif "a" <= c <= "z":
+        return "lower"
+    elif "0" <= c <= "9":
+        return "digit"
     else:
-        return 'other'
+        return "other"
 
 
 def build_ranges(ord_seq):
@@ -242,8 +251,7 @@ def build_ranges(ord_seq):
 
     for i in sorted(ord_seq):
         t = charclass(i)
-        if (prev_type and prev_type != 'other' and t == prev_type and
-            prev_end == i - 1):
+        if prev_type and prev_type != "other" and t == prev_type and prev_end == i - 1:
             # extend
             prev_end = i
         else:
@@ -263,6 +271,7 @@ def build_ranges(ord_seq):
             ranges.append(prev_start)
 
     return ranges
+
 
 def lowercase_code(i):
     if 65 <= i <= 90:
