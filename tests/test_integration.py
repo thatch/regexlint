@@ -1,3 +1,4 @@
+import os
 import re
 import subprocess
 import sys
@@ -5,7 +6,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-STRIP_PATH_RE = re.compile(r"^.*/(?=demo_integration\.py)", re.M)
+STRIP_PATH_RE = re.compile(r"^.*[\\/](?=demo_integration\.py)", re.M)
 
 
 class IntegrationTest(unittest.TestCase):
@@ -26,9 +27,10 @@ class T(RegexLexer):
 """
             )
 
+            env = dict(os.environ, PYTHONPATH=d)
             proc = subprocess.run(
                 [sys.executable, "-m", "regexlint.cmdline", "demo_integration"],
-                env={"PYTHONPATH": d},
+                env=env,
                 encoding="utf-8",
                 stdout=subprocess.PIPE,
             )
@@ -60,9 +62,10 @@ class T(RegexLexer):
 """
             )
 
+            env = dict(os.environ, PYTHONPATH=d)
             proc = subprocess.run(
                 [sys.executable, "-m", "regexlint.cmdline", "demo_integration"],
-                env={"PYTHONPATH": d},
+                env=env,
                 encoding="utf-8",
                 stdout=subprocess.PIPE,
             )
