@@ -17,6 +17,7 @@ PYTEST?=$(PYTHON) -m pytest
 FIGLEAF?=figleaf
 FIGLEAF2HTML?=figleaf2html
 DEMOOPTS?=
+SOURCES=regexlint tests setup.py
 
 .PHONY: all
 all:
