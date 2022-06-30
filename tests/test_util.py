@@ -14,6 +14,7 @@
 # limitations under the License.
 
 from unittest import TestCase
+from ast import literal_eval
 
 from regexlint.util import build_ranges, consistent_repr, eval_char
 
@@ -43,23 +44,23 @@ class UtilTests(TestCase):
 
     def test_consistent_repr_empty(self):
         golden = r"''"
-        self.assertEqual(golden, consistent_repr(eval(golden)))
+        self.assertEqual(golden, consistent_repr(literal_eval(golden)))
 
     def test_consistent_repr(self):
         golden = r"""b'azAZ09!#-$_\\/\'"\n\t\x02\xf3'"""
-        self.assertEqual(golden, consistent_repr(eval(golden)))
+        self.assertEqual(golden, consistent_repr(literal_eval(golden)))
 
     def test_consistent_repr_unicode(self):
         golden = "'text\\u1234text'"
-        print(repr(eval(golden)))
-        self.assertEqual(len(golden), len(consistent_repr(eval(golden))))
-        self.assertEqual(golden, consistent_repr(eval(golden)))
+        print(repr(literal_eval(golden)))
+        self.assertEqual(len(golden), len(consistent_repr(literal_eval(golden))))
+        self.assertEqual(golden, consistent_repr(literal_eval(golden)))
 
     def test_consistent_repr_wide_unicode(self):
         golden = u"'text\\U00101234text'"
-        print(repr(eval(golden)))
-        self.assertEqual(len(golden), len(consistent_repr(eval(golden))))
-        self.assertEqual(golden, consistent_repr(eval(golden)))
+        print(repr(literal_eval(golden)))
+        self.assertEqual(len(golden), len(consistent_repr(literal_eval(golden))))
+        self.assertEqual(golden, consistent_repr(literal_eval(golden)))
 
     def test_consistent_repr_for_ranges(self):
         r = consistent_repr("a-b[]", escape="[]-", include_quotes=False)
