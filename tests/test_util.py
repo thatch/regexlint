@@ -57,7 +57,7 @@ class UtilTests(TestCase):
         self.assertEqual(golden, consistent_repr(literal_eval(golden)))
 
     def test_consistent_repr_wide_unicode(self):
-        golden = u"'text\\U00101234text'"
+        golden = "'text\\U00101234text'"
         print(repr(literal_eval(golden)))
         self.assertEqual(len(golden), len(consistent_repr(literal_eval(golden))))
         self.assertEqual(golden, consistent_repr(literal_eval(golden)))

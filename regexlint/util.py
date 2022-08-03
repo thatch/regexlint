@@ -141,11 +141,11 @@ class Break(Exception):
 
 
 ESC_SPECIAL = {
-    u"\r": "\\r",
-    u"\n": "\\n",
-    u"\t": "\\t",
-    u"\\": "\\\\",
-    u"'": "\\'",
+    "\r": "\\r",
+    "\n": "\\n",
+    "\t": "\\t",
+    "\\": "\\\\",
+    "'": "\\'",
     b"\r": "\\r",
     b"\n": "\\n",
     b"\t": "\\t",
@@ -159,7 +159,7 @@ def esc(c, also_escape=(), esc_special=ESC_SPECIAL):
         return esc_special[c]
     elif ord(c) > 0xFFFF:
         return "\\U%08x" % ord(c)
-    elif isinstance(c, type(u"")) and ord(c) > 126:
+    elif isinstance(c, type("")) and ord(c) > 126:
         return "\\u%04x" % ord(c)
     elif ord(c) < 32 or ord(c) > 126:
         return "\\x%02x" % ord(c)
