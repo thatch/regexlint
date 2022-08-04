@@ -9,3 +9,6 @@ html/
 build
 dist
 .venv
+.eggs/
+.idea/
+.tox/
