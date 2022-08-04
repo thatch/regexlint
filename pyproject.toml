@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=61.2", "wheel", "setuptools_scm[toml]>=3.4.3"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "regexlint"
+description = "Linter for (Pygments) regular expressions"
+readme = "README.rst"
+license = {text = "Apache"}
+authors = [{name = "Tim Hatch", email = "tim@timhatch.com"}]
+classifiers = [
+    "License :: OSI Approved :: Apache Software License",
+    "Intended Audience :: Developers",
+    "Development Status :: 5 - Production/Stable",
+    "Operating System :: OS Independent",
+    "Topic :: Software Development :: Quality Assurance",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+]
+keywords = []
+urls = {Homepage = "https://github.com/thatch/regexlint/"}
+requires-python = ">=3.6"
+dependencies = ["Pygments"]
+dynamic = ["version"]
+
+[project.scripts]
+regexlint = "regexlint.cmdline:main"
+
+[project.optional-dependencies]
+testing = ["pytest"]
+
+[tool.setuptools]
+packages = ["regexlint"]
+include-package-data = false
+
+[tool.setuptools_scm]
+
+
+[tool.isort]
+line-length = 88
+multi-line-output = 3
+force-grid-wrap = false
+include-trailing-comma = true
+use-parentheses = true
+
+[tool.flake8]
+ignore = "E203, E231, E266, E302, E501, W503, E741"
+max-line-length = "88"
