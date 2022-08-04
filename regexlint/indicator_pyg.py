@@ -17,6 +17,7 @@ This script is several layered hacks to be able to point out clang-style errors
 for a specific line of Python code (likely in a string literal).  Do not take
 as an example of well-written Python.
 """
+from ast import literal_eval
 import re
 
 from pygments.lexers.agile import PythonLexer
@@ -116,7 +117,7 @@ def find_offending_line(mod, clsname, state, idx, pos):
                 level = 1
         elif level == 1 and ttyp in String:
             # print "key", text
-            key = eval(text, {}, {})
+            key = literal_eval(text)
 
             # next is expected to be the colon.
             it.next()
@@ -155,7 +156,7 @@ def find_offending_line(mod, clsname, state, idx, pos):
                 match_brace("(")
             elif tuple_idx == idx and ttyp in String:
                 # this might be it!
-                s = eval(text, {}, {})
+                s = literal_eval(text, {}, {})
                 # print "maybe", string_pos, pos, (string_pos+len(s))
                 if string_pos <= pos < (string_pos + len(s)):
                     # need to point in here

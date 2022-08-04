@@ -14,6 +14,7 @@
 # limitations under the License.
 
 from os import path
+from ast import literal_eval
 
 from pygments.token import Other
 
@@ -132,7 +133,7 @@ def eval_char(c):
         return c
 
     # Probably a unicode escape.
-    return ord(eval("'%s'" % c))
+    return ord(literal_eval("'%s'" % c))
 
 
 class Break(Exception):

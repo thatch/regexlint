@@ -124,7 +124,7 @@ def find_offending_line(mod, clsname, state, idx, pos):
             try:
                 (dx, d1, d2) = find_substr_pos(strInst, pos)
             except ValueError:
-                pos -= len(eval(strInst))
+                pos -= len(ast.literal_eval(strInst))
                 continue
             before_match = rawstr[: match.start(0)]
             match_lineno_in_rawstr = before_match.count("\n")
