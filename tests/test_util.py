@@ -13,8 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from unittest import TestCase
 from ast import literal_eval
+from unittest import TestCase
 
 from regexlint.util import build_ranges, consistent_repr, eval_char
 

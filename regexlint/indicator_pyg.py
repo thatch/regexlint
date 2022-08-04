@@ -17,8 +17,8 @@ This script is several layered hacks to be able to point out clang-style errors
 for a specific line of Python code (likely in a string literal).  Do not take
 as an example of well-written Python.
 """
-from ast import literal_eval
 import re
+from ast import literal_eval
 
 from pygments.lexers.agile import PythonLexer
 from pygments.token import Name, Punctuation, String
