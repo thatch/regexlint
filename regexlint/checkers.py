@@ -38,15 +38,6 @@ from regexlint.util import (
 )
 
 
-def check_no_nulls(reg, errs):
-    num = "101"
-    level = logging.ERROR
-    msg = "Null characters not allowed (python docs)"
-    pos = reg.raw.find("\x00")
-    if pos != -1:
-        errs.append((num, level, pos, msg))
-
-
 def check_no_bels(reg, errs):
     num = "110"
     level = logging.ERROR
