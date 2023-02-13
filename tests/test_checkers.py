@@ -37,7 +37,6 @@ from regexlint.checkers import (
     check_no_consecutive_dots,
     check_no_empty_alternations,
     check_no_newlines,
-    check_no_nulls,
     check_prefix_ordering,
     check_redundant_lookaround,
     check_redundant_repetition,
@@ -52,12 +51,6 @@ from regexlint.parser import Regex, fmttree
 
 
 class CheckersTests(TestCase):
-    def test_null(self):
-        r = Regex.get_parse_tree("a\x00b")
-        errs = []
-        check_no_nulls(r, errs)
-        self.assertEqual(len(errs), 1)
-
     def test_newline(self):
         r = Regex.get_parse_tree("a\nb")
         errs = []
