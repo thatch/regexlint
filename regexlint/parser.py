@@ -13,7 +13,11 @@
 # limitations under the License.
 
 import re
-import sre_parse
+
+try:
+    from re import _parser as sre_parse
+except ImportError:  # Python < 3.11
+    import sre_parse
 import sys
 import weakref
 

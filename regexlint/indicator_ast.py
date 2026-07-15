@@ -51,7 +51,11 @@ def find_offending_line(mod, clsname, state, idx, pos):
             continue
         stateValue = None
         for i, key in enumerate(item.keys):
-            if isinstance(key, ast.Str) and key.s == state:
+            if (
+                isinstance(key, ast.Constant)
+                and isinstance(key.value, str)
+                and key.value == state
+            ):
                 stateValue = item.values[i]
         if stateValue is None:
             continue
@@ -62,7 +66,10 @@ def find_offending_line(mod, clsname, state, idx, pos):
         idxTuple = stateValue.elts[idx]
         if not isinstance(idxTuple, ast.Tuple):
             continue
-        if len(idxTuple.elts) < 2 or not isinstance(idxTuple.elts[0], ast.Str):
+        if len(idxTuple.elts) < 2 or not (
+            isinstance(idxTuple.elts[0], ast.Constant)
+            and isinstance(idxTuple.elts[0].value, str)
+        ):
             continue
         lines = []
         startline = idxTuple.elts[0].lineno - 1

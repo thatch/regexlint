@@ -13,8 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sre_constants
-import sre_parse
+try:
+    from re import _constants as sre_constants
+    from re import _parser as sre_parse
+except ImportError:  # Python < 3.11
+    import sre_constants
+    import sre_parse
 from unittest import TestCase
 
 import pytest
