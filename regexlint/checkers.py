@@ -507,6 +507,61 @@ def check_redundant_repetition(reg, errs):
             errs.append((num, level, repeat.start, "should be +"))
 
 
+def _whitespace_atom(branch):
+    """Return the single atom of an alternation branch when it matches only
+    whitespace that ``\\s`` already covers (unwrapping a repetition such as
+    ``\\s+``), else None.
+    """
+    if len(branch.children) != 1:
+        return None
+    atom = branch.children[0]
+    if atom.type in Other.Repetition and len(atom.children) == 1:
+        atom = atom.children[0]
+    if (
+        (atom.type is Other.BuiltinCharclass and atom.data == "\\s")
+        or atom.type in (Other.Newline, Other.Tab)
+        or (atom.type is Other.Suspicious and atom.data == "\\r")
+        or (atom.type is Other.Literal and atom.data in " \t\n\r\x0b\x0c")
+    ):
+        return atom
+    return None
+
+
+def check_redundant_whitespace_alternation(reg, errs):
+    # https://github.com/pygments/pygments/pull/3186
+    num = "126"
+    level = logging.WARNING
+    msg = "Redundant whitespace alternation, simplify to \\s+ (\\s already matches \\n)"
+
+    outer = (
+        Other.Repetition.Plus,
+        Other.Repetition.NongreedyPlus,
+        Other.Repetition.Star,
+        Other.Repetition.NongreedyStar,
+    )
+    for rep in find_all_by_type(reg, Other.Repetition):
+        if rep.type not in outer or len(rep.children) != 1:
+            continue
+        group = rep.children[0]
+        if group.type not in Other.Open or len(group.children) != 1:
+            continue
+        alt = group.children[0]
+        if alt.type is not Other.Alternation:
+            continue
+        # Every branch must be \s-subsumed whitespace, and at least one must be
+        # \s itself (which is what makes the other branches redundant).
+        has_s = False
+        for branch in alt.children:
+            atom = _whitespace_atom(branch)
+            if atom is None:
+                break
+            if atom.type is Other.BuiltinCharclass:
+                has_s = True
+        else:
+            if has_s:
+                errs.append((num, level, rep.start or 0, msg))
+
+
 def manual_check_for_empty_string_match(reg, errs, raw_pat):
     # Skip the check in the following conditions:
     # * Rules that use a callback, since they're used for indentation

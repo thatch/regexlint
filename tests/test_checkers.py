@@ -39,6 +39,7 @@ from regexlint.checkers import (
     check_no_nulls,
     check_prefix_ordering,
     check_redundant_repetition,
+    check_redundant_whitespace_alternation,
     check_single_character_classes,
     check_suspicious_anchors,
     check_unescaped_braces,
@@ -757,6 +758,29 @@ class CheckersTests(TestCase):
         check_redundant_repetition(r, errs)
         print(errs)
         self.assertEqual(len(errs), 1)
+
+    def test_redundant_whitespace_alternation(self):
+        for pat in (r"(\n|\s+)+", r"(\n|\s)+", r"(\s|\n)+", r"(\s|\n)*"):
+            r = Regex.get_parse_tree(pat)
+            errs = []
+            check_redundant_whitespace_alternation(r, errs)
+            print(pat, errs)
+            self.assertEqual(len(errs), 1, pat)
+
+    def test_redundant_whitespace_alternation_noncapturing(self):
+        r = Regex.get_parse_tree(r"(?:\n|\s)+")
+        errs = []
+        check_redundant_whitespace_alternation(r, errs)
+        self.assertEqual(len(errs), 1)
+
+    def test_redundant_whitespace_alternation_ok(self):
+        # No \s branch, a non-whitespace branch, or no outer +/* repetition.
+        for pat in (r"(\n|\t)+", r"(\d|\s)+", r"(\n|\s)?", r"(\n|\s)", r"\s+"):
+            r = Regex.get_parse_tree(pat)
+            errs = []
+            check_redundant_whitespace_alternation(r, errs)
+            print(pat, errs)
+            self.assertEqual(len(errs), 0, pat)
 
     def test_manual_empty_string(self):
         r = Regex.get_parse_tree("")
