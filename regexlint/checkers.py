@@ -507,6 +507,26 @@ def check_redundant_repetition(reg, errs):
             errs.append((num, level, repeat.start, "should be +"))
 
 
+def check_dot_newline_alternation(reg, errs):
+    # https://github.com/pygments/pygments/pull/3187
+    num = "126"
+    level = logging.WARNING
+    msg = "Alternation matching any character, simplify to [\\s\\S]"
+
+    # (.|\n) matches every character, since . matches all but \n. It is the
+    # [\s\S] idiom spelled as a per-character alternation; matching a single
+    # character class is markedly faster: ~4x on a long comment body, ~13%
+    # end-to-end on comment-heavy sources (pygments PR #3187).
+    allowed = {Other.Dot, Other.Newline, Other.Tab, Other.Suspicious}
+    for alt in find_all_by_type(reg, Other.Alternation):
+        atoms = [b.children[0] for b in alt.children if len(b.children) == 1]
+        if len(atoms) != len(alt.children):
+            continue
+        types = {a.type for a in atoms}
+        if Other.Dot in types and Other.Newline in types and types <= allowed:
+            errs.append((num, level, alt.start or 0, msg))
+
+
 def manual_check_for_empty_string_match(reg, errs, raw_pat):
     # Skip the check in the following conditions:
     # * Rules that use a callback, since they're used for indentation
