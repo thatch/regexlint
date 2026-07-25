@@ -31,6 +31,7 @@ from regexlint.checkers import (
     check_charclass_negation,
     check_charclass_overlap,
     check_charclass_simplify,
+    check_dot_newline_alternation,
     check_multiline_anchors,
     check_no_bels,
     check_no_consecutive_dots,
@@ -779,6 +780,23 @@ class CheckersTests(TestCase):
             r = Regex.get_parse_tree(pat)
             errs = []
             check_redundant_whitespace_alternation(r, errs)
+            print(pat, errs)
+            self.assertEqual(len(errs), 0, pat)
+
+    def test_dot_newline_alternation(self):
+        for pat in (r"(.|\n)*?", r"(.|\n)", r".|\n", r"(\n|.)+", r"(.|\n|\r)*?"):
+            r = Regex.get_parse_tree(pat)
+            errs = []
+            check_dot_newline_alternation(r, errs)
+            print(pat, errs)
+            self.assertEqual(len(errs), 1, pat)
+
+    def test_dot_newline_alternation_ok(self):
+        # No \n branch, no . branch, or a multi-character branch.
+        for pat in (r"(.|a)+", r"(\n|a)+", r"(a|b)+", r"(.|\n|foo)+", r"[\s\S]*?"):
+            r = Regex.get_parse_tree(pat)
+            errs = []
+            check_dot_newline_alternation(r, errs)
             print(pat, errs)
             self.assertEqual(len(errs), 0, pat)
 
