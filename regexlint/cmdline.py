@@ -136,7 +136,7 @@ def main(argv=None):
                 )
 
     has_any_errors = False
-    for (stream, has_errors) in pool.imap(check_lexer_map, lexers_to_check):
+    for stream, has_errors in pool.imap(check_lexer_map, lexers_to_check):
         stream.seek(0, 0)
         output_stream.write(stream.read())
         has_any_errors |= has_errors

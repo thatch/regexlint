@@ -163,7 +163,7 @@ class MarkStrTest(unittest.TestCase):
         self._test("a" * 1000 + "b" + "c" * 1000, "b")
 
     def test_mark_unicode(self):
-        self._test(u"a" * 1000 + u"\u1234", "\\u1234", u"\u1234")
+        self._test("a" * 1000 + "\u1234", "\\u1234", "\u1234")
 
 
 class UnderlineHelperTest(unittest.TestCase):

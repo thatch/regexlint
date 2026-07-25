@@ -13,8 +13,7 @@ class IntegrationTest(unittest.TestCase):
     def test_readme_example_one(self):
         with tempfile.TemporaryDirectory() as d:
             dp = Path(d)
-            (dp / "demo_integration.py").write_text(
-                """\
+            (dp / "demo_integration.py").write_text("""\
 from pygments.lexer import RegexLexer, bygroups
 from pygments.token import Text
 
@@ -24,8 +23,7 @@ class T(RegexLexer):
             ("(else|elseif)", Text),
         ],
     }
-"""
-            )
+""")
 
             env = dict(os.environ, PYTHONPATH=d)
             proc = subprocess.run(
@@ -48,8 +46,7 @@ demo_integration.py:7: (T:root:pat#1) E105: Potential out of order alternation b
     def test_readme_example_two(self):
         with tempfile.TemporaryDirectory() as d:
             dp = Path(d)
-            (dp / "demo_integration.py").write_text(
-                """\
+            (dp / "demo_integration.py").write_text("""\
 from pygments.lexer import RegexLexer, bygroups
 from pygments.token import Text
 
@@ -59,8 +56,7 @@ class T(RegexLexer):
             ("(foo)\\s+(bar)", bygroups(Text, Text)),
         ],
     }
-"""
-            )
+""")
 
             env = dict(os.environ, PYTHONPATH=d)
             proc = subprocess.run(

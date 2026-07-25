@@ -521,6 +521,7 @@ class Regex(BaseRegex, RegexLexer):
     on it.  This is fairly close to the best possible, but doesn't catch a few
     things (mainly in non-raw strings).
     """
+
     name = "regex"
     mimetypes = ["text/x-regex"]
     filenames = ["*.regex"]  # fake

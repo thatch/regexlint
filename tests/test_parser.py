@@ -152,11 +152,9 @@ class BasicTests(TestCase):
 
 class VerboseModeTests(TestCase):
     def test_basic_verbose_parsing(self):
-        r = Regex.get_parse_tree(
-            r"""(?x)  a   b # comment
+        r = Regex.get_parse_tree(r"""(?x)  a   b # comment
                         c
-                        d"""
-        )
+                        d""")
         l = list(find_all(r))[1:]  # skip root
         print("\n".join(fmttree(r)))
         self.assertEqual(5, len(l))
@@ -207,7 +205,7 @@ SRE_CATS = {
 
 
 def expand_sre_in(x):
-    for (typ, value) in x:
+    for typ, value in x:
         if typ in (sre_constants.LITERAL, sre_constants.NOT_LITERAL):
             yield value
         elif typ == sre_constants.RANGE:

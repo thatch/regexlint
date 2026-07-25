@@ -38,11 +38,11 @@ include-package-data = false
 
 
 [tool.isort]
-line-length = 88
-multi-line-output = 3
-force-grid-wrap = false
-include-trailing-comma = true
-use-parentheses = true
+line_length = 88
+multi_line_output = 3
+force_grid_wrap = false
+include_trailing_comma = true
+use_parentheses = true
 
 [tool.flake8]
 ignore = "E203, E231, E266, E302, E501, W503, E741"

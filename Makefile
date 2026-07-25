@@ -17,7 +17,7 @@ PYTEST?=$(PYTHON) -m pytest
 FIGLEAF?=figleaf
 FIGLEAF2HTML?=figleaf2html
 DEMOOPTS?=
-SOURCES=regexlint tests setup.py
+SOURCES=regexlint tests
 
 .PHONY: all
 all:
@@ -51,11 +51,11 @@ updatecopyright: COPYING Makefile *.py */*.py
 
 .PHONY: format
 format:
-	python -m isort --recursive -y $(SOURCES)
+	python -m isort $(SOURCES)
 	python -m black $(SOURCES)
 
 .PHONY: lint
 lint:
-	python -m isort --recursive --diff $(SOURCES)
+	python -m isort --diff --check-only $(SOURCES)
 	python -m black --check $(SOURCES)
 	python -m flake8 $(SOURCES)

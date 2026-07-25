@@ -170,7 +170,7 @@ class CheckersTests(TestCase):
         self.assertEqual(len(errs), 1)
 
     def test_good_unicode_charclass(self):
-        r = Regex.get_parse_tree(u"[\u1000-\uffff]")
+        r = Regex.get_parse_tree("[\u1000-\uffff]")
         print("\n".join(fmttree(r)))
         print(r.children[0].chars)
         errs = []

@@ -129,7 +129,7 @@ def find_offending_line(mod, clsname, state, idx, pos):
             # print "match:", repr(match.group(0))
             strInst = match.group(0)
             try:
-                (dx, d1, d2) = find_substr_pos(strInst, pos)
+                dx, d1, d2 = find_substr_pos(strInst, pos)
             except ValueError:
                 pos -= len(ast.literal_eval(strInst))
                 continue
