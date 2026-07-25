@@ -39,6 +39,7 @@ from regexlint.checkers import (
     check_no_newlines,
     check_no_nulls,
     check_prefix_ordering,
+    check_redundant_lookaround,
     check_redundant_repetition,
     check_redundant_whitespace_alternation,
     check_single_character_classes,
@@ -797,6 +798,80 @@ class CheckersTests(TestCase):
             r = Regex.get_parse_tree(pat)
             errs = []
             check_dot_newline_alternation(r, errs)
+            print(pat, errs)
+            self.assertEqual(len(errs), 0, pat)
+
+    def test_redundant_lookaround(self):
+        for pat in (r"(?<=\b)", r"(?=\b)", r"(?!\b)", r"(?<!\b)", r"(?<=^)", r"(?=$)"):
+            r = Regex.get_parse_tree(pat)
+            errs = []
+            check_redundant_lookaround(r, errs)
+            print(pat, errs)
+            self.assertEqual(len(errs), 1, pat)
+
+    def test_redundant_lookaround_string_anchors(self):
+        for pat in (r"(?=\A)", r"(?=\Z)", r"(?<=\A)", r"(?<=\Z)"):
+            r = Regex.get_parse_tree(pat)
+            errs = []
+            check_redundant_lookaround(r, errs)
+            print(pat, errs)
+            self.assertEqual(len(errs), 1, pat)
+
+    def test_redundant_lookaround_embedded(self):
+        # The lookaround is only part of a larger pattern.
+        r = Regex.get_parse_tree(r"foo(?=\b)bar")
+        errs = []
+        check_redundant_lookaround(r, errs)
+        print(errs)
+        self.assertEqual(len(errs), 1)
+        # Reported at the position of the offending group.
+        self.assertEqual(errs[0][2], 3)
+
+    def test_redundant_lookaround_multiple(self):
+        r = Regex.get_parse_tree(r"(?=\b)x(?<=^)y(?!\b)")
+        errs = []
+        check_redundant_lookaround(r, errs)
+        print(errs)
+        self.assertEqual(len(errs), 3)
+
+    def test_redundant_lookaround_message(self):
+        r = Regex.get_parse_tree(r"(?=\b)")
+        errs = []
+        check_redundant_lookaround(r, errs)
+        self.assertEqual(len(errs), 1)
+        self.assertIn(r"\b", errs[0][3])
+        # Negative lookaround over \b suggests \B.
+        errs = []
+        check_redundant_lookaround(Regex.get_parse_tree(r"(?!\b)"), errs)
+        self.assertEqual(len(errs), 1)
+        self.assertIn(r"\B", errs[0][3])
+
+    def test_redundant_lookaround_ok(self):
+        # Lookarounds over more than a bare assertion, or negative lookarounds
+        # over anchors with no named negation.
+        for pat in (r"(?=\bx)", r"(?<=abc)", r"(?!foo)", r"(?<==)", r"(?!^)"):
+            r = Regex.get_parse_tree(pat)
+            errs = []
+            check_redundant_lookaround(r, errs)
+            print(pat, errs)
+            self.assertEqual(len(errs), 0, pat)
+
+    def test_redundant_lookaround_ok_negative_anchors(self):
+        # Negative lookarounds over anchors other than \b have no named
+        # replacement, so they must not be flagged.
+        for pat in (r"(?!$)", r"(?<!^)", r"(?!\A)", r"(?<!\Z)"):
+            r = Regex.get_parse_tree(pat)
+            errs = []
+            check_redundant_lookaround(r, errs)
+            print(pat, errs)
+            self.assertEqual(len(errs), 0, pat)
+
+    def test_redundant_lookaround_ok_plain_group(self):
+        # Ordinary (capturing / non-capturing) groups are never lookarounds.
+        for pat in (r"(\b)", r"(?:\b)", r"(^)", r"(?:$)"):
+            r = Regex.get_parse_tree(pat)
+            errs = []
+            check_redundant_lookaround(r, errs)
             print(pat, errs)
             self.assertEqual(len(errs), 0, pat)
 

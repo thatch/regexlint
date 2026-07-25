@@ -582,6 +582,40 @@ def check_dot_newline_alternation(reg, errs):
             errs.append((num, level, alt.start or 0, msg))
 
 
+def check_redundant_lookaround(reg, errs):
+    # https://github.com/pygments/pygments/pull/3192
+    num = "126"
+    level = logging.WARNING
+
+    negative = (Other.Open.NegativeLookahead, Other.Open.NegativeLookbehind)
+    lookarounds = (Other.Open.Lookahead, Other.Open.Lookbehind) + negative
+    for node in find_all_by_type(reg, Other.Open):
+        if node.type not in lookarounds:
+            continue
+        body = node.children
+        # (?<=...) lexes its leading '=' as a literal child; drop it.
+        if node.type is Other.Open.Lookbehind:
+            body = body[1:]
+        if len(body) != 1 or body[0].type not in Other.Anchor:
+            continue
+        # A lookaround wrapping a single zero-width assertion is just the
+        # assertion (or its negation). Only \b has a named negation, \B.
+        if node.type in negative:
+            if body[0].type is Other.Anchor.WordBoundary:
+                errs.append(
+                    (num, level, node.start or 0, "Redundant lookaround, use \\B")
+                )
+        else:
+            errs.append(
+                (
+                    num,
+                    level,
+                    node.start or 0,
+                    "Redundant lookaround, use %s directly" % body[0].data,
+                )
+            )
+
+
 def manual_check_for_empty_string_match(reg, errs, raw_pat):
     # Skip the check in the following conditions:
     # * Rules that use a callback, since they're used for indentation
