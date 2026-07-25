@@ -36,7 +36,6 @@ from regexlint.checkers import (
     check_no_bels,
     check_no_consecutive_dots,
     check_no_empty_alternations,
-    check_no_newlines,
     check_prefix_ordering,
     check_redundant_lookaround,
     check_redundant_repetition,
@@ -51,24 +50,6 @@ from regexlint.parser import Regex, fmttree
 
 
 class CheckersTests(TestCase):
-    def test_newline(self):
-        r = Regex.get_parse_tree("a\nb")
-        errs = []
-        check_no_newlines(r, errs)
-        self.assertEqual(len(errs), 1)
-
-    def test_newline_ok_in_verbose(self):
-        r = Regex.get_parse_tree("a\nb", re.VERBOSE)
-        errs = []
-        check_no_newlines(r, errs)
-        self.assertEqual(len(errs), 0)
-
-    def test_newline_ok_in_verbose2(self):
-        r = Regex.get_parse_tree("(?x)a\nb")
-        errs = []
-        check_no_newlines(r, errs)
-        self.assertEqual(len(errs), 0)
-
     def test_empty_alternation(self):
         r = Regex.get_parse_tree(r"(a|)")
         print("\n".join(fmttree(r)))

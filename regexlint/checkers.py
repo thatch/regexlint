@@ -47,21 +47,6 @@ def check_no_bels(reg, errs):
         errs.append((num, level, pos, msg))
 
 
-def check_no_newlines(reg, errs):
-    num = "102"
-    level = logging.ERROR
-    msg = "Newline characters not allowed (java compat, use a rawstring)"
-
-    # Ignore re.VERBOSE modes for now.  I'm not sure how they fit in with
-    # Java.
-    if reg.effective_flags & re.VERBOSE:
-        return
-
-    pos = reg.raw.find("\n")
-    if pos != -1:
-        errs.append((num, level, pos, msg))
-
-
 def check_no_empty_alternations(reg, errs):
     num = "103"
     level = logging.ERROR
