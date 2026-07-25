@@ -564,7 +564,7 @@ def check_redundant_whitespace_alternation(reg, errs):
 
 def check_dot_newline_alternation(reg, errs):
     # https://github.com/pygments/pygments/pull/3187
-    num = "126"
+    num = "127"
     level = logging.WARNING
     msg = "Alternation matching any character, simplify to [\\s\\S]"
 
@@ -584,7 +584,7 @@ def check_dot_newline_alternation(reg, errs):
 
 def check_redundant_lookaround(reg, errs):
     # https://github.com/pygments/pygments/pull/3192
-    num = "126"
+    num = "128"
     level = logging.WARNING
 
     negative = (Other.Open.NegativeLookahead, Other.Open.NegativeLookbehind)
