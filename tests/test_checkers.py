@@ -38,6 +38,7 @@ from regexlint.checkers import (
     check_no_empty_alternations,
     check_prefix_ordering,
     check_redundant_lookaround,
+    check_redundant_noncapturing_group,
     check_redundant_repetition,
     check_redundant_whitespace_alternation,
     check_single_character_classes,
@@ -380,6 +381,44 @@ class CheckersTests(TestCase):
         print(errs)
         self.assertEqual(len(errs), 1)
         self.assertEqual(("107", logging.INFO, 0), errs[0][:3])
+
+    def test_redundant_noncapturing_group_single_atom(self):
+        for pat in (r"(?:a)", r"(?:a)+", r"(?:\d)*", r"(?:[abc])+", r"(?:(x))", r"(?:a){2}"):
+            r = Regex.get_parse_tree(pat)
+            errs = []
+            check_redundant_noncapturing_group(r, errs)
+            self.assertEqual(len(errs), 1, pat)
+            self.assertEqual("129", errs[0][0], pat)
+
+    def test_redundant_noncapturing_group_concatenation(self):
+        for pat in (r"(?:ab)", r"x(?:ab)y", r"(?:a+)", r"x(?:a+)y"):
+            r = Regex.get_parse_tree(pat)
+            errs = []
+            check_redundant_noncapturing_group(r, errs)
+            self.assertEqual(len(errs), 1, pat)
+
+    def test_redundant_noncapturing_group_whole_pattern_alternation(self):
+        for pat in (r"(?:a|b)", r"(?:abc|def)", r"(?:a)|b"):
+            r = Regex.get_parse_tree(pat)
+            errs = []
+            check_redundant_noncapturing_group(r, errs)
+            self.assertEqual(len(errs), 1, pat)
+
+    def test_redundant_noncapturing_group_needed(self):
+        # The group is load-bearing and must not be flagged.
+        for pat in (r"(?:ab)+", r"(?:a|b)+", r"(?:a+)+", r"x(?:a|b)y", r"(?:a|b)c"):
+            r = Regex.get_parse_tree(pat)
+            errs = []
+            check_redundant_noncapturing_group(r, errs)
+            self.assertEqual(len(errs), 0, pat)
+
+    def test_redundant_noncapturing_group_quantified_anchor(self):
+        # Removing the group would leave an illegal quantified anchor (^+).
+        for pat in (r"(?:^)+", r"(?:\b)*", r"(?:$)+"):
+            r = Regex.get_parse_tree(pat)
+            errs = []
+            check_redundant_noncapturing_group(r, errs)
+            self.assertEqual(len(errs), 0, pat)
 
     def test_unnecessary_i_flag(self):
         r = Regex.get_parse_tree(r"(?i).")

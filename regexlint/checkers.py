@@ -592,6 +592,44 @@ def check_redundant_lookaround(reg, errs):
             )
 
 
+def check_redundant_noncapturing_group(reg, errs):
+    num = "129"
+    level = logging.WARNING
+    msg = "Redundant non-capturing group, the (?:...) can be removed"
+
+    for group in find_all_by_type(reg, Other.Open.NonCapturing):
+        parent = group.parent()
+        quantified = parent is not None and parent.type in Other.Repetition
+        children = group.children
+        single = len(children) == 1
+        child = children[0] if single else None
+
+        if quantified:
+            # A group earns its keep only by binding the quantifier to more than
+            # a single atom. One plain atom means (?:X)q == Xq, but an already
+            # quantified atom ((?:a+)+ would merge into an illegal a++), an
+            # alternation ((?:a|b)+) or a zero-width anchor ((?:^)+ would become
+            # the illegal ^+) must keep the group.
+            redundant = (
+                single
+                and child.type is not Other.Alternation
+                and child.type not in Other.Repetition
+                and child.type not in Other.Anchor
+            )
+        elif single and child.type is Other.Alternation:
+            # A bare alternation needs the group for precedence against any
+            # neighbouring atoms; it is only redundant when it is the whole
+            # pattern, e.g. (?:a|b) but not x(?:a|b)y.
+            redundant = parent is reg and len(reg.children) == 1
+        else:
+            # Unquantified concatenation is associative, so the group boundary is
+            # invisible: (?:ab) == ab, x(?:ab)y == xaby.
+            redundant = True
+
+        if redundant:
+            errs.append((num, level, group.start or 0, msg))
+
+
 def manual_check_for_empty_string_match(reg, errs, raw_pat):
     # Skip the check in the following conditions:
     # * Rules that use a callback, since they're used for indentation
