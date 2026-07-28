@@ -592,6 +592,73 @@ def check_redundant_lookaround(reg, errs):
             )
 
 
+_UNBOUNDED_REPETITION = (
+    Other.Repetition.Star,
+    Other.Repetition.NongreedyStar,
+    Other.Repetition.Plus,
+    Other.Repetition.NongreedyPlus,
+)
+
+_CONSUMING_GROUP = (
+    Other.Open.Capturing,
+    Other.Open.NonCapturing,
+    Other.Open.NamedCapturing,
+)
+
+
+def _is_unbounded_repetition(node):
+    """True for *, +, and open-ended {n,} (the quantifiers that can match an
+    unbounded amount of text)."""
+    if node.type in _UNBOUNDED_REPETITION:
+        return True
+    return node.type is Other.Repetition.Curly and node.max is None
+
+
+def _body_is_ambiguously_repeatable(group):
+    """True when a group's whole body reduces to a single unbounded repetition
+    (possibly through nested single-child groups, or via an alternation branch).
+
+    That is the shape that makes ``(<group>)+`` catastrophic: the inner
+    quantifier can split the same input in exponentially many ways because no
+    fixed text delimits successive iterations. Bodies with a mandatory literal
+    part (e.g. ``ab+``) or single-character alternations (e.g. ``a|b``) are not
+    ambiguous and are intentionally left alone to avoid false positives.
+    """
+    children = group.children
+    # Unwrap chains of single-child groups, e.g. (?:(a+))+.
+    while len(children) == 1 and children[0].type in _CONSUMING_GROUP:
+        children = children[0].children
+    if len(children) != 1:
+        return False
+    child = children[0]
+    if _is_unbounded_repetition(child):
+        return True
+    if child.type is Other.Alternation:
+        for branch in child.children:
+            if len(branch.children) == 1 and _is_unbounded_repetition(
+                branch.children[0]
+            ):
+                return True
+    return False
+
+
+def check_nested_quantifier_redos(reg, errs):
+    num = "129"
+    level = logging.WARNING
+    msg = "Nested quantifier can cause catastrophic backtracking (ReDoS)"
+
+    for rep in find_all_by_type(reg, Other.Repetition):
+        if not _is_unbounded_repetition(rep):
+            continue
+        if len(rep.children) != 1:
+            continue
+        atom = rep.children[0]
+        if atom.type not in _CONSUMING_GROUP:
+            continue
+        if _body_is_ambiguously_repeatable(atom):
+            errs.append((num, level, atom.start or 0, msg))
+
+
 def manual_check_for_empty_string_match(reg, errs, raw_pat):
     # Skip the check in the following conditions:
     # * Rules that use a callback, since they're used for indentation
