@@ -43,6 +43,7 @@ from regexlint.checkers import (
     check_single_character_classes,
     check_suspicious_anchors,
     check_unescaped_braces,
+    groups_check_superfluous_capture,
     manual_check_for_empty_string_match,
     run_all_checkers,
 )
@@ -208,7 +209,7 @@ class CheckersTests(TestCase):
         self.assertEqual(len(errs), 0)
 
     def test_run_all_checkers_no_errors(self):
-        r = Regex.get_parse_tree(r"(x)")
+        r = Regex.get_parse_tree(r"(?:x)")
         print("\n".join(fmttree(r)))
         errs = run_all_checkers(r)
         self.assertEqual(len(errs), 0)
@@ -380,6 +381,56 @@ class CheckersTests(TestCase):
         print(errs)
         self.assertEqual(len(errs), 1)
         self.assertEqual(("107", logging.INFO, 0), errs[0][:3])
+
+    def test_superfluous_capture_single_token(self):
+        # A single-token action does not consume any group, so the parens are
+        # superfluous. https://github.com/pygments/pygments/pull/3232
+        r = Regex.get_parse_tree(r"(shared|temp|local)")
+        errs = []
+        groups_check_superfluous_capture(r, errs, None)
+        print(errs)
+        self.assertEqual(len(errs), 1)
+        self.assertEqual(("129", logging.WARNING, 0), errs[0][:3])
+
+    def test_superfluous_capture_grouping_still_flagged(self):
+        # Even when the group is needed for precedence, it should be
+        # non-capturing under a single-token action.
+        r = Regex.get_parse_tree(r"(Right|Left) Join")
+        errs = []
+        groups_check_superfluous_capture(r, errs, None)
+        print(errs)
+        self.assertEqual(len(errs), 1)
+        self.assertEqual(("129", logging.WARNING, 0), errs[0][:3])
+
+    def test_superfluous_capture_multiple(self):
+        r = Regex.get_parse_tree(r"(a)(b)")
+        errs = []
+        groups_check_superfluous_capture(r, errs, None)
+        print(errs)
+        self.assertEqual(len(errs), 2)
+
+    def test_superfluous_capture_ok_with_bygroups(self):
+        # bygroups() consumes the captured text, so the group is required.
+        r = Regex.get_parse_tree(r"(shared|temp|local)")
+        errs = []
+        groups_check_superfluous_capture(r, errs, (Text,))
+        print(errs)
+        self.assertEqual(len(errs), 0)
+
+    def test_superfluous_capture_ok_with_backref(self):
+        # A backreference relies on the group numbering.
+        r = Regex.get_parse_tree(r"(['\"]).*?\1")
+        errs = []
+        groups_check_superfluous_capture(r, errs, None)
+        print(errs)
+        self.assertEqual(len(errs), 0)
+
+    def test_superfluous_capture_ok_non_capturing(self):
+        r = Regex.get_parse_tree(r"(?:shared|temp|local)")
+        errs = []
+        groups_check_superfluous_capture(r, errs, None)
+        print(errs)
+        self.assertEqual(len(errs), 0)
 
     def test_unnecessary_i_flag(self):
         r = Regex.get_parse_tree(r"(?i).")

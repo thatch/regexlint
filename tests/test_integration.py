@@ -36,6 +36,9 @@ class T(RegexLexer):
 
             self.assertEqual(
                 """\
+demo_integration.py:7: (T:root:pat#1) W129: Superfluous capture group, the token action does not use it: use a non-capturing group (?:...) or drop the parentheses
+              ("(else|elseif)", Text),
+                ^ here
 demo_integration.py:7: (T:root:pat#1) E105: Potential out of order alternation between 'else' and 'elseif'
               ("(else|elseif)", Text),
                       ^ here

@@ -592,6 +592,33 @@ def check_redundant_lookaround(reg, errs):
             )
 
 
+def groups_check_superfluous_capture(reg, errs, expected_groups):
+    # https://github.com/pygments/pygments/pull/3232
+    num = "129"
+    level = logging.WARNING
+    msg = (
+        "Superfluous capture group, the token action does not use it: "
+        "use a non-capturing group (?:...) or drop the parentheses"
+    )
+
+    # When bygroups() consumes the captured text, the groups are needed.
+    if expected_groups:
+        return
+
+    # Backreferences (\1, (?P=name), (?(1)...)) rely on the group numbering, so
+    # the capturing groups are load-bearing; don't touch them.
+    if list(
+        find_all_by_type(
+            reg,
+            (Other.Backref, Other.Open.ExistsNamed, Other.Open.Exists),
+        )
+    ):
+        return
+
+    for cap in find_all_by_type(reg, Other.Open.Capturing):
+        errs.append((num, level, cap.start or 0, msg))
+
+
 def manual_check_for_empty_string_match(reg, errs, raw_pat):
     # Skip the check in the following conditions:
     # * Rules that use a callback, since they're used for indentation
@@ -627,6 +654,18 @@ def run_all_checkers(regex, expected_groups=None):
                     )
                 )
         elif k.startswith("bygroups_check_") and expected_groups:
+            try:
+                f(regex, errs, expected_groups)
+            except Exception as e:
+                errs.append(
+                    (
+                        "999",
+                        logging.ERROR,
+                        0,
+                        "Checker %s encountered error parsing: %s" % (f, repr(e)),
+                    )
+                )
+        elif k.startswith("groups_check_"):
             try:
                 f(regex, errs, expected_groups)
             except Exception as e:
