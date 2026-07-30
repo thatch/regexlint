@@ -33,6 +33,7 @@ from regexlint.checkers import (
     check_charclass_simplify,
     check_dot_newline_alternation,
     check_multiline_anchors,
+    check_nested_quantifier_redos,
     check_no_bels,
     check_no_consecutive_dots,
     check_no_empty_alternations,
@@ -392,6 +393,14 @@ class CheckersTests(TestCase):
         self.assertEqual(len(errs), 1)
         self.assertEqual(("129", logging.WARNING, 0), errs[0][:3])
 
+    def test_nested_quantifier_redos_plus_plus(self):
+        r = Regex.get_parse_tree(r"(a+)+")
+        errs = []
+        check_nested_quantifier_redos(r, errs)
+        print(errs)
+        self.assertEqual(len(errs), 1)
+        self.assertEqual(("130", logging.WARNING, 0), errs[0][:3])
+
     def test_superfluous_capture_grouping_still_flagged(self):
         # Even when the group is needed for precedence, it should be
         # non-capturing under a single-token action.
@@ -431,6 +440,48 @@ class CheckersTests(TestCase):
         groups_check_superfluous_capture(r, errs, None)
         print(errs)
         self.assertEqual(len(errs), 0)
+
+    def test_nested_quantifier_redos_star_variants(self):
+        for pat in (r"(a+)*", r"(?:a+)*", r"([ab]*)+", r"(a{1,})+", r"(.*)+"):
+            r = Regex.get_parse_tree(pat)
+            errs = []
+            check_nested_quantifier_redos(r, errs)
+            print(pat, errs)
+            self.assertEqual(len(errs), 1, pat)
+            self.assertEqual("130", errs[0][0], pat)
+
+    def test_nested_quantifier_redos_alternation_branch(self):
+        r = Regex.get_parse_tree(r"(a+|b)*")
+        errs = []
+        check_nested_quantifier_redos(r, errs)
+        print(errs)
+        self.assertEqual(len(errs), 1)
+        self.assertEqual("130", errs[0][0])
+
+    def test_nested_quantifier_redos_nested_group(self):
+        r = Regex.get_parse_tree(r"(?:(a+))+")
+        errs = []
+        check_nested_quantifier_redos(r, errs)
+        print(errs)
+        self.assertEqual(len(errs), 1)
+
+    def test_nested_quantifier_redos_ok_anchored_body(self):
+        # A mandatory fixed part delimits successive iterations: not ambiguous.
+        for pat in (r"(ab+)+", r"(a+b)+", r"(a|b)+", r"a+", r"(a+)?", r"(a+){2}"):
+            r = Regex.get_parse_tree(pat)
+            errs = []
+            check_nested_quantifier_redos(r, errs)
+            print(pat, errs)
+            self.assertEqual(len(errs), 0, pat)
+
+    def test_nested_quantifier_redos_ok_common_string_body(self):
+        # Ubiquitous string-lexer idioms must not be flagged.
+        for pat in (r'(\.|[^"])*', r'([^"\\]|\\.)*'):
+            r = Regex.get_parse_tree(pat)
+            errs = []
+            check_nested_quantifier_redos(r, errs)
+            print(pat, errs)
+            self.assertEqual(len(errs), 0, pat)
 
     def test_unnecessary_i_flag(self):
         r = Regex.get_parse_tree(r"(?i).")
