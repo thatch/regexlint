@@ -41,6 +41,7 @@ from regexlint.checkers import (
     check_redundant_lookaround,
     check_redundant_repetition,
     check_redundant_whitespace_alternation,
+    check_single_char_alternation,
     check_single_character_classes,
     check_suspicious_anchors,
     check_unescaped_braces,
@@ -481,6 +482,54 @@ class CheckersTests(TestCase):
             errs = []
             check_nested_quantifier_redos(r, errs)
             print(pat, errs)
+            self.assertEqual(len(errs), 0, pat)
+
+    def test_single_char_alternation_literals(self):
+        r = Regex.get_parse_tree(r"a|b|c")
+        errs = []
+        check_single_char_alternation(r, errs)
+        self.assertEqual(len(errs), 1)
+        self.assertEqual("131", errs[0][0])
+        self.assertIn("[abc]", errs[0][3])
+
+    def test_single_char_alternation_with_builtin_and_escapes(self):
+        r = Regex.get_parse_tree(r"\d|_|\.")
+        errs = []
+        check_single_char_alternation(r, errs)
+        self.assertEqual(len(errs), 1)
+        # The '.' escape is redundant inside a class and is dropped.
+        self.assertIn(r"[\d_.]", errs[0][3])
+
+    def test_single_char_alternation_minimizes_redundant_escapes(self):
+        # Metacharacters that are literal inside a class lose their backslash,
+        # but ']' and '^' must stay escaped so the class is not broken.
+        r = Regex.get_parse_tree(r"\.|\+|\(|\||\]|\^")
+        errs = []
+        check_single_char_alternation(r, errs)
+        self.assertEqual(len(errs), 1)
+        self.assertIn(r"[.+(|\]\^]", errs[0][3])
+
+    def test_single_char_alternation_nested_in_group(self):
+        r = Regex.get_parse_tree(r"(a|b)c")
+        errs = []
+        check_single_char_alternation(r, errs)
+        self.assertEqual(len(errs), 1)
+        self.assertIn("[ab]", errs[0][3])
+
+    def test_single_char_alternation_ignores_multichar(self):
+        for pat in (r"foo|bar", r"a|bc", r"ab|c"):
+            r = Regex.get_parse_tree(pat)
+            errs = []
+            check_single_char_alternation(r, errs)
+            self.assertEqual(len(errs), 0, pat)
+
+    def test_single_char_alternation_ignores_non_literal_atoms(self):
+        # '.' changes meaning inside a class; anchors/groups/repeats aren't
+        # single characters, and ']'/'-'/'^' would break or alter the class.
+        for pat in (r"a|.", r"a|b+", r"a|^", r"a|(bc)", r"a|]", r"1|-|9", r"a|^|b"):
+            r = Regex.get_parse_tree(pat)
+            errs = []
+            check_single_char_alternation(r, errs)
             self.assertEqual(len(errs), 0, pat)
 
     def test_unnecessary_i_flag(self):

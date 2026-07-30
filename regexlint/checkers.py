@@ -686,6 +686,61 @@ def check_nested_quantifier_redos(reg, errs):
             errs.append((num, level, atom.start or 0, msg))
 
 
+def _foldable_alternation_atom(atom):
+    """Return True when ``atom`` is a single character (or builtin class) that
+    keeps its meaning inside ``[...]``, so a branch consisting solely of it can
+    be folded into a character class."""
+    if atom.type in Other.BuiltinCharclass:
+        return True
+    if atom.type in (Other.Tab, Other.Newline):
+        return True
+    if atom.type in Other.Literal:
+        # Characters that change meaning inside ``[...]`` must not be folded:
+        # ']' closes the class, '-' would form a range (1|-|9 -> [1-9]!), and a
+        # leading '^' negates it. The lexer currently types most of these as
+        # Other.Literals rather than Other.Literal, but guard explicitly so the
+        # safety does not depend on tokenizer internals.
+        return atom.data not in ("]", "-", "^")
+    return False
+
+
+# Metacharacters that need a backslash outside a class but are plain literals
+# inside one, so the escape is redundant in the suggested ``[...]``. ']', '^'
+# and '-' are deliberately excluded: unescaping them would close, negate or
+# turn the class into a range.
+_CLASS_REDUNDANT_ESCAPE = frozenset(".+*?(){}|$")
+
+
+def _render_charclass_member(atom):
+    """Render ``atom`` as it should appear inside a suggested character class,
+    dropping backslashes that become redundant there (e.g. ``\\.`` -> ``.``)."""
+    data = atom.data
+    if len(data) == 2 and data[0] == "\\" and data[1] in _CLASS_REDUNDANT_ESCAPE:
+        return data[1]
+    return data
+
+
+def check_single_char_alternation(reg, errs):
+    num = "131"
+    level = logging.WARNING
+    msg = "Single-character alternation, use a character class %s instead"
+
+    for alt in find_all_by_type(reg, Other.Alternation):
+        atoms = []
+        for branch in alt.children:
+            if len(branch.children) != 1:
+                break
+            atom = branch.children[0]
+            if not _foldable_alternation_atom(atom):
+                break
+            atoms.append(atom)
+        else:
+            # An alternation always has at least two branches; guard anyway.
+            if len(atoms) >= 2:
+                suggestion = "[" + "".join(_render_charclass_member(a) for a in atoms) + "]"
+                errs.append((num, level, alt.start or 0, msg % suggestion))
+
+
 def manual_check_for_empty_string_match(reg, errs, raw_pat):
     # Skip the check in the following conditions:
     # * Rules that use a callback, since they're used for indentation
