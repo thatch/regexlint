@@ -741,6 +741,38 @@ def check_single_char_alternation(reg, errs):
                 errs.append((num, level, alt.start or 0, msg % suggestion))
 
 
+def check_quantified_lookaround(reg, errs):
+    num = "132"
+    level = logging.WARNING
+    # A lookaround matches no characters, so a quantifier on it is always a
+    # mistake, but the consequence differs. When at least one iteration is
+    # required (+, {n}, {n,} with n>=1) the assertion still applies and the
+    # quantifier is merely redundant. When zero iterations are allowed
+    # (*, ?, {0,m}) the assertion can be skipped entirely, which silently
+    # disables it -- a behaviour change rather than a no-op.
+    redundant_msg = "Redundant quantifier on a zero-width lookaround assertion"
+    disabling_msg = (
+        "Quantifier makes a zero-width lookaround assertion optional, "
+        "disabling it"
+    )
+
+    lookarounds = (
+        Other.Open.Lookahead,
+        Other.Open.NegativeLookahead,
+        Other.Open.Lookbehind,
+        Other.Open.NegativeLookbehind,
+    )
+    # Quantified anchors (\b+, ^?) are rejected by the engine before they ever
+    # reach us, so only lookaround groups need checking here.
+    for rep in find_all_by_type(reg, Other.Repetition):
+        if len(rep.children) != 1:
+            continue
+        atom = rep.children[0]
+        if atom.type in lookarounds:
+            msg = disabling_msg if rep.min == 0 else redundant_msg
+            errs.append((num, level, atom.start or 0, msg))
+
+
 def manual_check_for_empty_string_match(reg, errs, raw_pat):
     # Skip the check in the following conditions:
     # * Rules that use a callback, since they're used for indentation

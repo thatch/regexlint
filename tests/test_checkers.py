@@ -38,6 +38,7 @@ from regexlint.checkers import (
     check_no_consecutive_dots,
     check_no_empty_alternations,
     check_prefix_ordering,
+    check_quantified_lookaround,
     check_redundant_lookaround,
     check_redundant_repetition,
     check_redundant_whitespace_alternation,
@@ -530,6 +531,44 @@ class CheckersTests(TestCase):
             r = Regex.get_parse_tree(pat)
             errs = []
             check_single_char_alternation(r, errs)
+            self.assertEqual(len(errs), 0, pat)
+
+    def test_quantified_lookaround_variants(self):
+        for pat in (r"(?=a)+", r"(?=a)*", r"(?=a)?", r"(?!a)*", r"(?<=a)+", r"(?<!a)?"):
+            r = Regex.get_parse_tree(pat)
+            errs = []
+            check_quantified_lookaround(r, errs)
+            self.assertEqual(len(errs), 1, pat)
+            self.assertEqual("132", errs[0][0], pat)
+            self.assertEqual(logging.WARNING, errs[0][1], pat)
+
+    def test_quantified_lookaround_redundant_vs_disabling(self):
+        # +, {n} and {n,} (n>=1) keep the assertion: merely redundant.
+        for pat in (r"(?=a)+", r"(?=a){2}", r"(?=a){1,3}", r"(?<=a){2,}"):
+            r = Regex.get_parse_tree(pat)
+            errs = []
+            check_quantified_lookaround(r, errs)
+            self.assertEqual(len(errs), 1, pat)
+            self.assertIn("Redundant", errs[0][3], pat)
+        # *, ? and {0,m} allow zero iterations: they disable the assertion.
+        for pat in (r"(?=a)*", r"(?=a)?", r"(?!a){0,3}"):
+            r = Regex.get_parse_tree(pat)
+            errs = []
+            check_quantified_lookaround(r, errs)
+            self.assertEqual(len(errs), 1, pat)
+            self.assertIn("disabling it", errs[0][3], pat)
+
+    def test_quantified_lookaround_in_context(self):
+        r = Regex.get_parse_tree(r"a(?=b)+c")
+        errs = []
+        check_quantified_lookaround(r, errs)
+        self.assertEqual(len(errs), 1)
+
+    def test_quantified_lookaround_ok_unquantified(self):
+        for pat in (r"(?=a)b", r"(?:a)+", r"(a)+", r"a+"):
+            r = Regex.get_parse_tree(pat)
+            errs = []
+            check_quantified_lookaround(r, errs)
             self.assertEqual(len(errs), 0, pat)
 
     def test_unnecessary_i_flag(self):
