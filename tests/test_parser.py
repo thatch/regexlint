@@ -35,6 +35,11 @@ SAMPLE_PATTERNS = [
     r"x{1,}",
     r"x{,5}?",
     r"(?P<first_char>.)(?P=first_char)*",
+    # Scoped inline flags must parse (used to crash) and round-trip.
+    r"(?i:abc)",
+    r"x(?i-s:ab)y",
+    r"(?-i:a)",
+    r"(?ims:a|b)",
 ]
 
 CHARCLASS_PATTERNS = [

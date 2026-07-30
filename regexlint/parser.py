@@ -287,6 +287,11 @@ class BaseRegex(object):
             (r"\|", Other.Alternate),
             (r"\(\?[iLmsux]+\)", Other.Directive),
             (r"\(\?:", Other.Open.NonCapturing),
+            # Scoped inline flags, e.g. (?i:...), (?i-s:...), (?-i:...). This is
+            # a non-capturing group that also sets flags for its body, so it is
+            # NOT interchangeable with a plain (?:...) and gets its own type so
+            # checks (e.g. redundant-group) do not suggest dropping the flags.
+            (r"\(\?[aiLmsux]*(?:-[imsx]+)?:", Other.Open.NonCapturingFlags),
             (r"(\(\?P<)(.*?)(>)", Other.Open.NamedCapturing),
             (r"\(\?=", Other.Open.Lookahead),
             (r"\(\?!", Other.Open.NegativeLookahead),
