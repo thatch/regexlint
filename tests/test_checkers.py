@@ -1114,3 +1114,40 @@ class CheckersTests(TestCase):
         manual_check_for_empty_string_match(r, errs, (r"$\b", Token, "#pop"))
         print(errs)
         self.assertEqual(len(errs), 0)
+
+    def test_checker_message_ids_are_unique(self):
+        # Checkers are often written independently against the same base, so
+        # it's easy for two of them to pick the same "num" by coincidence
+        # (this has happened twice: message 126 across #52/#53/#54, and
+        # message 129 across #55/#56/#57/#58/#59). Statically walk each
+        # checker's source rather than running it, since triggering every
+        # checker requires a matching pattern for each.
+        import ast
+        import inspect
+
+        import regexlint.checkers as checkers_module
+
+        prefixes = ("check_", "bygroups_check_", "groups_check_")
+        tree = ast.parse(inspect.getsource(checkers_module))
+        owner_by_num = {}
+        for node in tree.body:
+            if not (
+                isinstance(node, ast.FunctionDef) and node.name.startswith(prefixes)
+            ):
+                continue
+            for stmt in ast.walk(node):
+                if (
+                    isinstance(stmt, ast.Assign)
+                    and len(stmt.targets) == 1
+                    and isinstance(stmt.targets[0], ast.Name)
+                    and stmt.targets[0].id == "num"
+                    and isinstance(stmt.value, ast.Constant)
+                ):
+                    num = stmt.value.value
+                    self.assertNotIn(
+                        num,
+                        owner_by_num,
+                        "Message id %r is used by both %s and %s"
+                        % (num, owner_by_num.get(num), node.name),
+                    )
+                    owner_by_num[num] = node.name
