@@ -737,7 +737,9 @@ def check_single_char_alternation(reg, errs):
         else:
             # An alternation always has at least two branches; guard anyway.
             if len(atoms) >= 2:
-                suggestion = "[" + "".join(_render_charclass_member(a) for a in atoms) + "]"
+                suggestion = (
+                    "[" + "".join(_render_charclass_member(a) for a in atoms) + "]"
+                )
                 errs.append((num, level, alt.start or 0, msg % suggestion))
 
 
@@ -752,8 +754,7 @@ def check_quantified_lookaround(reg, errs):
     # disables it -- a behaviour change rather than a no-op.
     redundant_msg = "Redundant quantifier on a zero-width lookaround assertion"
     disabling_msg = (
-        "Quantifier makes a zero-width lookaround assertion optional, "
-        "disabling it"
+        "Quantifier makes a zero-width lookaround assertion optional, " "disabling it"
     )
 
     lookarounds = (

@@ -573,7 +573,14 @@ class CheckersTests(TestCase):
             self.assertEqual(len(errs), 0, pat)
 
     def test_redundant_noncapturing_group_single_atom(self):
-        for pat in (r"(?:a)", r"(?:a)+", r"(?:\d)*", r"(?:[abc])+", r"(?:(x))", r"(?:a){2}"):
+        for pat in (
+            r"(?:a)",
+            r"(?:a)+",
+            r"(?:\d)*",
+            r"(?:[abc])+",
+            r"(?:(x))",
+            r"(?:a){2}",
+        ):
             r = Regex.get_parse_tree(pat)
             errs = []
             check_redundant_noncapturing_group(r, errs)
