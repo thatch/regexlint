@@ -15,7 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import itertools
 import logging
 import multiprocessing
 import sys
@@ -88,11 +87,12 @@ def main(argv=None):
 
     if opts.parallel:
         pool = multiprocessing.Pool()
+        map_checks = pool.imap
     else:
-        pool = itertools
+        map_checks = map
 
     if opts.regex:
-        for result in pool.imap(
+        for result in map_checks(
             check_regex_map, [(i, min_level, StringIO()) for i in args]
         ):
             result.seek(0, 0)
@@ -136,7 +136,7 @@ def main(argv=None):
                 )
 
     has_any_errors = False
-    for stream, has_errors in pool.imap(check_lexer_map, lexers_to_check):
+    for stream, has_errors in map_checks(check_lexer_map, lexers_to_check):
         stream.seek(0, 0)
         output_stream.write(stream.read())
         has_any_errors |= has_errors
