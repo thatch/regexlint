@@ -79,9 +79,12 @@ def main(argv=None):
 
     min_level = getattr(logging, opts.min_level)
     if opts.output_file:
-        output_stream = open(opts.output_file, "wb")
-    else:
-        output_stream = sys.stdout
+        with open(opts.output_file, "w", encoding="utf-8") as output_stream:
+            return _run_checks(opts, args, min_level, output_stream)
+    return _run_checks(opts, args, min_level, sys.stdout)
+
+
+def _run_checks(opts, args, min_level, output_stream):
     if opts.only_func:
         global ONLY_FUNC
         ONLY_FUNC = opts.only_func
