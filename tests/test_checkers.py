@@ -903,6 +903,55 @@ class CheckersTests(TestCase):
     #    self.assertTrue('[0-9_]' in errs[0][-1])
     #    self.assertTrue('[\\d_]' in errs[0][-1])
 
+    def test_charclass_simplify_escaped_parenthesis(self):
+        r = Regex.get_parse_tree(r"[\(]", re.A)
+        errs = []
+        check_charclass_simplify(r, errs)
+        self.assertEqual(
+            errs,
+            [
+                (
+                    "123",
+                    logging.WARNING,
+                    0,
+                    r"Regex can be written more simply: [\(] -> \(",
+                )
+            ],
+        )
+
+    def test_charclass_simplify_literal_preserves_matches(self):
+        literals = "()[]{}.*+?^$|\\ #a0-'\t\n\r"
+        for flags in (re.A, re.A | re.I, re.A | re.X, re.A | re.I | re.X):
+            for literal in literals:
+                with self.subTest(literal=repr(literal), flags=flags):
+                    # Hex escapes make every class eligible for simplification.
+                    pattern = r"[\x%02x]" % ord(literal)
+                    r = Regex.get_parse_tree(pattern, flags)
+                    errs = []
+                    check_charclass_simplify(r, errs)
+                    self.assertEqual(len(errs), 1)
+                    replacement = errs[0][3].split(" -> ", 1)[1]
+                    original = re.compile(pattern, flags)
+                    simplified = re.compile(replacement, flags)
+                    self.assertIsNotNone(simplified.fullmatch(literal))
+                    samples = ["", literal * 2] + [chr(i) for i in range(256)]
+                    for sample in samples:
+                        self.assertEqual(
+                            bool(original.fullmatch(sample)),
+                            bool(simplified.fullmatch(sample)),
+                            repr(sample),
+                        )
+
+    def test_charclass_simplify_literal_preserves_context(self):
+        pattern = r"a[\x7b]2}b"
+        errs = []
+        check_charclass_simplify(Regex.get_parse_tree(pattern, re.A), errs)
+        self.assertEqual(len(errs), 1)
+        replacement = errs[0][3].split(" -> ", 1)[1]
+        simplified = re.compile(pattern.replace(r"[\x7b]", replacement), re.A)
+        self.assertIsNotNone(simplified.fullmatch("a{2}b"))
+        self.assertIsNone(simplified.fullmatch("aab"))
+
     def test_charclass_simplify_suggest_range(self):
         # Need to use ASCII mode to enable this checker.
         r = Regex.get_parse_tree(r"[01acb234]", re.A)
