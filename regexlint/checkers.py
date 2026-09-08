@@ -441,15 +441,16 @@ def check_charclass_simplify(reg, errs):
         except WontOptimize:
             continue
         new_score = charclass_score(new_codes, negated)
-        if new_score < existing_score:
-            if len(new_codes) == 1 and not negated and isinstance(new_codes[0], int):
-                # Outside a class, operators and verbose-mode text need escaping.
-                new_class = esc(chr(new_codes[0]), "()[]{}.*+?^$| #")
-            elif len(new_codes) == 1 and not negated and isinstance(new_codes[0], str):
-                new_class = new_codes[0]
-            else:
-                new_class = "[%s%s]" % (negated and "^" or "", build_output(new_codes))
+        if len(new_codes) == 1 and not negated and isinstance(new_codes[0], int):
+            # A literal loses the brackets but may need escapes outside the class.
+            new_class = esc(chr(new_codes[0]), "()[]{}.*+?^$| #")
+            new_score = len(new_class) - 2
+        elif len(new_codes) == 1 and not negated and isinstance(new_codes[0], str):
+            new_class = new_codes[0]
+        else:
+            new_class = "[%s%s]" % (negated and "^" or "", build_output(new_codes))
 
+        if new_score < existing_score:
             errs.append((num, level, c.start, msg % (c.reconstruct(), new_class)))
 
 

@@ -919,6 +919,29 @@ class CheckersTests(TestCase):
             ],
         )
 
+    def test_charclass_simplify_unescaped_parenthesis(self):
+        r = Regex.get_parse_tree("[(]", re.A)
+        errs = []
+        check_charclass_simplify(r, errs)
+        self.assertEqual(
+            errs,
+            [
+                (
+                    "123",
+                    logging.WARNING,
+                    0,
+                    r"Regex can be written more simply: [(] -> \(",
+                )
+            ],
+        )
+
+    def test_charclass_simplify_no_longer_literal(self):
+        # Escaping this raw character outside the class would be longer.
+        r = Regex.get_parse_tree("[\x80]", re.A)
+        errs = []
+        check_charclass_simplify(r, errs)
+        self.assertEqual(errs, [])
+
     def test_charclass_simplify_literal_preserves_matches(self):
         literals = "()[]{}.*+?^$|\\ #a0-'\t\n\r"
         for flags in (re.A, re.A | re.I, re.A | re.X, re.A | re.I | re.X):
